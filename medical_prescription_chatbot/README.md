@@ -37,9 +37,9 @@ When a prescription cannot be confidently understood, the UI shows a warning sta
 
 ## ⚙️ Installation & Setup
 
-1. **Clone the repository**:
+1. **repository**:
     ```bash
-    git clone <repository-url>
+    
     cd medical-prescription-analyzer-chatbot
     ```
 
