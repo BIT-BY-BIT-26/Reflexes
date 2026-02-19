@@ -2,6 +2,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const PharmacyModel = require("../models/PharmacyModel");
+const userModel = require("../models/userModel");
 const { ROLE } = require("../config/Role");
 
 
@@ -25,17 +26,21 @@ exports.registerPharmacy = async (req, res) => {
       lng,
     } = req.body;
 
-    // check existing
-    const existing = await PharmacyModel.findOne({ email });
-    if (existing) {
-      return res.status(400).json({ msg: "Pharmacy already registered" });
-    }
+    const existingUser = await userModel.findOne({ email });
+    if (existingUser) return res.status(400).json({ msg: "Email already registered" });
 
     // hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-
+    const user = await userModel.create({
+    name: ownerName, 
+    email,
+    password: hashedPassword,
+    role: ROLE.pharmacy,
+    isActive: true
+  });
     const pharmacy = await PharmacyModel.create({
+      userId: user._id,
       shopName,
       ownerName,
       email,
@@ -49,18 +54,19 @@ exports.registerPharmacy = async (req, res) => {
       location: {
         type: "Point",
         coordinates: [lng, lat],
-      },
-      role:ROLE.pharmacy
+      }
     });
 
+    
+
     res.status(201).json({
+      pharmacy,
       msg: "Pharmacy registered successfully. Waiting for admin approval.",
       pharmacyId: pharmacy._id,
     });
 
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ msg: "Server error" });
+    res.status(500).json({ msg: `Server error ${err.message}` });
   }
 };
 

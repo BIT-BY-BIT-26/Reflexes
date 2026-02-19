@@ -28,7 +28,7 @@ const registerPatient = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create patient 
-    const user = await User.create({
+    const user = await userModel.create({
       name,
       email,
       password: hashedPassword,
