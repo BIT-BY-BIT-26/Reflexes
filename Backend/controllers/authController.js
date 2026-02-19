@@ -1,6 +1,5 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { ROLE } = require('../config/role');
 const patientModel = require('../models/patientModel.js');
 const userModel = require('../models/userModel');
 
