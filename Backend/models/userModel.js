@@ -21,8 +21,8 @@ const userSchema =new mongoose.Schema({
    },
    role: {
       type: String,
-      enum: [ROLE.admin, ROLE.doctor, ROLE.patient],
-      required: true 
+      enum: [ROLE.admin, ROLE.doctor, ROLE.patient, ROLE.pharmacy],
+      required:true
     },
     isActive: {
         type: Boolean,
@@ -42,7 +42,7 @@ const userSchema =new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Hospital",
     required: function () {
-      return this.role !== ROLE.patient; // admin/doctor/subadmin ke liye required
+      return this.role !== ROLE.patient && this.role !== ROLE.pharmacy; // admin/doctor/subadmin ke liye required
     }
   },
 },{timestamps:true})

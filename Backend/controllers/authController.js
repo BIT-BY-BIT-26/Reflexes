@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const patientModel = require('../models/patientModel.js');
 const userModel = require('../models/userModel');
 const { ROLE } = require('../config/Role.js');
+const PharmacyModel = require('../models/PharmacyModel.js');
 
 const loginUser = async (req, res) => {
   try {
@@ -38,6 +39,11 @@ const loginUser = async (req, res) => {
     if (user.role === ROLE.patient) {
       const patient = await patientModel.findOne({ userId: user._id });
       patientId = patient?._id;
+    }
+    let pharmacyId = null;
+    if (user.role === ROLE.pharmacy) {
+      const pharmacy = await PharmacyModel.findOne({ userId: user._id });
+      pharmacyId = pharmacy?._id;
     }
 
 
