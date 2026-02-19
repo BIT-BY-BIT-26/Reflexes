@@ -32,7 +32,8 @@ const Login = () => {
     if (token && role) {
       if (role === ROLE.admin) navigate("/admin-dashboard");
       else if (role === ROLE.doctor) navigate("/doctor-dashboard");
-      else if (role === ROLE.patient) navigate("/patient-dashboard");
+      else if (role === ROLE.pharmacy) navigate("/pharmacy-dashboard");
+      
     }
   }, [navigate]);
 
