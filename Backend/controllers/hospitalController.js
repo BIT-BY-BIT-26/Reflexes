@@ -10,6 +10,7 @@ const path = require("path");
 
 const registerHospital = async (req, res) => {
     try {
+        
         const { name, city, email, state, pincode, hospitalLicense,phone_number, lat, lng ,adminName, adminEmail, adminPassword} = req.body;
 
         const existingHospital = await HospitalModel.findOne({ hospitalLicense });

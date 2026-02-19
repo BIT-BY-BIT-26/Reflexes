@@ -50,8 +50,11 @@ const pharmacySchema = new mongoose.Schema(
         enum:['Point'],
         default: "Point",
       },
-      coordinates: [Number], // [longitude, latitude]
-      required:true
+      coordinates:{
+        type:[Number],
+        
+      } , // [longitude, latitude]
+      
     },
 
     isVerified: {
