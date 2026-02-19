@@ -6,7 +6,7 @@ const { loginValidator } = require('../helper/validator');
 const authRoute = express.Router();
 
 
-authRoute.post('/user-login' ,loginValidator,loginUser)
+authRoute.post('/login' ,loginValidator,loginUser)
 authRoute.get("/me", auth, getProfile);
 authRoute.post("/reset_password",resetPassword);
 
