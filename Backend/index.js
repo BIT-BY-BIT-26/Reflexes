@@ -2,6 +2,8 @@ const express = require("express");
 const { mongoose } = require("mongoose");
 const app = express();
 const dotenv = require("dotenv");
+const patientRoute = require("./routes/patientRoute");
+const authRoute = require("./routes/authRoute");
 dotenv.config();
 
 // MongoDB
@@ -17,6 +19,10 @@ app.get('/',(req , res)=>{
     res.json("hi there");
 });
 const PORT = 3000;
+
+app.use("/api/auth", authRoute);
+app.use("/api/patients", patientRoute);
+
 app.listen(PORT,()=>{
     console.log(`Listening to port ${PORT}`);
 })
