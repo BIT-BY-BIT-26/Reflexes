@@ -7,6 +7,8 @@ const PharmacyModel = require("../models/PharmacyModel");
 // ✅ REGISTER PHARMACY
 exports.registerPharmacy = async (req, res) => {
   try {
+    console.log(req.body);
+
     const {
       shopName,
       ownerName,
@@ -18,8 +20,8 @@ exports.registerPharmacy = async (req, res) => {
       city,
       state,
       pincode,
-      latitude,
-      longitude,
+      lat,
+      lng,
     } = req.body;
 
     // check existing
@@ -45,8 +47,9 @@ exports.registerPharmacy = async (req, res) => {
       pincode,
       location: {
         type: "Point",
-        coordinates: [longitude, latitude],
+        coordinates: [lng, lat],
       },
+      
     });
 
     res.status(201).json({
