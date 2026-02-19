@@ -24,13 +24,15 @@ const RegisterPharmacy = () => {
     email: "",
     phone: "",
     city: "",
+    address: "",
     state: "",
     pincode: "",
     lat: "",
     lng: "",
     ownerName: "",
     password: ""
-  });
+});
+
 
   const [locationFetched, setLocationFetched] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -72,7 +74,6 @@ const RegisterPharmacy = () => {
       await api.post("/pharmacy/register", formData);
 
       toast.success("Pharmacy registered! Await admin approval.");
-
       navigate("/login");
     } catch (err) {
       toast.error(err?.response?.data?.msg || "Registration failed");
@@ -164,6 +165,18 @@ const RegisterPharmacy = () => {
               <Grid item xs={12} md={4}>
                 <TextField fullWidth label="Pincode" name="pincode" sx={inputSx} size="small" onChange={handleChange} required />
               </Grid>
+              <Grid item xs={12}>
+                <TextField
+                    fullWidth
+                    label="Full Address"
+                    name="address"
+                    sx={inputSx}
+                    size="small"
+                    onChange={handleChange}
+                    required
+                />
+                </Grid>
+
 
               <Grid item xs={12}>
                 <Button
