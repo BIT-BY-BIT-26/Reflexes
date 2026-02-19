@@ -74,7 +74,7 @@ const RegisterPharmacy = () => {
       await api.post("/pharmacy/register", formData);
 
       toast.success("Pharmacy registered! Await admin approval.");
-      navigate("/pharmacy-dashboard");
+      navigate("/login");
     } catch (err) {
       toast.error(err?.response?.data?.msg || "Registration failed");
     } finally {

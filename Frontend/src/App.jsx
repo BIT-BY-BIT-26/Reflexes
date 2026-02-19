@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import RegisterHospital from "./pages/RegisterHospital";
 import RegisterRole from "./pages/RegisterRoles";
 import RegisterPharmacy from "./pages/RegisterPharmacy";
+import PharmacyDashboard from "./components/PharmacyDashboard";
 function App() {
   return (
     <BrowserRouter>
@@ -26,7 +27,7 @@ function App() {
        
       <Route path="/register-role" element={<RegisterRole />} />
       <Route path="/register-pharmacy" element={<RegisterPharmacy />} />
-
+      <Route path="/pharmacy-dashboard" element={<PharmacyDashboard />} />
       <Route
           path="/register"
           element={
