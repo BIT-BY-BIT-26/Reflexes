@@ -15,9 +15,12 @@ mongoose
   })
   .catch((err) => console.log("❌ MongoDB connection error", err));
 
+app.use(express.json()); 
+
 app.get('/',(req , res)=>{
     res.json("hi there");
 });
+
 const PORT = 3000;
 
 app.use("/api/auth", authRoute);
