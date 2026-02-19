@@ -6,6 +6,9 @@ import { ROLE } from "./Constants/role";
 import DoctorDashboard from "./components/DoctorDashboard";
 import PublicRoute from "./protected/publicRoute";
 import Login from "./pages/Login";
+import RegisterHospital from "./pages/RegisterHospital";
+import RegisterRole from "./pages/RegisterRoles";
+import RegisterPharmacy from "./pages/RegisterPharmacy";
 function App() {
   return (
     <BrowserRouter>
@@ -20,15 +23,18 @@ function App() {
         theme="dark"
       />
       <Routes>
-        <Route
-        path="/doctor-dashboard"
-        element={
-          <ProtectedRoute allowedRoles={[ROLE.doctor]}>
-            <DoctorDashboard />
-          </ProtectedRoute>
-        }
-      />
+       
+      <Route path="/register-role" element={<RegisterRole />} />
+      <Route path="/register-pharmacy" element={<RegisterPharmacy />} />
 
+      <Route
+          path="/register"
+          element={
+            <PublicRoute>
+              <RegisterHospital />
+            </PublicRoute>
+          }
+        />
        <Route
           path="/login"
           element={
@@ -37,6 +43,14 @@ function App() {
             </PublicRoute>
           }
         />
+         <Route
+        path="/doctor-dashboard"
+        element={
+          <ProtectedRoute allowedRoles={[ROLE.doctor]}>
+            <DoctorDashboard />
+          </ProtectedRoute>
+        }
+      />
 
     </Routes>
     
