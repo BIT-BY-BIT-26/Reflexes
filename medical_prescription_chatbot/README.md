@@ -22,7 +22,7 @@ A key challenge is that not all prescriptions are resolvable, and blindly genera
 
 ## Solution Overview
 
-A Vision-AI–powered Medical Prescription Analyzer that intelligently understands handwritten prescriptions and converts them into structured, reliable medical data.
+A Qubrid(Vision)-AI–powered Medical Prescription Analyzer that intelligently understands handwritten prescriptions and converts them into structured, reliable medical data.
 
 ### 1. Vision-Based Prescription Understanding
 The system leverages a multimodal vision-language model capable of understanding handwritten text directly from prescription images, interpreting medical context, and reasoning across multiple lines and symbols. The model processes prescription images and extracts medicine names, dosage information, intake frequency, and time of consumption (morning / afternoon / night).
