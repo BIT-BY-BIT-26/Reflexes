@@ -2,6 +2,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const PharmacyModel = require("../models/PharmacyModel");
+const { ROLE } = require("../config/Role");
 
 
 // ✅ REGISTER PHARMACY
@@ -49,7 +50,7 @@ exports.registerPharmacy = async (req, res) => {
         type: "Point",
         coordinates: [lng, lat],
       },
-      
+      role:ROLE.pharmacy
     });
 
     res.status(201).json({
