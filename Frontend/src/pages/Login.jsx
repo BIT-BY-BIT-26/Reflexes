@@ -55,7 +55,7 @@ const Login = () => {
     try {
       setLoading(true);
 
-      const res = await api.post("/auth/user-login", formData); // ✅ Correct endpoint
+      const res = await api.post("/auth/login", formData); // ✅ Correct endpoint
 
       toast.success(res.data.msg || "Login successful");
 
