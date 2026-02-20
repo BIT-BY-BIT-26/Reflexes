@@ -236,32 +236,13 @@ exports.getTodayOrderStats = async (req, res) => {
   }
 };
 
-
-exports.getAllMedicine = async (req, res) => {
+exports.getAllMedicines = async (req, res) => {
   try {
-    // 🔹 Logged-in hospital find karo
-    const hospital = await HospitalModel.findOne({ userId: req.user._id });
-
-    if (!hospital) {
-      return res.status(404).json({ message: "Hospital not found" });
-    }
-
-    // 🔹 Inventory fetch karo + medicine populate karo
-    const medicines = await Inventory.find({
-      hospitalId: hospital._id,
-      isAvailable: true,
-      quantity: { $gt: 0 }
-    })
-      .populate("medicineId")
-      .sort({ createdAt: -1 });
-
-    res.status(200).json({
-      total: medicines.length,
-      medicines,
-    });
-
+    const medicines = await inventory.find().populate("medicineId").sort({ createdAt: -1 });
+    res.status(200).json(medicines);
   } catch (error) {
-    console.error("GET ALL MEDICINE ERROR:", error);
-    res.status(500).json({ message: "Server error" });
+    console.log(error);
+    res.status(500).json({ message: "Error fetching medicines" });
   }
 };
+

@@ -99,11 +99,11 @@ const AllAppointments = ({appointments=[], onPatientClick})=>{
                             // onClick={()=> onPatientClick(appt.patient?._id)}
                             // onClick={()=>navigate(`/doctor-dashboard/patient/${appt.patient?._id}`)}
                             onClick={() =>
-  navigate(`/doctor-dashboard/patient/${appt.patient?._id}`, {
-    state: { appointmentId: appt._id }  // 🔥 important
-  })
-}
-                        >   
+                    navigate(`/doctor-dashboard/patient/${appt.patient?._id}`, {
+                        state: { appointmentId: appt._id }  // 🔥 important
+                    })
+            }
+                    >   
                             {appt.patient?.userId?.name || "Unknown Patient"}
                         </p>
 
