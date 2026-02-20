@@ -1,7 +1,14 @@
 const mongoose = require("mongoose");
+const { ROLE } = require("../config/Role");
 
 const pharmacySchema = new mongoose.Schema(
   {
+    userId:{
+      type:mongoose.Schema.Types.ObjectId,
+      ref:"User",
+      unique:true,
+      sparse:true
+    },  
     shopName: {
       type: String,
       required: true,
@@ -52,7 +59,6 @@ const pharmacySchema = new mongoose.Schema(
       },
       coordinates:{
         type:[Number],
-        
       } , // [longitude, latitude]
       
     },
@@ -61,12 +67,6 @@ const pharmacySchema = new mongoose.Schema(
       type: Boolean,
       default: false, // admin approval
     },
-
-    role: {
-      type: String,
-      default: "pharmacy",
-    },
-
     isActive: {
       type: Boolean,
       default: true,
