@@ -2,7 +2,7 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const { ROLE } = require('../config/Role');
 const authorize = require('../middleware/authorize');
-const { uploadReport, shareReport } = require('../controller/reportController');
+const { uploadReport, shareReport } = require('../controllers/reportController');
 const upload = require('../middleware/uploadCloud');
 const reportsRoute = express.Router();
 

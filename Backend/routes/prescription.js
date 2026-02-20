@@ -1,5 +1,5 @@
 const express = require('express');
-const { createPrescription, getPatientPrescriptionsForDoctor, getPrescriptionByAppointment } = require('../controller/prescriptionController');
+const { createPrescription, getPatientPrescriptionsForDoctor, getPrescriptionByAppointment } = require('../controllers/prescriptionController');
 
 const auth = require('../middleware/auth');
 const { ROLE } = require('../config/Role');
