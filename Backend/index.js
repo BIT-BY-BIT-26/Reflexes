@@ -1,19 +1,71 @@
+// const express = require("express");
+// const { mongoose } = require("mongoose");
+// const app = express();
+// const cors = require("cors");
+// const dotenv = require("dotenv");
+// const patientRoute = require("./routes/patientRoute");
+// const authRoute = require("./routes/authRoute");
+// const pharmacyRouter = require("./routes/pharmacy");
+// const hospitalRoutes = require("./routes/hospital");
+
+// dotenv.config();
+// app.use(cors({
+//   origin: true,
+//   credentials: true
+// }));
+
+// app.use(express.json());
+
+// // MongoDB
+// mongoose
+//   .connect(process.env.MONGO_URI)
+//   .then(async () => {
+//     console.log("✅ MongoDB connected successfully");
+
+//   })
+//   .catch((err) => console.log("❌ MongoDB connection error", err));
+
+// app.use(express.json()); 
+
+// app.get('/',(req , res)=>{
+//     res.json("hi there");
+// });
+
+// const PORT = 3000;
+
+// app.use("/api/auth", authRoute);
+// app.use("/api/patients", patientRoute);
+// app.use("/api/pharmacy",pharmacyRouter);
+// app.use("/api",hospitalRoutes)
+
+// app.listen(PORT,()=>{
+//     console.log(`Listening to port ${PORT}`);
+// })
+
+
 const express = require("express");
-const { mongoose } = require("mongoose");
-const app = express();
+const mongoose = require("mongoose");
+const http = require("http");
 const cors = require("cors");
 const dotenv = require("dotenv");
-const patientRoute = require("./routes/patientRoute");
-const authRoute = require("./routes/authRoute");
-const pharmacyRouter = require("./routes/pharmacy");
-const hospitalRoutes = require("./routes/hospital");
-
 dotenv.config();
-app.use(cors({
-  origin: true,
-  credentials: true
-}));
 
+const { Server } = require("socket.io");
+
+// Routes
+const hospitalRoutes = require("./routes/hospital");
+const authRoute = require("./routes/authRoute");
+const departmentRouter = require("./routes/departmentRoute");
+const patientRoute = require("./routes/patientRoute");
+const appointmentRouter = require("./routes/appointment");
+const socketHandler = require("./socket.js");
+const prescriptionRoute = require("./routes/prescription.js");
+const reportsRoute = require("./routes/reports.js");
+const pharmacyRouter = require("./routes/pharmacy");
+const consultationRouter = require("./routes/consultationRoute.js");
+const doctorRouter = require("./routes/doctor.js");
+const app = express();
+app.use(cors());
 app.use(express.json());
 
 // MongoDB
@@ -25,19 +77,38 @@ mongoose
   })
   .catch((err) => console.log("❌ MongoDB connection error", err));
 
-app.use(express.json()); 
-
-app.get('/',(req , res)=>{
-    res.json("hi there");
+// Root
+app.get("/", (req, res) => {
+  res.json("Server is running 🚀");
 });
 
-const PORT = 3000;
+// HTTP + Socket.IO
+const server = http.createServer(app);
 
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+  },
+});
+const onlineDoctors = new Map();
+const onlinePatients = new Map();
+app.set("onlineDoctors", onlineDoctors);
+app.set("onlinePatients", onlinePatients);
+
+app.set("io", io);
+socketHandler(io,onlineDoctors,onlinePatients);
+
+// Routes
+app.use("/api", hospitalRoutes);
 app.use("/api/auth", authRoute);
+app.use("/api/prescription", prescriptionRoute);
+app.use("/api/departments", departmentRouter);
 app.use("/api/patients", patientRoute);
+app.use("/api",appointmentRouter);
+app.use("/api/reports",reportsRoute);
+app.use("/api/consulation",consultationRouter);
 app.use("/api/pharmacy",pharmacyRouter);
-app.use("/api",hospitalRoutes)
-
-app.listen(PORT,()=>{
-    console.log(`Listening to port ${PORT}`);
-})
+// Listen
+server.listen(3000, () => {
+  console.log("🚀 Server running on port 3000");
+});
