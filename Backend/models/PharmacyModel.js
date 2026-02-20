@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const { ROLE } = require("../config/Role");
 
 const pharmacySchema = new mongoose.Schema(
   {
