@@ -6,7 +6,7 @@ const HospitalModel = require('../models/HospitalModel');
 dotenv.config();
 const fs = require("fs");
 const path = require("path");
-const { ROLE } = require('../config/Role');
+const { ROLE } = require('../config/role');
 
 const registerHospital = async (req, res) => {
     try {
