@@ -21,16 +21,16 @@ class DoctorModel {
 
   factory DoctorModel.fromJson(Map<String, dynamic> json) {
     return DoctorModel(
-      position: json['position'],
-      id: json['_id'],
-      name: json['userId']['name'],
-      email: json['userId']['email'],
-      experience: json['experience'],
-      specialisation: json['specialisation'],
-      hospitalName: json['hospital']['name'],
-      departmentName: json['department'] is Map 
-          ? json['department']['name'] 
-          : json['department'].toString(), // agar populate nahi hai
+      id: json['_id'] ?? '',
+      position: json['position'] ?? '',
+      name: json['userId']?['name'] ?? '',
+      email: json['userId']?['email'] ?? '',
+      experience: json['experience'] ?? 0,
+      specialisation: json['specialisation'] ?? '',
+      hospitalName: json['hospital']?['name'] ?? '',
+      departmentName: json['department'] is Map
+          ? json['department']['name'] ?? ''
+          : (json['department'] ?? '').toString(),
     );
   }
 }
