@@ -3,7 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const PharmacyModel = require("../models/PharmacyModel");
 const userModel = require("../models/userModel");
-const { ROLE } = require("../config/Role");
+const { ROLE } = require("../config/role");
 
 
 // ✅ REGISTER PHARMACY
