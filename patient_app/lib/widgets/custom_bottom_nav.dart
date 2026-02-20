@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:patient_app/features/appointment/booked_appointment_screen.dart';
 import 'package:patient_app/features/hospitals/hospital_screen.dart';
-import 'package:patient_app/features/profile/profile_screen.dart';
+import 'package:patient_app/profile/profile_screen.dart';
 
 
 
