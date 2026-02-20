@@ -2,13 +2,13 @@
 
 
 const dotenv = require('dotenv');
-const userModel = require('../model/userModel');
+const userModel = require('../models/userModel');
 const crypto = require("crypto");
 const bcrypt = require('bcrypt');
 const { ROLE } = require('../config/Role');
 const nodemailer = require("nodemailer");
 const sendEmail = require('../utils/sendEmail');
-const docterModel = require('../model/docterModel');
+const docterModel = require('../models/docterModel');
 dotenv.config();
 
 const addDoctor = async (req, res) => {

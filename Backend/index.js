@@ -6,7 +6,10 @@
 // const patientRoute = require("./routes/patientRoute");
 // const authRoute = require("./routes/authRoute");
 // const pharmacyRouter = require("./routes/pharmacy");
+// app.use(cors());
 // const hospitalRoutes = require("./routes/hospital");
+// const departmentRouter = require("./routes/departmentRoute");
+// const doctorRouter = require("./routes/doctor");
 
 // dotenv.config();
 // app.use(cors({
@@ -35,13 +38,17 @@
 
 // app.use("/api/auth", authRoute);
 // app.use("/api/patients", patientRoute);
+// app.use("/api",appointmentRouter);
+// app.use("/api/reports",reportsRoute);
+// // app.use("/api/consulation",consultationRouter);
 // app.use("/api/pharmacy",pharmacyRouter);
+// app.use("/api/departments",departmentRouter );
+// app.use("/api/doctors",doctorRouter);
 // app.use("/api",hospitalRoutes)
 
 // app.listen(PORT,()=>{
 //     console.log(`Listening to port ${PORT}`);
 // })
-
 
 
 const express = require("express");
@@ -82,6 +89,8 @@ app.get("/", (req, res) => {
   res.json("Server is running 🚀");
 });
 
+const PORT = 3000;
+
 // HTTP + Socket.IO
 const server = http.createServer(app);
 
@@ -109,6 +118,6 @@ app.use("/api/reports",reportsRoute);
 // app.use("/api/consulation",consultationRouter);
 app.use("/api/pharmacy",pharmacyRouter);
 // Listen
-server.listen(3000, () => {
-  console.log("🚀 Server running on port 3000");
+server.listen(PORT, () => {
+  console.log(`Listening to port ${PORT}`);
 });
