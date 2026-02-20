@@ -4,6 +4,7 @@ const { hasUncaughtExceptionCaptureCallback } = require("process");
 const patientModel = require("../models/patientModel");
 const docterModel = require("../models/docterModel");
 const consulation = require("../models/consulation");
+const appointmentModel = require("../models/appointmentModel");
 
 exports.createConsultationRoom = async (req, res) => {
   try {
@@ -118,14 +119,14 @@ exports.startConsultation = async (req, res) => {
   try {
     const { appointmentId } = req.params;
 
-    const appointment = await Appointment.findById(appointmentId);
+    const appointment = await appointmentModel.findById(appointmentId);
 
     if (!appointment) {
       return res.status(404).json({ message: "Appointment not found" });
     }
 
     // ✅ Only offline appointments allowed
-    if (appointment.type !== "OFFLINE") {
+    if (appointment.appointmentType?.toLowerCase() !== "offline") {
       return res.status(400).json({
         message: "Start consultation allowed only for offline appointments",
       });
