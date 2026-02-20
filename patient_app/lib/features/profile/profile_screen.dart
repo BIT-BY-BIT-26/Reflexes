@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:patient_app/features/auth/provider/auth_provider.dart';
 import 'package:patient_app/features/reports/reports_screen.dart';
 import 'package:patient_app/models/patient_model.dart';
-import 'package:patient_app/profile/provider/patient_profile_provider.dart';
+import 'package:patient_app/features/profile/provider/patient_profile_provider.dart';
 import 'package:provider/provider.dart';
 
 class PatientProfileScreen extends StatefulWidget {

@@ -18,7 +18,7 @@ class SocketService {
     if (socket != null && socket!.connected) return;
 
     socket = IO.io(
-      "http://192.168.137.1:3000",
+      "http://https://reflexes.onrender.com",
       IO.OptionBuilder()
           .setTransports(['websocket'])
           .enableAutoConnect()
