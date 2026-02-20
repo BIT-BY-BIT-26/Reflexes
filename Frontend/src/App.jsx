@@ -11,6 +11,7 @@ import RegisterPharmacy from "./pages/RegisterPharmacy";
 import PharmacyDashboard from "./components/PharmacyDashboard";
 import { ROLE } from "./constants/role";
 import AdminDashboard from "./components/AdminDashboard";
+
 function App() {
   return (
     <BrowserRouter>
