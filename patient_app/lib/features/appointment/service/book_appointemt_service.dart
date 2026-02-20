@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:patient_app/models/appointment_model.dart';
 
 class AppointmentService {
-  static const String baseUrl = "http://10.69.119.145:3000/api";
+  static const String baseUrl = "http://10.251.213.145:3000/api";
 
   static Future<Map<String, dynamic>> createAppointment({
     required String doctorId,
@@ -25,6 +25,9 @@ class AppointmentService {
           "appointmentType": appointmentType,
         }),
       );
+
+      print("STATUS CODE: ${res.statusCode}");
+      print("BODY: ${res.body}");
 
       if (res.statusCode == 200 || res.statusCode == 201) {
         return jsonDecode(res.body);
