@@ -1,4 +1,4 @@
-const HospitalModel = require("../model/HospitalModel");
+const HospitalModel = require("../models/HospitalModel");
 
 // socket.on("location-update",async({lat,lng})=>{
 //     const hospitalId = socket.hospitalId;
