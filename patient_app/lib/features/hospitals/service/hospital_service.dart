@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:patient_app/models/hospital_model.dart';
 
 class HospitalService {
-  static const String baseUrl = "http://10.69.119.145:3000/api/hospitals";
+  static const String baseUrl = "http://10.251.213.145:3000/api/hospitals";
 
   Future<List<String>> getStates() async {
     final res = await http.get(Uri.parse("$baseUrl/states"));

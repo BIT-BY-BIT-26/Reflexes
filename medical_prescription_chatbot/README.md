@@ -40,7 +40,7 @@ When a prescription cannot be confidently understood, the UI shows a warning sta
 1. **repository**:
     ```bash
     
-    cd medical-prescription-analyzer-chatbot
+    cd medical-prescription-chatbot
     ```
 
 2. **Install dependencies**:

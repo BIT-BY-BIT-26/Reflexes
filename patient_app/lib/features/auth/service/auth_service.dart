@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class AuthApiService {
-  static const String baseUrl = "http://10.69.119.145:3000/api";
+  static const String baseUrl = "http://10.251.213.145:3000/api";
 
   // LOGIN
   static Future<Map<String, dynamic>> login({
@@ -10,14 +10,14 @@ class AuthApiService {
     required String password,
   }) async {
     final response = await http.post(
-      Uri.parse("$baseUrl/auth/user-login"),
+      Uri.parse("$baseUrl/auth/login"),
       headers: {
         "Content-Type": "application/json",
         //if (token != null) 'Authorization': 'Bearer $token',
       },
       body: jsonEncode({"email": email, "password": password}),
     );
-
+    print("Login response: ${response.body}");
     return jsonDecode(response.body)as Map<String, dynamic>;
   }
 
