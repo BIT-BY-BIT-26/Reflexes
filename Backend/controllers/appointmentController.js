@@ -136,7 +136,7 @@ exports.confirmAppointment = async (req, res) => {
     endOfDay.setHours(23,59,59,999);
 
     // ✅ FIRST appointments fetch karo
-    const appointments = await Appointment.find({
+    const appointments = await appointmentModel.find({
       doctor: appointment.doctor,
       date: { $gte: startOfDay, $lte: endOfDay },
       status: { $in: ["PENDING", "CONFIRMED"] },
@@ -202,7 +202,7 @@ exports.getAllAppointmentsForDate = async(req,res)=>{
     const endOfDay = new Date();
     endOfDay.setHours(23,59,59,999);
 
-    const appointments = await Appointment.find({
+    const appointments = await appointmentModel.find({
       doctor:doctor._id,
       appointmentType:"offline",
       date:{

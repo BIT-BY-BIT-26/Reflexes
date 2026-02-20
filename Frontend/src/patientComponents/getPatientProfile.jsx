@@ -1,173 +1,111 @@
-import React, { useState } from 'react';
-import { IoMdArrowRoundBack } from "react-icons/io";
-import { useNavigate } from 'react-router-dom';
-import axios from "axios";
-import { ClipLoader } from 'react-spinners';
-import api from '../api/axios';
+import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { useParams, useNavigate,useLocation } from "react-router-dom"; // ✅ import useNavigate
+import api from "../api/axios";
 
-const ForgotPassword = () => {
-  const [step, setStep] = useState(1);
-  const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [err,setErr] = useState("")
-  const [loading,setLoading] = useState(false);
+const PatientProfile = () => {
+  const { id } = useParams();
+  const navigate = useNavigate(); // ✅ define navigate
+  const [patient, setPatient] = useState(null);
+  const location = useLocation();
+    const appointmentId = location.state?.appointmentId;
 
-  const navigate = useNavigate();
-  const handleSendOtp = async () => {
-    setLoading(true)
+  useEffect(() => {
+    const fetchPatient = async () => {
+      try {
+        const res = await api.get(`patients/get-patient-profile/${id}`);
+        setPatient(res.data.patient);
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
+    if (id) fetchPatient();
+  }, [id]);
+ const startConsultation = async () => {
     try {
-      const result = await api.post(
-        'auth/send-otp',
-        { email },
-        { withCredentials: true }
-      );
-      console.log(result);
-      setErr("")
-      setLoading(false)
-      setStep(2);
+      if (!appointmentId) {
+        alert("Appointment ID missing ❌");
+        return;
+      }
+
+      await api.patch(`/consulation/start-consultation/${appointmentId}`);
+
+      alert("Consultation Started ✅");
+
     } catch (error) {
-      setErr(error?.response?.data?.message);
-      setLoading(false);
+      console.error(error);
+      alert("Error starting consultation ❌");
     }
   };
-
-  // STEP 2 -> VERIFY OTP
-  const handleVerifyOtp = async () => {
-    setLoading(true);
-    try {
-      const result = await api.post(
-        '/auth/verify-otp',
-        { email, otp },
-        { withCredentials: true }
-      );
-      console.log(result);
-      setErr("")
-      setStep(3);
-      setLoading(false);
-    } catch (error) {
-      setErr(error?.response?.data?.message);
-      setLoading(false);
-    }
-  };
-
-  // STEP 3 -> RESET PASSWORD
-  const handleResetPassword = async () => {
-    if (newPassword !== confirmPassword) {
-      alert("Passwords do not match!");
-      return;
-    }
-  setLoading(true);
-    try {
-      const result = await api.post(
-        `/auth/reset-password`,
-        { email, newPassword },
-        { withCredentials: true }
-      );
-
-      console.log(result);
-      setErr("")
-      setLoading(false);
-      navigate('/signin');
-    } catch (error) {
-      setErr(error?.response?.data?.message);
-      setLoading(false);
-    }
-  };
+  if (!patient)
+    return (
+      <div className="text-white animate-pulse p-6">
+        Loading patient profile...
+      </div>
+    );
 
   return (
-    <div className="flex flex-col w-full items-center min-h-screen p-4">
-
+    <motion.div
+      initial={{ opacity: 0, x: 40 }}
+      animate={{ opacity: 1, x: 0 }}
+      className="bg-gradient-to-br from-purple-950 via-purple-900 to-purple-800 rounded-2xl p-6 shadow-xl text-white"
+    >
       {/* HEADER */}
-      <div className="flex items-center gap-4 mb-6 w-full max-w-md">
-        <IoMdArrowRoundBack
-          className="text-2xl cursor-pointer"
-          onClick={() => navigate('/signin')}
-        />
-        <h1 className="text-2xl font-bold text-[#ff4d2d]">Forgot Password</h1>
+      <div className="flex items-center gap-4 mb-6">
+        {/* Avatar */}
+        <div className="w-16 h-16 rounded-full bg-purple-700 flex items-center justify-center text-2xl font-bold shadow-md">
+          {patient?.userId?.name?.charAt(0).toUpperCase()}
+        </div>
+
+        <div>
+          <h3 className="text-xl font-semibold">{patient?.userId?.name}</h3>
+          <p className="text-sm text-purple-200">
+            Patient ID: {patient?._id.slice(-6)}
+          </p>
+        </div>
       </div>
 
-      {/* STEP 1 */}
-      {step === 1 && (
-        <div className="w-full max-w-md bg-white shadow-md rounded-xl p-5">
-          <label className="block text-gray-700 font-medium mb-1">Email</label>
-          <input
-            type="email"
-            placeholder="Enter your email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-4"
-          />
-          <button
-            onClick={handleSendOtp}
-            disabled={loading}
-            className="w-full bg-orange-500 text-white py-2 rounded-lg"
-          >
-            {loading?<ClipLoader size={20} color='white'/>:"send otp"}
-          </button>
+      {/* INFO GRID */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Info label="Email" value={patient?.userId?.email} />
+        <Info label="Phone" value={patient?.phone_number || "N/A"} />
+        <Info label="Age" value={patient?.age || "N/A"} />
+        <Info label="Gender" value={patient?.gender || "N/A"} />
+        <Info label="Blood Group" value={patient?.bloodGroup || "N/A"} />
+      </div>
 
-         <p className='text-red-500 text-center my-[10px]'>{err}</p>
-
-        </div>
-      )}
-
-      {/* STEP 2 */}
-      {step === 2 && (
-        <div className="w-full max-w-md bg-white shadow-md rounded-xl p-5">
-          <label className="block text-gray-700 font-medium mb-1">Enter OTP</label>
-          <input
-            type="text"
-            placeholder="Enter OTP"
-            value={otp}
-            onChange={(e) => setOtp(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-4"
-            required
-          />
-          <button
-            onClick={handleVerifyOtp}
-            className="w-full bg-orange-500 text-white py-2 rounded-lg"
-          >{loading?<ClipLoader size={20} color='white'/>:"Verifyotp"}
-            Verify OTP
-          </button>
-           <p className='text-red-500 text-center my-[10px]'>{err}</p>
-        </div>
-      )}
-
-      {/* STEP 3 */}
-      {step === 3 && (
-        <div className="w-full max-w-md bg-white shadow-md rounded-xl p-5">
-          <label className="block text-gray-700 font-medium mb-1">New Password</label>
-          <input
-            type="password"
-            placeholder="Enter new password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-4"
-            required
-          />
-
-          <label className="block text-gray-700 font-medium mb-1">Confirm Password</label>
-          <input
-            type="password"
-            placeholder="Confirm password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 mb-4"
-            required
-          />
-
-          <button
-            onClick={handleResetPassword}
-            className="w-full bg-orange-500 text-white py-2 rounded-lg"
-          >{loading?<ClipLoader size={20} color='white'/>:"reset password"}
-            Reset Password
-          </button>
-           <p className='text-red-500 text-center my-[10px]'>{err}</p>
-        </div>
-      )}
-    </div>
+      {/* ACTION BUTTONS */}
+      <div className="flex gap-3 mt-6">
+        {/* MORE DETAILS */}
+            
+        <button
+        onClick={() =>
+            navigate(`/doctor-dashboard/patient-details/${patient._id}`)
+            }
+        className="bg-purple-600 hover:bg-purple-500 px-4 py-2 rounded-lg text-sm font-medium"
+        >
+        More Details
+        </button>
+        {/* START CONSULTATION */}
+        <motion.button
+          onClick={startConsultation}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="bg-green-600 hover:bg-green-500 px-4 py-2 rounded-lg text-sm font-medium"
+        >
+          Start Consultation
+        </motion.button>
+      </div>
+    </motion.div>
   );
 };
 
-export default ForgotPassword;
+const Info = ({ label, value }) => (
+  <div className="bg-white/10 backdrop-blur rounded-xl p-3">
+    <p className="text-xs text-purple-200">{label}</p>
+    <p className="font-semibold">{value}</p>
+  </div>
+);
+
+export default PatientProfile;

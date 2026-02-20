@@ -57,7 +57,7 @@ export default function AdminDashboard() {
   const [openDept, setOpenDept] = useState(false);
   const [page,setPage] = useState("dashboard");
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-slate-50 to-teal-50">
+    <div className="flex min-h-screen w-screen text-black bg-gradient-to-br from-slate-50 to-teal-50">
 
       {/* ---------------- Sidebar ---------------- */}
       <motion.aside

@@ -71,8 +71,18 @@ const prescriptionRoute = require("./routes/prescription.js");
 const reportsRoute = require("./routes/reports.js");
 const pharmacyRouter = require("./routes/pharmacy");
 const doctorRouter = require("./routes/doctor.js");
+const consultationRouter = require("./routes/consultationRoute.js");
+const { addMedicineToInventory } = require("./controllers/inventoryController.js");
+const inventoryRouter = require("./routes/inventoryRoute.js");
+
 const app = express();
-app.use(cors());
+app.use(cors({
+    origin: [
+        "http://localhost:5173", // local dev
+        "https://your-frontend-deploy-url.com" // frontend deployed URL
+    ],
+    credentials: true, // if sending cookies
+}));
 app.use(express.json());
 
 // MongoDB
@@ -88,8 +98,6 @@ mongoose
 app.get("/", (req, res) => {
   res.json("Server is running 🚀");
 });
-
-const PORT = process.env.PORT||3000;
 
 // HTTP + Socket.IO
 const server = http.createServer(app);
@@ -116,9 +124,13 @@ app.use("/api/patients", patientRoute);
 app.use('/api/doctors', doctorRouter)
 app.use("/api",appointmentRouter);
 app.use("/api/reports",reportsRoute);
+app.use("/api/doctors",doctorRouter);
+app.use("/api/pharmacy",inventoryRouter);
+
 // app.use("/api/consulation",consultationRouter);
 app.use("/api/pharmacy",pharmacyRouter);
+app.use("/api/consulation",consultationRouter);
 // Listen
-server.listen(PORT, () => {
-  console.log(`Listening to port ${PORT}`);
+server.listen(process.env.PORT, () => {
+  console.log(`Listening to port ${process.env.PORT}`);
 });

@@ -11,7 +11,7 @@ const {
 } = require("../controllers/departmentController");
 const auth = require("../middleware/auth");
 const authorize = require("../middleware/authorize");
-const { ROLE } = require("../config/Role");
+const { ROLE } = require("../config/role");
 
 const departmentRouter = express.Router();
 
