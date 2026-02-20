@@ -25,6 +25,7 @@ class DoctorProvider with ChangeNotifier {
       );
       print(doctors);
     } catch (e) {
+      print("Error fetching doctors: $e");
       doctors = [];
     }
 
