@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:patient_app/features/appointment/provider/appointment_provider.dart';
 import 'package:patient_app/features/auth/login_screen.dart';
 import 'package:patient_app/features/auth/provider/auth_provider.dart';
 import 'package:patient_app/features/departments/provider/department_provider.dart';
+import 'package:patient_app/features/doctors/provider/doctor_provider.dart';
 import 'package:patient_app/features/hospitals/provider/hospital_provider.dart';
 import 'package:patient_app/splash_screen.dart';
 import 'package:provider/provider.dart';
@@ -11,6 +13,8 @@ void main() {
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => DoctorProvider()),
+        ChangeNotifierProvider(create: (_) => AppointmentProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => HospitalProvider()),
         ChangeNotifierProvider(create: (_) => DepartmentProvider()),
