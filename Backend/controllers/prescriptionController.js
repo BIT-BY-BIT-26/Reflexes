@@ -66,7 +66,7 @@ const createPrescription = async (req, res) => {
       });
     }
 
-    const prescription = new prescriptionSchema({
+    const prescription = new prescriptionModel({
       appointmentId,
       patientId:appointment.patient,
       doctorId,
@@ -113,7 +113,7 @@ const getPatientPrescriptionsForDoctor = async (req, res) => {
         });
     }
     
-    const prescriptions = await prescriptionSchema.find({ patientId, 
+    const prescriptions = await prescriptionModel.find({ patientId, 
       $or:[
         {doctorId:doctor._id},
         {sharedWithDoctor:doctor._id}
@@ -146,7 +146,7 @@ const getPrescriptionById = async (req, res) => {
     const { id } = req.params;
     console.log("Patient param:", patientId);
 
-    const prescription = await prescriptionSchema.findById(id)
+    const prescription = await prescriptionModel.findById(id)
       .populate("doctorId , id, name")
       .populate("patientId");
 
@@ -176,7 +176,7 @@ const getPrescriptionByAppointment = async (req, res) => {
   try {
     const { appointmentId } = req.params;
 
-    const prescription = await prescriptionSchema
+    const prescription = await prescriptionModel
       .findOne({ appointmentId })
       .populate("doctorId")
       .populate("patientId");
