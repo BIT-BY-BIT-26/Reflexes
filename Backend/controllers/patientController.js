@@ -1,5 +1,6 @@
 const { ROLE } = require("../config/Role");
 const appointmentModel = require("../models/appointmentModel");
+const docterModel = require("../models/docterModel");
 const patientModel = require("../models/patientModel");
 const userModel = require("../models/userModel");
 const bcrypt = require('bcryptjs');
@@ -80,22 +81,24 @@ const registerPatient = async (req, res) => {
     });
   }
 };
-
-
-//FOR PATIENTS__
-const getMyProfile = async (req, res) => {
+// Reception creates walk-in patient
+const createWalkInPatient = async (req, res) => {
   try {
-    const patient = await patientModel
-      .findOne({ userId: req.user.id })
-      .populate("userId", "name email");
+    const { age, gender, bloodGroup } = req.body;
 
-    if (!patient) {
-      return res.status(404).json({ message: "Patient profile not found" });
-    }
+    const patient = await patientModel.create({
+      userId: null,   // 👈 very important
+      age,
+      gender,
+      bloodGroup
+    });
 
-    res.json({ patient });
-  } catch (e) {
-    res.status(500).json({ message: "Failed to fetch profile" });
+    res.status(201).json({
+      message: "Walk-in patient created",
+      patient
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };
 
@@ -248,4 +251,69 @@ const updatePatientProfile = async (req, res) => {
 };
 
 
-module.exports = { registerPatient,getDailyPatientsWithDetails,getPatientAppointments,getMyReports,getMyProfile,updatePatientProfile};
+const getPatientProfile = async(req,res)=>{
+  try{
+    const patient = await patientModel.findById(req.params.patientId).populate("userId","name email gender");
+    if(!patient){
+      return res.status(400).json({messgae:"Patient not found"});
+    }
+    res.json({
+      // id:patient._id,
+      // name:patient.userId.name,
+      // email:patient.userId.email,
+      // email:patient.userId.gender,
+      patient
+    })
+  }catch(e){
+    res.status(500).json({message:"Failed to fetch patient"});
+  }
+}
+
+//FOR PATIENTS__
+const getMyProfile = async (req, res) => {
+  try {
+    const patient = await patientModel
+      .findOne({ userId: req.user.id })
+      .populate("userId", "name email");
+
+    if (!patient) {
+      return res.status(404).json({ message: "Patient profile not found" });
+    }
+
+    res.json({ patient });
+  } catch (e) {
+    res.status(500).json({ message: "Failed to fetch profile" });
+  }
+};
+
+//doctor sirf whi reports dekhega jo patient ne share ki h
+ const getPatientReportForDoctor = async(req,res)=>{
+  try{
+    const doctor = await docterModel.findOne({userId:req.user.id});
+    if(!doctor){
+      return res.status(400).json({messgae:"Doctor not found"});
+
+    }
+    const reports = await reportModel.find({
+      patient:req.params.patientId,
+      $or:[
+        {doctorId:doctor._id},
+        {sharedWithDoctors:doctor._id}
+      ]
+    }).sort({createdAt:-1});
+
+    const formatted = reports.map(r=>({
+      id:r._id,
+      title:r.title,
+      uploadedAt:r.createdAt,
+      file : getSignedUrl(r.filePublicId)
+    }))
+    res.json({reports:formatted})
+  }catch(e){
+    res.status(500).json({message:`Failed to fetch patient ${e.message}`});
+  }
+}
+
+
+
+module.exports = { registerPatient,getMyProfile,createWalkInPatient,updatePatientProfile,getPatientAppointments,getPatientProfile ,getPatientReportForDoctor, updatePatientProfile,getMyReports};

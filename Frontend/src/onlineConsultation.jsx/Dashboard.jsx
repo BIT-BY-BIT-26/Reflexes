@@ -62,8 +62,8 @@ const Dashboard = () => {
                     className='p-4 bg-white shadow rounded-lg border'
                 >
                 <p><strong>Token:</strong> {p.token}</p>
-                <p><strong>Name:</strong> {p.patient.userId.name}</p>
-                <p><strong>Email:</strong> {p.patient.userId.email}</p>
+                <p><strong>Name:</strong> {p.patient.userId?.name}</p>
+                <p><strong>Email:</strong> {p.patient.userId?.email}</p>
                 <p><strong>Status:</strong> {p.status}</p>
                 <p>
                     <strong>Booked At:</strong>{" "}
