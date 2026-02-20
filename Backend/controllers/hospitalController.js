@@ -1,5 +1,4 @@
 const dotenv = require('dotenv');
-const { ROLE } = require("../config/Role");
 const userModel = require("../models/userModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -7,6 +6,7 @@ const HospitalModel = require('../models/HospitalModel');
 dotenv.config();
 const fs = require("fs");
 const path = require("path");
+const { ROLE } = require('../config/Role');
 
 const registerHospital = async (req, res) => {
     try {
