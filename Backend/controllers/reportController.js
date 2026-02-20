@@ -1,5 +1,5 @@
-const patientModel = require("../model/patientModel");
-const reportModel = require("../model/reportModel");
+const patientModel = require("../models/patientModel");
+const reportModel = require("../models/reportModel");
 
 
 exports.uploadReport = async(req,res)=>{
