@@ -16,6 +16,7 @@ import Dashboard from "./onlineConsultation.jsx/Dashboard";
 import DoctorProfile from "./DoctorDashboard.jsx/DoctorProfile";
 import CompleteProfile from "./components/CompleteProfile";
 import MoreDetails from "./patientComponents/moreDetails";
+import MedicalChatbot from "./chatbot/MedicalChatbot";
 // import ForgotPassword from "./pages/ForgotPassword";
 function App() {
   return (
@@ -87,6 +88,8 @@ function App() {
           </ProtectedRoute>
         }
       />
+
+      <Route path="/chatbot" element={<MedicalChatbot />} />
       <Route
       path="/online-assessment"
       element={
