@@ -93,8 +93,6 @@ app.get("/", (req, res) => {
   res.json("Server is running 🚀");
 });
 
-const PORT = 3000;
-
 // HTTP + Socket.IO
 const server = http.createServer(app);
 
@@ -127,6 +125,6 @@ app.use("/api/pharmacy",inventoryRouter);
 app.use("/api/pharmacy",pharmacyRouter);
 app.use("/api/consulation",consultationRouter);
 // Listen
-server.listen(PORT, () => {
-  console.log(`Listening to port ${PORT}`);
+server.listen(process.env.PORT, () => {
+  console.log(`Listening to port ${process.env.PORT}`);
 });
