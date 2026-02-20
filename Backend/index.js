@@ -89,7 +89,7 @@ app.get("/", (req, res) => {
   res.json("Server is running 🚀");
 });
 
-const PORT = 3000;
+const PORT = process.env.PORT||3000;
 
 // HTTP + Socket.IO
 const server = http.createServer(app);
