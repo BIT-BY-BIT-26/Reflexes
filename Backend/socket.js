@@ -1,4 +1,4 @@
-const { ROLE } = require("./config/Role");
+const { ROLE } = require("./config/role");
 
 module.exports = (io,onlineDoctors,onlinePatients) => {
   io.on("connection", (socket) => {
