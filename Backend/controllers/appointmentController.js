@@ -11,13 +11,13 @@ exports.createAppointment = async (req, res) => {
     const patient = await patientModel.findOne({ userId: req.user.id });
 
     if (!patient) {
-      return res.status(404).json({ message: "Patient profile not found" });
+      return res.status(404).json({ success: false,message: "Patient profile not found" });
     }
 
     const doctorData = await docterModel.findById(doctor);
 
     if (!doctorData) {
-      return res.status(404).json({ message: "Doctor not found" });
+      return res.status(404).json({ success: false,message: "Doctor not found" });
     }
 
     const { start, end } = getUtcDayRange(date);
@@ -35,6 +35,7 @@ exports.createAppointment = async (req, res) => {
 
     if (existingAppointment) {
       return res.status(400).json({
+        success: false,
         message: " Your Appointment already exists for this date"
       });
     }
@@ -62,7 +63,7 @@ exports.createAppointment = async (req, res) => {
     const io = req.app.get("io");
     const onlineDoctors = req.app.get("onlineDoctors");
     const doctorSocket = onlineDoctors.get(doctorData._id.toString());
-    const populatedAppointment = await Appointment.findById(appointment._id)
+    const populatedAppointment = await appointmentModel.findById(appointment._id)
     .populate({
       path:"patient",
       populate:{
@@ -81,11 +82,13 @@ exports.createAppointment = async (req, res) => {
     }
 
     return res.status(201).json({
+      success: true,
       message: "Appointment booked successfully",
       appointment
     });
 
   } catch (err) {
+    success: false,
     res.status(500).json({ error: err.message });
   }
 };

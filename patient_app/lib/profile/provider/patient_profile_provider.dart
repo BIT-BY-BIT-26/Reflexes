@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:meditrack_patient_app/features/profile/services/patient_profile_service.dart';
-import 'package:meditrack_patient_app/models/patient_model.dart';
+import 'package:patient_app/models/patient_model.dart';
+import 'package:patient_app/profile/services/patient_profile_service.dart';
 
 
 class PatientProvider extends ChangeNotifier {
@@ -23,5 +23,34 @@ class PatientProvider extends ChangeNotifier {
 
     loading = false;
     notifyListeners();
+  }
+  
+  Future<void> updateProfile({
+    required String token,
+    String? age,
+    String? gender,
+    String? bloodGroup,
+    String? phone,
+  }) async {
+    try {
+      loading = true;
+      notifyListeners();
+
+      patient = await service.updateProfile(
+        token: token,
+        age: age,
+        gender: gender,
+        bloodGroup: bloodGroup,
+        phone: phone,
+      );
+
+      loading = false;
+      notifyListeners();
+
+    } catch (e) {
+      loading = false;
+      error = e.toString();
+      notifyListeners();
+    }
   }
 }

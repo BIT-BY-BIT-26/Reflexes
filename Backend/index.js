@@ -113,6 +113,7 @@ app.use("/api/auth", authRoute);
 app.use("/api/prescription", prescriptionRoute);
 app.use("/api/departments", departmentRouter);
 app.use("/api/patients", patientRoute);
+app.use('/api/doctors', doctorRouter)
 app.use("/api",appointmentRouter);
 app.use("/api/reports",reportsRoute);
 // app.use("/api/consulation",consultationRouter);
