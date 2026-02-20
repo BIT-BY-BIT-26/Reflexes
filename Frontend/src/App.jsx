@@ -10,6 +10,7 @@ import RegisterRole from "./pages/RegisterRoles";
 import RegisterPharmacy from "./pages/RegisterPharmacy";
 import PharmacyDashboard from "./components/PharmacyDashboard";
 import { ROLE } from "./constants/role";
+import AdminDashboard from "./components/AdminDashboard";
 function App() {
   return (
     <BrowserRouter>
@@ -28,6 +29,7 @@ function App() {
       <Route path="/register-role" element={<RegisterRole />} />
       <Route path="/register-pharmacy" element={<RegisterPharmacy />} />
       <Route path="/pharmacy-dashboard" element={<PharmacyDashboard />} />
+      <Route path="/admin-dashboard" element={<AdminDashboard />} />
       <Route
           path="/register"
           element={
