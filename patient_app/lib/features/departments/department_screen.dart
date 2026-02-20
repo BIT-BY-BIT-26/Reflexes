@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:patient_app/features/departments/provider/department_provider.dart';
+import 'package:patient_app/features/doctors/doctor_screen.dart';
 import 'package:provider/provider.dart';
 
 class DepartmentScreen extends StatefulWidget {
@@ -47,16 +48,16 @@ class _DepartmentScreenState extends State<DepartmentScreen> {
 
                 return GestureDetector(
                   onTap: () {
-                    // Navigator.push(
-                    //   context,
-                    //   MaterialPageRoute(
-                    //     builder: (_) => DoctorListScreen(
-                    //       hospitalId: widget.hospitalId,
-                    //       departmentId: dept.id,
-                    //       //token: context.read<AuthProvider>().token!, // ya jo bhi tum use kar rhi ho
-                    //     ),
-                    //   ),
-                    // );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => DoctorListScreen(
+                          hospitalId: widget.hospitalId,
+                          departmentId: dept.id,
+                          //token: context.read<AuthProvider>().token!, // ya jo bhi tum use kar rhi ho
+                        ),
+                      ),
+                    );
                   },
 
                   child: Container(
