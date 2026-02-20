@@ -1,6 +1,6 @@
 const express = require('express');
 const auth = require('../middleware/auth');
-const { ROLE } = require('../config/Role');
+const { ROLE } = require('../config/role');
 const authorize = require('../middleware/authorize');
 const { uploadReport, shareReport } = require('../controllers/reportController');
 const upload = require('../middleware/uploadCloud');

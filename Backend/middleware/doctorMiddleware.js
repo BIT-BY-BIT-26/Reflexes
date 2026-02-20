@@ -1,4 +1,4 @@
-const { ROLE } = require("../config/Role");
+const { ROLE } = require("../config/role");
 const docterModel = require("../model/docterModel");
 
 

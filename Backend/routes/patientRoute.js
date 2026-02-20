@@ -1,6 +1,6 @@
 const express = require('express');
 const { registerPatient, getMyReports, getPatientAppointments, getMyProfile, updatePatientProfile, getPatientReportForDoctor, getPatientProfile } = require('../controllers/patientController');
-const { ROLE } = require('../config/Role');
+const { ROLE } = require('../config/role');
 const auth = require('../middleware/auth');
 const authorize = require('../middleware/authorize');
 
