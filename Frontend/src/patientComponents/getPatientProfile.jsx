@@ -1,11 +1,11 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom"; // ✅ import useNavigate
 import api from "../api/axios";
 
 const PatientProfile = () => {
-  const { id,appointmentId } = useParams();
-console.log(id, appointmentId); // debugging
+  const { id } = useParams();
+  const navigate = useNavigate(); // ✅ define navigate
   const [patient, setPatient] = useState(null);
 
   useEffect(() => {
@@ -21,6 +21,11 @@ console.log(id, appointmentId); // debugging
     if (id) fetchPatient();
   }, [id]);
 
+  const startConsultation = () => {
+    // Your consultation logic here
+    console.log("Starting consultation...");
+  };
+
   if (!patient)
     return (
       <div className="text-white animate-pulse p-6">
@@ -32,8 +37,7 @@ console.log(id, appointmentId); // debugging
     <motion.div
       initial={{ opacity: 0, x: 40 }}
       animate={{ opacity: 1, x: 0 }}
-      className="bg-gradient-to-br from-purple-950 via-purple-900 to-purple-800 
-      rounded-2xl p-6 shadow-xl text-white"
+      className="bg-gradient-to-br from-purple-950 via-purple-900 to-purple-800 rounded-2xl p-6 shadow-xl text-white"
     >
       {/* HEADER */}
       <div className="flex items-center gap-4 mb-6">
@@ -43,9 +47,7 @@ console.log(id, appointmentId); // debugging
         </div>
 
         <div>
-          <h3 className="text-xl font-semibold">
-            {patient?.userId?.name}
-          </h3>
+          <h3 className="text-xl font-semibold">{patient?.userId?.name}</h3>
           <p className="text-sm text-purple-200">
             Patient ID: {patient?._id.slice(-6)}
           </p>
@@ -54,13 +56,34 @@ console.log(id, appointmentId); // debugging
 
       {/* INFO GRID */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
         <Info label="Email" value={patient?.userId?.email} />
         <Info label="Phone" value={patient?.phone_number || "N/A"} />
         <Info label="Age" value={patient?.age || "N/A"} />
         <Info label="Gender" value={patient?.gender || "N/A"} />
         <Info label="Blood Group" value={patient?.bloodGroup || "N/A"} />
+      </div>
 
+      {/* ACTION BUTTONS */}
+      <div className="flex gap-3 mt-6">
+        {/* MORE DETAILS */}
+            
+        <button
+        onClick={() =>
+            navigate(`/doctor-dashboard/patient-details/${patient._id}`)
+            }
+        className="bg-purple-600 hover:bg-purple-500 px-4 py-2 rounded-lg text-sm font-medium"
+        >
+        More Details
+        </button>
+        {/* START CONSULTATION */}
+        <motion.button
+          onClick={startConsultation}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="bg-green-600 hover:bg-green-500 px-4 py-2 rounded-lg text-sm font-medium"
+        >
+          Start Consultation
+        </motion.button>
       </div>
     </motion.div>
   );

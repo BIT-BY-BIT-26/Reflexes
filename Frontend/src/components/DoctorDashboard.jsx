@@ -21,8 +21,98 @@ const DoctorDashboard = () => {
    const {doctor, loading, profileCompleted,isOnline,opdStarted} = useSelector(
     (state)=> state.doctor
   )
+    useEffect(() => {
+    if (!doctor) {
+      dispatch(fetchDoctorProfile());
+    }
+  }, []);
+  const doctorId = doctor?._id;
+  useEffect(() => {
+  if (profileCompleted === false) {
+    setShowProfilePopup(true);
+  }
+}, [profileCompleted]);
+
+useEffect(() => {
+
+  if(!doctorId) return;
+
+  // Always join room when dashboard loads
+  socket.emit("joinDoctor", doctorId);
+
+  console.log("✅ Joined Doctor Room");
+
+  return () => {
+    socket.emit("leaveDoctor", doctorId);
+    console.log("❌ Left Doctor Room");
+  };
+
+}, []);
   
-  
+    useEffect(() => {
+    if(!doctorId) return;
+
+  if(isOnline){
+    socket.emit("doctor-online", doctorId);
+    console.log("Doctor Online");
+  }
+  else{
+    socket.emit("doctor-offline", doctorId);
+    console.log("Doctor Offline");
+  }
+    const handlepatientConnected= (patientId) => {
+      console.log("✅ Patient Connected",patientId);
+      alert("Patient Connected");
+    };
+
+      const handlePatientOffline=() => {
+        console.log("❌ Patient Offline");
+      };
+      
+     const handleAppointmentCompleted= () => {
+        fetchAppointments();
+      };
+      const handleNewAppointment = (data) => {
+        dispatch(addAppointment(data));
+        dispatch(fetchTodayAppointments());
+      };
+
+       socket.on("newAppointment", handleNewAppointment);
+      socket.on("patient-connected",handlepatientConnected);
+      socket.on("patient-offline",handlePatientOffline);
+      socket.on("appointmentCompleted",handleAppointmentCompleted);
+    // cleanup
+    return () => {
+        socket.off("patient-connected", handlepatientConnected);
+        socket.off("patient-offline", handlePatientOffline);
+        socket.off("appointmentCompleted", handleAppointmentCompleted);
+         socket.off("newAppointment",handleNewAppointment);
+    };
+  }, [doctorId,isOnline]);
+
+    useEffect(() => {
+
+    socket.on("TOKEN_UPDATE", (data) => {
+      setCurrentToken(data.tokenNumber);
+    });
+    socket.on("QUEUE_UPDATE", (data) => {
+      setQueue(data.queue);
+    });
+
+
+    return () => {
+      socket.off("TOKEN_UPDATE");
+      socket.off("QUEUE_UPDATE");
+    };
+
+  }, []);
+
+  const callNext = () => {
+    socket.emit("CALL_NEXT_PATIENT", {
+         opdSessionId: "123"
+    });
+  };
+
 if (loading) {
   return (
     <div className="h-screen flex justify-center items-center">

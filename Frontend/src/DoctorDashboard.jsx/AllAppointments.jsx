@@ -98,7 +98,7 @@ const AllAppointments = ({appointments=[], onPatientClick})=>{
                     <div className="space-y-1">
                         <p className="font-semibold text-lg text-blue-900 cursor-pointer hover:text-blue-600 transition"
                             // onClick={()=> onPatientClick(appt.patient?._id)}
-                            onClick={()=>navigate(`/doctor-dashboard/patient/${appt.patient?._id}/${appt.appointmentId}`)}
+                            onClick={()=>navigate(`/doctor-dashboard/patient/${appt.patient?._id}`)}
                         >   
                             {appt.patient?.userId?.name || "Unknown Patient"}
                         </p>
