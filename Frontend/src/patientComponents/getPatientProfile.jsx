@@ -21,11 +21,22 @@ const PatientProfile = () => {
     if (id) fetchPatient();
   }, [id]);
 
-  const startConsultation = () => {
-    // Your consultation logic here
-    console.log("Starting consultation...");
-  };
+ const startConsultation = async () => {
+  try {
+    const appointmentId = patient?.appointmentId; 
+    // ⚠️ make sure appointmentId patient object me available ho
 
+    await api.patch(
+      `/appointments/start-consultation/${appointmentId}`
+    );
+
+    alert("Consultation Started ✅");
+
+  } catch (error) {
+    console.error(error);
+    alert("Error starting consultation ❌");
+  }
+};
   if (!patient)
     return (
       <div className="text-white animate-pulse p-6">
