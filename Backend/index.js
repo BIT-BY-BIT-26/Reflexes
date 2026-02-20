@@ -43,6 +43,7 @@
 // })
 
 
+
 const express = require("express");
 const mongoose = require("mongoose");
 const http = require("http");
@@ -62,7 +63,6 @@ const socketHandler = require("./socket.js");
 const prescriptionRoute = require("./routes/prescription.js");
 const reportsRoute = require("./routes/reports.js");
 const pharmacyRouter = require("./routes/pharmacy");
-const consultationRouter = require("./routes/consultationRoute.js");
 const doctorRouter = require("./routes/doctor.js");
 const app = express();
 app.use(cors());
@@ -106,7 +106,7 @@ app.use("/api/departments", departmentRouter);
 app.use("/api/patients", patientRoute);
 app.use("/api",appointmentRouter);
 app.use("/api/reports",reportsRoute);
-app.use("/api/consulation",consultationRouter);
+// app.use("/api/consulation",consultationRouter);
 app.use("/api/pharmacy",pharmacyRouter);
 // Listen
 server.listen(3000, () => {
