@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:patient_app/features/auth/login_screen.dart';
 import 'package:patient_app/features/auth/provider/auth_provider.dart';
+import 'package:patient_app/features/departments/department_screen.dart';
 import 'package:patient_app/features/hospitals/provider/hospital_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -216,14 +217,14 @@ class _HospitalScreenState extends State<HospitalScreen> {
 
 
                               onTap: () {
-                                // Navigator.push(
-                                //   context,
-                                //   MaterialPageRoute(
-                                //     builder: (_) => DepartmentScreen(
-                                //       hospitalId: h.id, 
-                                //     ),
-                                //   ),
-                                // );
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => DepartmentScreen(
+                                      hospitalId: h.id, 
+                                    ),
+                                  ),
+                                );
                               },
                             ),
                           );
