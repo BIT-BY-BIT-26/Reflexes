@@ -98,23 +98,52 @@ exports.createConsultationRoom = async (req, res) => {
 
 
 
+// exports.startConsultation = async (req, res) => {
+//   try {
+//     const { appointmentId, patientId } = req.body;
+
+//     const roomId = `room_${appointmentId}`;
+
+//     await Appointment.findByIdAndUpdate(appointmentId, {
+//       status: "CONFIRMED"
+//     });
+
+//     res.json({ roomId });
+
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
 exports.startConsultation = async (req, res) => {
   try {
-    const { appointmentId, patientId } = req.body;
+    const { appointmentId } = req.params;
 
-    const roomId = `room_${appointmentId}`;
+    const appointment = await Appointment.findById(appointmentId);
 
-    await Appointment.findByIdAndUpdate(appointmentId, {
-      status: "CONFIRMED"
+    if (!appointment) {
+      return res.status(404).json({ message: "Appointment not found" });
+    }
+
+    // ✅ Only offline appointments allowed
+    if (appointment.type !== "OFFLINE") {
+      return res.status(400).json({
+        message: "Start consultation allowed only for offline appointments",
+      });
+    }
+
+    // ✅ Update status
+    appointment.status = "CURRENT";
+    await appointment.save();
+
+    res.json({
+      message: "Consultation started successfully",
+      appointment,
     });
-
-    res.json({ roomId });
 
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
-
 // GET consultation by appointmentId
 exports.getConsultationAppointment = async (req, res) => {
   try {
