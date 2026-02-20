@@ -1,12 +1,14 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom"; // ✅ import useNavigate
+import { useParams, useNavigate,useLocation } from "react-router-dom"; // ✅ import useNavigate
 import api from "../api/axios";
 
 const PatientProfile = () => {
   const { id } = useParams();
   const navigate = useNavigate(); // ✅ define navigate
   const [patient, setPatient] = useState(null);
+  const location = useLocation();
+    const appointmentId = location.state?.appointmentId;
 
   useEffect(() => {
     const fetchPatient = async () => {
@@ -20,23 +22,22 @@ const PatientProfile = () => {
 
     if (id) fetchPatient();
   }, [id]);
-
  const startConsultation = async () => {
-  try {
-    const appointmentId = patient?.appointmentId; 
-    // ⚠️ make sure appointmentId patient object me available ho
+    try {
+      if (!appointmentId) {
+        alert("Appointment ID missing ❌");
+        return;
+      }
 
-    await api.patch(
-      `/appointments/start-consultation/${appointmentId}`
-    );
+      await api.patch(`/consulation/start-consultation/${appointmentId}`);
 
-    alert("Consultation Started ✅");
+      alert("Consultation Started ✅");
 
-  } catch (error) {
-    console.error(error);
-    alert("Error starting consultation ❌");
-  }
-};
+    } catch (error) {
+      console.error(error);
+      alert("Error starting consultation ❌");
+    }
+  };
   if (!patient)
     return (
       <div className="text-white animate-pulse p-6">

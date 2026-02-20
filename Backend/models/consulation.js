@@ -33,7 +33,7 @@ const consultationSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["ACTIVE", "ONGOING", "COMPLETED", "CANCELLED"],
+      enum: ["ACTIVE", "ONGOING", "COMPLETED", "CANCELLED","CURRENT"],
       default: "ACTIVE",
     },
 

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import api from '../api/axios';
 import { useEffect } from 'react';
-import socket from '../socket/socket';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {motion} from "framer-motion";
@@ -98,7 +97,12 @@ const AllAppointments = ({appointments=[], onPatientClick})=>{
                     <div className="space-y-1">
                         <p className="font-semibold text-lg text-blue-900 cursor-pointer hover:text-blue-600 transition"
                             // onClick={()=> onPatientClick(appt.patient?._id)}
-                            onClick={()=>navigate(`/doctor-dashboard/patient/${appt.patient?._id}`)}
+                            // onClick={()=>navigate(`/doctor-dashboard/patient/${appt.patient?._id}`)}
+                            onClick={() =>
+  navigate(`/doctor-dashboard/patient/${appt.patient?._id}`, {
+    state: { appointmentId: appt._id }  // 🔥 important
+  })
+}
                         >   
                             {appt.patient?.userId?.name || "Unknown Patient"}
                         </p>
