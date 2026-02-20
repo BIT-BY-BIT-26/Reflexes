@@ -76,7 +76,13 @@ const { addMedicineToInventory } = require("./controllers/inventoryController.js
 const inventoryRouter = require("./routes/inventoryRoute.js");
 
 const app = express();
-app.use(cors());
+app.use(cors({
+    origin: [
+        "http://localhost:5173", // local dev
+        "https://your-frontend-deploy-url.com" // frontend deployed URL
+    ],
+    credentials: true, // if sending cookies
+}));
 app.use(express.json());
 
 // MongoDB
