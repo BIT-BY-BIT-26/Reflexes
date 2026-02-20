@@ -1,7 +1,6 @@
-const Appointment = require("../models/Appointment");
 const appointmentModel = require("../models/appointmentModel");
 const docterModel = require("../models/docterModel");
-const prescriptionSchema = require("../models/prescriptionSchema");
+const prescriptionModel = require("../models/prescriptionModel");
 
 const createPrescription = async (req, res) => {
   try {
@@ -59,7 +58,7 @@ const createPrescription = async (req, res) => {
     }
 
     // ✅ Prevent duplicate prescription
-    const existingPrescription = await prescriptionSchema.findOne({ appointmentId });
+    const existingPrescription = await prescriptionModel.findOne({ appointmentId });
     if (existingPrescription) {
       return res.status(400).json({
         success: false,
