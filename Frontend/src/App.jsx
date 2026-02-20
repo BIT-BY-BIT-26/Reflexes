@@ -15,6 +15,7 @@ import PatientProfile from "./patientComponents/getPatientProfile";
 import Dashboard from "./onlineConsultation.jsx/Dashboard";
 import DoctorProfile from "./DoctorDashboard.jsx/DoctorProfile";
 import CompleteProfile from "./components/CompleteProfile";
+// import ForgotPassword from "./pages/ForgotPassword";
 function App() {
   return (
     <BrowserRouter>
@@ -28,13 +29,8 @@ function App() {
         draggable
         theme="dark"
       />
-      <Routes>
-       
-      <Route path="/register-role" element={<RegisterRole />} />
-      <Route path="/register-pharmacy" element={<RegisterPharmacy />} />
-      <Route path="/pharmacy-dashboard" element={<PharmacyDashboard />} />
-      <Route path="/admin-dashboard" element={<AdminDashboard />} />
-      <Route
+                <Routes>
+                <Route
           path="/register"
           element={
             <PublicRoute>
@@ -42,7 +38,10 @@ function App() {
             </PublicRoute>
           }
         />
-       <Route
+        <Route path="/register-role" element={<RegisterRole />} />
+      <Route path="/register-pharmacy" element={<RegisterPharmacy />} />
+      <Route path="/pharmacy-dashboard" element={<PharmacyDashboard />} />
+        <Route
           path="/login"
           element={
             <PublicRoute>
@@ -50,14 +49,23 @@ function App() {
             </PublicRoute>
           }
         />
-         <Route
-        path="/doctor-dashboard"
-        element={
-          <ProtectedRoute allowedRoles={[ROLE.doctor]}>
-            <DoctorDashboard />
-          </ProtectedRoute>
-        }
-      />
+
+        {/* <Route path="/forgot-password" element={<ForgotPassword />} /> */}
+    <Route path="/admin-dashboard" element={
+          <ProtectedRoute allowedRoles={[ROLE.admin]}>
+              <AdminDashboard />
+        </ProtectedRoute>} />
+
+        <Route
+          path="/doctor-dashboard"
+          element={
+            <ProtectedRoute allowedRoles={[ROLE.doctor]}>
+              <DoctorDashboard />
+            </ProtectedRoute>
+          }
+        >
+        <Route path="/doctor-dashboard/patient/:id/:appointmentId" element={<PatientProfile />}/>
+    </Route>
       <Route
         path="/doctor/profile"
         element={
@@ -74,8 +82,7 @@ function App() {
           </ProtectedRoute>
         }
       />
-      <Route path="patient/:id" element={<PatientProfile />}/>
-         <Route
+      <Route
       path="/online-assessment"
       element={
         <ProtectedRoute allowedRoles={[ROLE.doctor]}>

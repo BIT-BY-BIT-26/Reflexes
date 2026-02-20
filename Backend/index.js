@@ -115,6 +115,8 @@ app.use("/api/departments", departmentRouter);
 app.use("/api/patients", patientRoute);
 app.use("/api",appointmentRouter);
 app.use("/api/reports",reportsRoute);
+app.use("/api/doctors",doctorRouter);
+
 // app.use("/api/consulation",consultationRouter);
 app.use("/api/pharmacy",pharmacyRouter);
 // Listen
