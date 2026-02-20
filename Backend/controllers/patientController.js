@@ -1,3 +1,4 @@
+const { ROLE } = require("../config/Role");
 const patientModel = require("../models/patientModel");
 const userModel = require("../models/userModel");
 const bcrypt = require('bcryptjs');

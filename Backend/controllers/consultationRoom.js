@@ -1,0 +1,142 @@
+const crypto = require("crypto");
+const sendEmail = require("../utils/sendEmail");
+const Patient = require("../model/patientModel");
+const docterModel = require("../model/docterModel");
+const consultation = require("../model/consultation");
+const { hasUncaughtExceptionCaptureCallback } = require("process");
+
+exports.createConsultationRoom = async (req, res) => {
+  try {
+    const doctorUserId = req.user.id;
+    const doctor = await docterModel.findOne({ userId: doctorUserId });
+
+    const io = req.app.get("io");
+    const onlinePatients = req.app.get("onlinePatients");
+
+    const { appointmentId, patientId } = req.body;
+
+    const roomId = "CONS-" + crypto.randomBytes(2).toString("hex").toUpperCase();
+    const password = Math.floor(1000 + Math.random() * 9000);
+
+    const room = await consultation.create({
+      appointment: appointmentId,
+      patient: patientId,
+      doctor: doctor._id,  // ✅ FIXED
+      roomId,
+      password,
+      status: "WAITING",
+      startedAt: new Date(),
+      doctorJoined: false,
+      patientJoined: false
+
+    });
+
+    const patientSocket = onlinePatients.get(patientId);
+
+    if (patientSocket) {
+      // ✅ REALTIME ALERT
+      io.to(patientSocket).emit("consultation-started", {
+        roomId,
+        password,
+        appointmentId
+      });
+    } else {
+      // ✅ PATIENT OFFLINE → SEND EMAIL
+      const patient = await Patient.findById(patientId).populate("userId");
+
+      if (patient?.userId?.email) {
+        await sendEmail({
+          to: patient.userId.email,
+          subject: "Doctor is ready for consultation",
+          text: `
+            Your online consultation has started.
+
+            Room ID: ${roomId}
+            Password: ${password}
+
+            Please login to join the call.
+          `
+        });
+      }
+    }
+
+    res.json({
+      roomId,
+      password,
+      patientOnline: !!patientSocket
+    });
+
+    // 🔥 AUTO TIMEOUT (30 sec)
+    setTimeout(async () => {
+
+      const updatedRoom =
+        await consultation.findById(room._id);
+
+      if (
+        updatedRoom &&
+        updatedRoom.status === "WAITING"
+      ) {
+        updatedRoom.status = "MISSED";
+        await updatedRoom.save();
+
+        io.to(roomId)
+          .emit("call-missed");
+      }
+
+    }, 30000);
+
+    res.json({
+      roomId,
+      password,
+      patientOnline: !!patientSocket
+    });
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
+
+exports.startConsultation = async (req, res) => {
+  try {
+    const { appointmentId, patientId } = req.body;
+
+    const roomId = `room_${appointmentId}`;
+
+    await Appointment.findByIdAndUpdate(appointmentId, {
+      status: "CONFIRMED"
+    });
+
+    res.json({ roomId });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// GET consultation by appointmentId
+exports.getConsultationAppointment = async (req, res) => {
+  try {
+    const consultation = await Consultation.findOne({
+      appointment: req.params.appointmentId,
+    });
+
+    if (!consultation) {
+      return res.status(404).json({
+        success: false,
+        message: "Consultation not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      consultation,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+}
