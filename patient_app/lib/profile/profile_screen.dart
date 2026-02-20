@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:meditrack_patient_app/features/profile/provider/patient_profile_provider.dart';
-import 'package:meditrack_patient_app/features/reports/reports_screen.dart';
 import 'package:patient_app/features/auth/provider/auth_provider.dart';
+import 'package:patient_app/features/reports/reports_screen.dart';
 import 'package:patient_app/models/patient_model.dart';
 import 'package:patient_app/profile/provider/patient_profile_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:meditrack_patient_app/models/patient_model.dart';
-import 'package:meditrack_patient_app/features/auth/provider/auth_provider.dart';
 
 class PatientProfileScreen extends StatefulWidget {
   const PatientProfileScreen({super.key});
@@ -16,6 +13,125 @@ class PatientProfileScreen extends StatefulWidget {
 }
 
 class _PatientProfileScreenState extends State<PatientProfileScreen> {
+
+  // Load profile data when screen opens==========================================
+  void _showEditProfileSheet(BuildContext context, PatientModel patient) {
+    final ageController =
+        TextEditingController(text: patient.age?.toString() ?? "");
+    final phoneController =
+        TextEditingController(text: patient.phone ?? "");
+    String? selectedGender = patient.gender;
+    String? selectedBlood = patient.bloodGroup;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 20,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+
+              const Text(
+                "Edit Profile",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+
+              const SizedBox(height: 16),
+
+              TextField(
+                controller: ageController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: "Age",
+                  border: OutlineInputBorder(),
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              DropdownButtonFormField<String>(
+                value: selectedGender,
+                decoration: const InputDecoration(
+                  labelText: "Gender",
+                  border: OutlineInputBorder(),
+                ),
+                items: ["Male", "Female", "Other"]
+                    .map((e) =>
+                        DropdownMenuItem(value: e, child: Text(e)))
+                    .toList(),
+                onChanged: (val) {
+                  selectedGender = val;
+                },
+              ),
+
+              const SizedBox(height: 12),
+
+              DropdownButtonFormField<String>(
+                value: selectedBlood,
+                decoration: const InputDecoration(
+                  labelText: "Blood Group",
+                  border: OutlineInputBorder(),
+                ),
+                items: ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"]
+                    .map((e) =>
+                        DropdownMenuItem(value: e, child: Text(e)))
+                    .toList(),
+                onChanged: (val) {
+                  selectedBlood = val;
+                },
+              ),
+
+              const SizedBox(height: 12),
+
+              TextField(
+                controller: phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: "Phone Number",
+                  border: OutlineInputBorder(),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 48),
+                ),
+                onPressed: () async {
+                  final token =
+                      context.read<AuthProvider>().token!;
+
+                  await context.read<PatientProvider>().updateProfile(
+                        token: token,
+                        age: ageController.text,
+                        gender: selectedGender,
+                        bloodGroup: selectedBlood,
+                        phone: phoneController.text,
+                      );
+
+                  Navigator.pop(context);
+                },
+                child: const Text("Save Changes"),
+              )
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  
 
   @override
   void initState() {
@@ -33,8 +149,20 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
       appBar: AppBar(
         title: const Text("Profile"),
         centerTitle: true,
-        //backgroundColor: Colors.blue,
         elevation: 0,
+        actions: [
+          Consumer<PatientProvider>(
+            builder: (context, provider, _) {
+              if (provider.patient == null) return const SizedBox();
+              return IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: () {
+                  _showEditProfileSheet(context, provider.patient!);
+                },
+              );
+            },
+          )
+        ],
       ),
       body: Consumer<PatientProvider>(
         builder: (context, provider, _) {
@@ -178,11 +306,11 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
           subtitle: "View lab results & diagnostics",
           color: Colors.blue,
           onTap: () {
-          //   Navigator.of(context).push(
-          //     MaterialPageRoute(
-          //       builder: (context) => MyReportsScreen(),
-          //     ),
-          //   );
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => MyReportsScreen(),
+              ),
+            );
           },
         ),
         const SizedBox(height: 12),
