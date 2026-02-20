@@ -11,7 +11,10 @@ import RegisterPharmacy from "./pages/RegisterPharmacy";
 import PharmacyDashboard from "./components/PharmacyDashboard";
 import { ROLE } from "./constants/role";
 import AdminDashboard from "./components/AdminDashboard";
-
+import PatientProfile from "./patientComponents/getPatientProfile";
+import Dashboard from "./onlineConsultation.jsx/Dashboard";
+import DoctorProfile from "./DoctorDashboard.jsx/DoctorProfile";
+import CompleteProfile from "./components/CompleteProfile";
 function App() {
   return (
     <BrowserRouter>
@@ -55,7 +58,31 @@ function App() {
           </ProtectedRoute>
         }
       />
-
+      <Route
+        path="/doctor/profile"
+        element={
+          <ProtectedRoute allowedRoles={[ROLE.doctor]}>
+            <DoctorProfile />
+          </ProtectedRoute>
+        }
+      ></Route>
+       <Route
+        path="/doctor/complete-profile"
+        element={
+          <ProtectedRoute allowedRoles={[ROLE.doctor]}>
+            <CompleteProfile />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="patient/:id" element={<PatientProfile />}/>
+         <Route
+      path="/online-assessment"
+      element={
+        <ProtectedRoute allowedRoles={[ROLE.doctor]}>
+          <Dashboard />
+        </ProtectedRoute>
+      }
+    />
     </Routes>
     
     </BrowserRouter>

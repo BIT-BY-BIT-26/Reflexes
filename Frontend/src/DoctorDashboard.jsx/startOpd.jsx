@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import  socket  from "../socket/socket";
-import AllAppointments from "./AllAppointmnets";
 
 const StartOpd = () => {
   const [connected, setConnected] = useState(false);
