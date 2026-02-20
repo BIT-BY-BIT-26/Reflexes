@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:patient_app/models/patient_model.dart';
-import 'package:patient_app/profile/services/patient_profile_service.dart';
+import 'package:patient_app/features/profile/services/patient_profile_service.dart';
 
 
 class PatientProvider extends ChangeNotifier {
