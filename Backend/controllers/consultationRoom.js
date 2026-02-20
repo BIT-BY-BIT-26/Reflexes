@@ -1,9 +1,9 @@
 const crypto = require("crypto");
 const sendEmail = require("../utils/sendEmail");
-const Patient = require("../model/patientModel");
-const docterModel = require("../model/docterModel");
-const consultation = require("../model/consultation");
 const { hasUncaughtExceptionCaptureCallback } = require("process");
+const patientModel = require("../models/patientModel");
+const docterModel = require("../models/docterModel");
+const consulation = require("../models/consulation");
 
 exports.createConsultationRoom = async (req, res) => {
   try {
@@ -42,7 +42,7 @@ exports.createConsultationRoom = async (req, res) => {
       });
     } else {
       // ✅ PATIENT OFFLINE → SEND EMAIL
-      const patient = await Patient.findById(patientId).populate("userId");
+      const patient = await patientModel.findById(patientId).populate("userId");
 
       if (patient?.userId?.email) {
         await sendEmail({
@@ -118,7 +118,7 @@ exports.startConsultation = async (req, res) => {
 // GET consultation by appointmentId
 exports.getConsultationAppointment = async (req, res) => {
   try {
-    const consultation = await Consultation.findOne({
+    const consultation = await consulation.findOne({
       appointment: req.params.appointmentId,
     });
 

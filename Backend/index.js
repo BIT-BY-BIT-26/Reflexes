@@ -71,6 +71,10 @@ const prescriptionRoute = require("./routes/prescription.js");
 const reportsRoute = require("./routes/reports.js");
 const pharmacyRouter = require("./routes/pharmacy");
 const doctorRouter = require("./routes/doctor.js");
+const consultationRouter = require("./routes/consultationRoute.js");
+const { addMedicineToInventory } = require("./controllers/inventoryController.js");
+const inventoryRouter = require("./routes/inventoryRoute.js");
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -116,9 +120,11 @@ app.use("/api/patients", patientRoute);
 app.use("/api",appointmentRouter);
 app.use("/api/reports",reportsRoute);
 app.use("/api/doctors",doctorRouter);
+app.use("/api/pharmacy",inventoryRouter);
 
 // app.use("/api/consulation",consultationRouter);
 app.use("/api/pharmacy",pharmacyRouter);
+app.use("/api/consulation",consultationRouter);
 // Listen
 server.listen(PORT, () => {
   console.log(`Listening to port ${PORT}`);

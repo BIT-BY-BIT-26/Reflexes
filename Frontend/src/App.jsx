@@ -15,6 +15,7 @@ import PatientProfile from "./patientComponents/getPatientProfile";
 import Dashboard from "./onlineConsultation.jsx/Dashboard";
 import DoctorProfile from "./DoctorDashboard.jsx/DoctorProfile";
 import CompleteProfile from "./components/CompleteProfile";
+import MoreDetails from "./patientComponents/moreDetails";
 // import ForgotPassword from "./pages/ForgotPassword";
 function App() {
   return (
@@ -64,8 +65,12 @@ function App() {
             </ProtectedRoute>
           }
         >
-        <Route path="/doctor-dashboard/patient/:id/:appointmentId" element={<PatientProfile />}/>
-    </Route>
+        <Route path="patient/:id" element={<PatientProfile />}/>
+        <Route
+          path="patient-details/:id"
+          element={<MoreDetails />}
+        />
+    </Route> 
       <Route
         path="/doctor/profile"
         element={
