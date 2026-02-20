@@ -1,11 +1,13 @@
-const User = require("../model/userModel");
-const Department = require("../model/departmentModel");
-const userModel = require('../model/userModel');
-const docterModel = require("../model/docterModel");
-const { ROLE } = require("../config/Role");
-const HospitalModel = require("../model/HospitalModel");
-const Appointment = require("../model/Appointment");
+// const User = require("../model/userModel");
+// const Department = require("../model/departmentModel");
+// const docterModel = require("../models/docterModel");
+// const { ROLE } = require("../config/Role");
+// const HospitalModel = require("../models/HospitalModel");
+// const Appointment = require("../models/Appointment");
 
+const docterModel = require("../models/docterModel");
+const HospitalModel = require("../models/HospitalModel");
+const Appointment = require("../models/appointmentModel");
 /* ================= GET DOCTORS ================= */
 
 const getDoctorsByDepartment = async (req, res) => {
