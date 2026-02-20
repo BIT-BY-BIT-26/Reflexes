@@ -8,7 +8,7 @@ const {
 
 // middleware (example)
 //const { protect, authorize } = require("../middlewares/authMiddleware");
-const { ROLE } = require("../config/Role");
+const { ROLE } = require("../config/role");
 const auth = require("../middleware/auth");
 const authorize = require("../middleware/authorize");
 

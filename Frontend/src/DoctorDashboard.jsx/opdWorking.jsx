@@ -1,10 +1,10 @@
 import { motion } from "framer-motion";
-import AllAppointments from "./AllAppointmnets";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import socket from "../socket/socket";
 import { fetchTodayAppointments, fetchTodayStats } from "../redux/doctor/doctorThunk";
 import { useNavigate, Outlet } from "react-router-dom";
+import AllAppointments from "./AllAppointments";
 
 const OpdWorkingArea = () => {
 

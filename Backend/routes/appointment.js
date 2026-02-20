@@ -13,7 +13,7 @@ const {
   getTodayOnlineStats
 } = require("../controllers/appointmentController");
 
-const { ROLE } = require("../config/Role");
+const { ROLE } = require("../config/role");
 const auth = require("../middleware/auth");
 
 // Patient books appointment (online)
