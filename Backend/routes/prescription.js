@@ -2,7 +2,7 @@ const express = require('express');
 const { createPrescription, getPatientPrescriptionsForDoctor, getPrescriptionByAppointment } = require('../controllers/prescriptionController');
 
 const auth = require('../middleware/auth');
-const { ROLE } = require('../config/Role');
+const { ROLE } = require('../config/role');
 const authorize = require('../middleware/authorize');
 const prescriptionRoute = express.Router();
 
