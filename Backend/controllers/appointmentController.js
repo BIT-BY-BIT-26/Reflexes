@@ -62,7 +62,7 @@ exports.createAppointment = async (req, res) => {
     const io = req.app.get("io");
     const onlineDoctors = req.app.get("onlineDoctors");
     const doctorSocket = onlineDoctors.get(doctorData._id.toString());
-    const populatedAppointment = await Appointment.findById(appointment._id)
+    const populatedAppointment = await appointmentModel.findById(appointment._id)
     .populate({
       path:"patient",
       populate:{
@@ -133,7 +133,7 @@ exports.confirmAppointment = async (req, res) => {
     endOfDay.setHours(23,59,59,999);
 
     // ✅ FIRST appointments fetch karo
-    const appointments = await Appointment.find({
+    const appointments = await appointmentModel.find({
       doctor: appointment.doctor,
       date: { $gte: startOfDay, $lte: endOfDay },
       status: { $in: ["PENDING", "CONFIRMED"] },
@@ -199,7 +199,7 @@ exports.getAllAppointmentsForDate = async(req,res)=>{
     const endOfDay = new Date();
     endOfDay.setHours(23,59,59,999);
 
-    const appointments = await Appointment.find({
+    const appointments = await appointmentModel.find({
       doctor:doctor._id,
       appointmentType:"offline",
       date:{

@@ -4,7 +4,8 @@ import { useParams } from "react-router-dom";
 import api from "../api/axios";
 
 const PatientProfile = () => {
-  const { id } = useParams();
+  const { id,appointmentId } = useParams();
+console.log(id, appointmentId); // debugging
   const [patient, setPatient] = useState(null);
 
   useEffect(() => {
