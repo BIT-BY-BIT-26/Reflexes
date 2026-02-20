@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:patient_app/features/auth/login_screen.dart';
+
 import 'package:patient_app/features/auth/service/auth_service.dart';
 import 'package:patient_app/helpers/token_expiry_helper.dart';
 import 'package:patient_app/models/user_model.dart';
+import 'package:patient_app/socket.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthProvider with ChangeNotifier {
@@ -42,10 +43,10 @@ class AuthProvider with ChangeNotifier {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', _token!);
 
-        // // 🔥 SOCKET CONNECT
-        // if (_user?.patientId != null) {
-        //   SocketService().connectPatient(_user!.patientId!);
-        // }
+        // 🔥 SOCKET CONNECT
+        if (_user?.patientId != null) {
+          SocketService().connectPatient(_user!.patientId!);
+        }
 
         print("Saved token: $_token");
         print("User: ${_user!.name}");
@@ -85,12 +86,12 @@ class AuthProvider with ChangeNotifier {
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', _token!);
-        // // 🔥 SOCKET CONNECT
-        // if (_user?.patientId != null) {
-        //   SocketService().connectPatient(_user!.patientId!);
-        // }
+        // 🔥 SOCKET CONNECT
+        if (_user?.patientId != null) {
+          SocketService().connectPatient(_user!.patientId!);
+        }
 
-        notifyListeners();
+        //notifyListeners();
       } else {
         throw res['msg'];
       }
@@ -102,13 +103,21 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  
+  // 🔄 AUTO LOGIN
+  // Future<bool> tryAutoLogin() async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   if (!prefs.containsKey('token')) return false;
+
+  //   _token = prefs.getString('token');
+  //   notifyListeners();
+  //   return true;
+  // }
 
   // 🚪 LOGOUT
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
-    //SocketService().disconnect();
+    SocketService().disconnect();
     _user = null;
     _token = null;
 
@@ -133,13 +142,14 @@ class AuthProvider with ChangeNotifier {
       final res = await AuthApiService.getProfile(_token!);
       _user = UserModel.fromJson(res);
 
-      // if (_user?.patientId != null) {
-      //   SocketService().connectPatient(_user!.patientId!);
-      // }
+      if (_user?.patientId != null) {
+        SocketService().connectPatient(_user!.patientId!);
+      }
 
       notifyListeners();
       return true;
     } catch (e) {
+      // 🔥 token invalid / api fail
       await logout();
       return false;
     }

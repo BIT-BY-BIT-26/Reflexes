@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:patient_app/models/department_model.dart';
+import 'package:patient_app/utils/constants.dart';
 
 class DepartmentApiService {
-  static const String baseUrl = "http://10.251.213.145:3000/api";
 
   Future<List<DepartmentModel>> getDepartmentsByHospital(
       String hospitalId) async {

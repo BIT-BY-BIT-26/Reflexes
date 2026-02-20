@@ -1,7 +1,7 @@
 const express = require('express');
-const { registerPatient, getPatientProfile, updatePatientProfile, getMyProfile, getPatientAppointments, getMyReports, getPatientReportForDoctor } = require('../controllers/patientController');
-const auth = require('../middleware/auth');
+const { registerPatient, getMyReports, getPatientAppointments, getMyProfile, updatePatientProfile, getPatientReportForDoctor, getPatientProfile } = require('../controllers/patientController');
 const { ROLE } = require('../config/Role');
+const auth = require('../middleware/auth');
 const authorize = require('../middleware/authorize');
 
 const patientRoute = express.Router();

@@ -5,6 +5,8 @@ const patientModel = require("../models/patientModel");
 const userModel = require("../models/userModel");
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const getSignedUrl = require("../utils/getSignedUrl");
+const reportModel = require("../models/reportModel");
 
 const registerPatient = async (req, res) => {
   try {
@@ -99,6 +101,116 @@ const createWalkInPatient = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+
+//GET DAILY PATIENTS=============================================
+const getDailyPatientsWithDetails = async (req, res) => {
+  try {
+    const { hospitalId, date } = req.query;
+
+    if (!hospitalId || !date) {
+      return res.status(400).json({
+        success: false,
+        message: "hospitalId and date are required"
+      });
+    }
+
+    // Day range
+    const startDate = new Date(date);
+    startDate.setHours(0, 0, 0, 0);
+
+    const endDate = new Date(date);
+    endDate.setHours(23, 59, 59, 999);
+
+    // Fetch appointments with patient populated
+    const appointments = await appointmentModel.find({
+      hospital: hospitalId,
+      date: { $gte: startDate, $lte: endDate },
+      status: { $ne: "CANCELLED" }
+    })
+      .populate({
+        path: "patient",
+        populate: {
+          path: "userId",
+          select: "name email phone_number"
+        }
+      });
+
+    // Unique patients (avoid duplicates)
+    const uniqueMap = new Map();
+
+    appointments.forEach(app => {
+      if (app.patient && app.patient._id) {
+        uniqueMap.set(app.patient._id.toString(), app.patient);
+      }
+    });
+
+    const uniquePatients = Array.from(uniqueMap.values());
+
+    res.status(200).json({
+      success: true,
+      date,
+      totalPatients: uniquePatients.length,
+      patients: uniquePatients
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch daily patients",
+      error: error.message
+    });
+  }
+};
+
+
+//patient ko apna reports milega----
+const getMyReports = async (req, res) => {
+  try {
+    const patient = await patientModel.findOne({ userId: req.user.id });
+    if (!patient) {
+      return res.status(404).json({ message: "Patient not found" });
+    }
+    const reports = await reportModel.find({
+      patient: patient._id
+    }).sort({ createdAt: -1 });
+
+    const formatted = reports.map(r => ({
+      id: r._id,
+      title: r.title,
+      type:r.type,
+      uploadedAt: r.createdAt,
+      filePublicId: getSignedUrl(r.filePublicId),
+      fileType: r.fileType
+    }));
+
+    res.json({ reports: formatted });
+  } catch (e) {
+    res.status(500).json({ message: `Failed to fetch reports ${e.message}`});
+  }
+};
+
+
+const getPatientAppointments = async(req,res)=>{
+  try{
+    const doctor =await docterModel.findOne({userId: req.user.id});
+    if(!doctor){
+      return res.status(400).json({message:"Doctor not found"});
+    }
+    const appointments = await appointmentModel.find({
+      patient:req.params.patientId,
+      doctor:doctor._id
+    }).sort({date:-1})
+    .select("date status token createdAt");
+
+    res.status(200).json({
+      appointments
+    })
+
+  }catch(error){
+    res.status(500).json({message:`Failed to fetch appointments ${error.message}`});
+  }
+}
 
 
 //============== UPDATE PATIENT PROFILE====================
@@ -203,52 +315,5 @@ const getMyProfile = async (req, res) => {
 }
 
 
-//patient ko apna reports milega----
-const getMyReports = async (req, res) => {
-  try {
-    const patient = await patientModel.findOne({ userId: req.user.id });
-    if (!patient) {
-      return res.status(404).json({ message: "Patient not found" });
-    }
-    const reports = await reportModel.find({
-      patient: patient._id
-    }).sort({ createdAt: -1 });
-
-    const formatted = reports.map(r => ({
-      id: r._id,
-      title: r.title,
-      type:r.type,
-      uploadedAt: r.createdAt,
-      filePublicId: getSignedUrl(r.filePublicId),
-      fileType: r.fileType
-    }));
-
-    res.json({ reports: formatted });
-  } catch (e) {
-    res.status(500).json({ message: "Failed to fetch reports" });
-  }
-};
-
-
-const getPatientAppointments = async(req,res)=>{
-  try{
-    const doctor =await docterModel.findOne({userId: req.user.id});
-    if(!doctor){
-      return res.status(400).json({messgae:"Doctor not found"});
-    }
-    const appointments = await appointmentModel.find({
-      patient:req.params.patientId,
-      doctor:doctor._id
-    }).sort({date:-1})
-    .select("date status token createdAt");
-
-    res.status(200).json({
-      appointments
-    })
-
-  }catch(error){
-    res.status(500).json({message:`Failed to fetch appointments ${error.message}`});
-  }
-}
 
 module.exports = { registerPatient,getMyProfile,createWalkInPatient,updatePatientProfile,getPatientAppointments,getPatientProfile ,getPatientReportForDoctor, updatePatientProfile,getMyReports};

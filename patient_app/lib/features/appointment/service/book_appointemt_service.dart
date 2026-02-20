@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:patient_app/models/appointment_model.dart';
+import 'package:patient_app/utils/constants.dart';
 
 class AppointmentService {
-  static const String baseUrl = "http://10.251.213.145:3000/api";
 
   static Future<Map<String, dynamic>> createAppointment({
     required String doctorId,
