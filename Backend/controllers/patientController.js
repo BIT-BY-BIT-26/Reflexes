@@ -1,4 +1,4 @@
-const { ROLE } = require("../config/Role");
+const { ROLE } = require("../config/role");
 const appointmentModel = require("../models/appointmentModel");
 const docterModel = require("../models/docterModel");
 const patientModel = require("../models/patientModel");
