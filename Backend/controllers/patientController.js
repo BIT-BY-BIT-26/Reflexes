@@ -1,4 +1,6 @@
 const { ROLE } = require("../config/Role");
+const appointmentModel = require("../models/appointmentModel");
+const docterModel = require("../models/docterModel");
 const patientModel = require("../models/patientModel");
 const userModel = require("../models/userModel");
 const bcrypt = require('bcryptjs');
@@ -234,7 +236,7 @@ const getPatientAppointments = async(req,res)=>{
     if(!doctor){
       return res.status(400).json({messgae:"Doctor not found"});
     }
-    const appointments = await Appointment.find({
+    const appointments = await appointmentModel.find({
       patient:req.params.patientId,
       doctor:doctor._id
     }).sort({date:-1})
