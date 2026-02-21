@@ -16,6 +16,9 @@ const PublicRoute = ({ children }) => {
     if (role === ROLE.patient) {
       return <Navigate to="/patient-dashboard" />;
     }
+    if (role === ROLE.pharmacy) {
+      return <Navigate to="/pharmacy-dashboard" />;
+    }
   }
 
   return children;
