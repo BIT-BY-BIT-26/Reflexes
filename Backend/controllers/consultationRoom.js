@@ -145,6 +145,40 @@ exports.startConsultation = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.startOnlineConsultation = async (req, res) => {
+  try {
+    const doctorId = req.user.id; // doctor ID from JWT
+    const { appointmentId, patientId } = req.body;
+
+    // 1️⃣ Find appointment
+    const appointment = await appointmentModel.findById(appointmentId);
+    if (!appointment)
+      return res.status(404).json({ success: false, msg: "Appointment not found" });
+
+    // 2️⃣ Mark appointment as IN_PROGRESS
+    appointment.status = "CURRENT";
+    await appointment.save();
+
+    // 3️⃣ Create a consultation room object
+    const room = {
+      roomId: appointmentId, // you can generate a unique ID if needed
+      doctor: doctorId,
+      patient: patientId,
+      startedAt: new Date(),
+    };
+
+    // Optional: Save to DB
+    await ConsultationModel.create(room);
+
+    // 4️⃣ Return room details to frontend
+    res.json(room);
+  } catch (err) {
+    console.error("Error starting consultation:", err);
+    res.status(500).json({ success: false, msg: "Internal Server Error" });
+  }
+};
+
 // GET consultation by appointmentId
 exports.getConsultationAppointment = async (req, res) => {
   try {

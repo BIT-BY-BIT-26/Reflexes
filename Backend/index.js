@@ -79,7 +79,7 @@ const app = express();
 app.use(cors({
     origin: [
         "http://localhost:5173", // local dev
-        "https://your-frontend-deploy-url.com" // frontend deployed URL
+        // "https://your-frontend-deploy-url.com" // frontend deployed URL
     ],
     credentials: true, // if sending cookies
 }));
