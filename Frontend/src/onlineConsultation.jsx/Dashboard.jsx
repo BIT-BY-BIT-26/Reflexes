@@ -1,9 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import api from '../api/axios'
 import LiveCall from './LiveCall';
-
-
-
 const Dashboard = () => {
     const [data,setData] = useState(null);
     const [room, setRoom] = useState(null);
@@ -30,7 +27,7 @@ const Dashboard = () => {
     //start call
     const startConsultation = async(patient)=>{
         try{
-            const res = await api.post('/consulation/start',{
+            const res = await api.post('/consulation/start-online',{
                 appointmentId:patient.appointmentId,
                 patientId: patient.patient._id
             })
