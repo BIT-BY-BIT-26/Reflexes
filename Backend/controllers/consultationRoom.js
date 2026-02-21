@@ -6,96 +6,96 @@ const docterModel = require("../models/docterModel");
 const consulation = require("../models/consulation");
 const appointmentModel = require("../models/appointmentModel");
 
-exports.createConsultationRoom = async (req, res) => {
-  try {
-    const doctorUserId = req.user.id;
-    const doctor = await docterModel.findOne({ userId: doctorUserId });
+// exports.createConsultationRoom = async (req, res) => {
+//   try {
+//     const doctorUserId = req.user.id;
+//     const doctor = await docterModel.findOne({ userId: doctorUserId });
 
-    const io = req.app.get("io");
-    const onlinePatients = req.app.get("onlinePatients");
+//     const io = req.app.get("io");
+//     const onlinePatients = req.app.get("onlinePatients");
 
-    const { appointmentId, patientId } = req.body;
+//     const { appointmentId, patientId } = req.body;
 
-    const roomId = "CONS-" + crypto.randomBytes(2).toString("hex").toUpperCase();
-    const password = Math.floor(1000 + Math.random() * 9000);
+//     const roomId = "CONS-" + crypto.randomBytes(2).toString("hex").toUpperCase();
+//     const password = Math.floor(1000 + Math.random() * 9000);
 
-    const room = await consulation.create({
-      appointment: appointmentId,
-      patient: patientId,
-      doctor: doctor._id,  // ✅ FIXED
-      roomId,
-      password,
-      status: "WAITING",
-      startedAt: new Date(),
-      doctorJoined: false,
-      patientJoined: false
+//     const room = await consulation.create({
+//       appointment: appointmentId,
+//       patient: patientId,
+//       doctor: doctor._id,  // ✅ FIXED
+//       roomId,
+//       password,
+//       status: "WAITING",
+//       startedAt: new Date(),
+//       doctorJoined: false,
+//       patientJoined: false
 
-    });
+//     });
 
-    const patientSocket = onlinePatients.get(patientId);
+//     const patientSocket = onlinePatients.get(patientId);
 
-    if (patientSocket) {
-      // ✅ REALTIME ALERT
-      io.to(patientSocket).emit("consultation-started", {
-        roomId,
-        password,
-        appointmentId
-      });
-    } else {
-      // ✅ PATIENT OFFLINE → SEND EMAIL
-      const patient = await patientModel.findById(patientId).populate("userId");
+//     if (patientSocket) {
+//       // ✅ REALTIME ALERT
+//       io.to(patientSocket).emit("consultation-started", {
+//         roomId,
+//         password,
+//         appointmentId
+//       });
+//     } else {
+//       // ✅ PATIENT OFFLINE → SEND EMAIL
+//       const patient = await patientModel.findById(patientId).populate("userId");
 
-      if (patient?.userId?.email) {
-        await sendEmail({
-          to: patient.userId.email,
-          subject: "Doctor is ready for consultation",
-          text: `
-            Your online consultation has started.
+//       if (patient?.userId?.email) {
+//         await sendEmail({
+//           to: patient.userId.email,
+//           subject: "Doctor is ready for consultation",
+//           text: `
+//             Your online consultation has started.
 
-            Room ID: ${roomId}
-            Password: ${password}
+//             Room ID: ${roomId}
+//             Password: ${password}
 
-            Please login to join the call.
-          `
-        });
-      }
-    }
+//             Please login to join the call.
+//           `
+//         });
+//       }
+//     }
 
-    res.json({
-      roomId,
-      password,
-      patientOnline: !!patientSocket
-    });
+//     res.json({
+//       roomId,
+//       password,
+//       patientOnline: !!patientSocket
+//     });
 
-    // 🔥 AUTO TIMEOUT (30 sec)
-    setTimeout(async () => {
+//     // 🔥 AUTO TIMEOUT (30 sec)
+//     setTimeout(async () => {
 
-      const updatedRoom =
-        await consulation.findById(room._id);
+//       const updatedRoom =
+//         await consulation.findById(room._id);
 
-      if (
-        updatedRoom &&
-        updatedRoom.status === "WAITING"
-      ) {
-        updatedRoom.status = "MISSED";
-        await updatedRoom.save();
+//       if (
+//         updatedRoom &&
+//         updatedRoom.status === "WAITING"
+//       ) {
+//         updatedRoom.status = "MISSED";
+//         await updatedRoom.save();
 
-        io.to(roomId)
-          .emit("call-missed");
-      }
+//         io.to(roomId)
+//           .emit("call-missed");
+//       }
 
-    }, 30000);
+//     }, 30000);
 
-    res.json({
-      roomId,
-      password,
-      patientOnline: !!patientSocket
-    });
+//     res.json({
+//       roomId,
+//       password,
+//       patientOnline: !!patientSocket
+//     });
 
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// };
 
 
 
@@ -115,36 +115,52 @@ exports.createConsultationRoom = async (req, res) => {
 //     res.status(500).json({ error: error.message });
 //   }
 // };
+
 exports.startConsultation = async (req, res) => {
   try {
-    const { appointmentId } = req.params;
+    const doctorId = req.user.id;
+    const { appointmentId, patientId } = req.body;
 
+    // 1️⃣ Find the appointment
     const appointment = await appointmentModel.findById(appointmentId);
-
     if (!appointment) {
       return res.status(404).json({ message: "Appointment not found" });
     }
 
-    // ✅ Only offline appointments allowed
-    if (appointment.appointmentType?.toLowerCase() !== "offline") {
-      return res.status(400).json({
-        message: "Start consultation allowed only for offline appointments",
-      });
-    }
-
-    // ✅ Update status
+    // 2️⃣ Update appointment status to CURRENT
+    appointment.status = "CURRENT";
     await appointment.save();
 
-    res.json({
-      message: "Consultation started successfully",
-      appointment,
+    // 3️⃣ Create a unique consultation room
+    const roomId = "CONS-" + crypto.randomBytes(2).toString("hex").toUpperCase();
+    const password = Math.floor(1000 + Math.random() * 9000).toString();
+
+    const room = await consulation.create({
+      appointment: appointmentId,
+      patient: patientId,
+      doctor: doctorId,
+      roomId,
+      password,
+      status: "ACTIVE", // room status
+      startedAt: new Date(),
+      doctorJoined: false,
+      patientJoined: false,
     });
 
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+    // 4️⃣ Send room details to frontend
+    res.json({
+      roomId: room.roomId,
+      password: room.password,
+      status: room.status,
+      appointmentId: room.appointment,
+      patientId: room.patient,
+      doctorId: room.doctor,
+    });
+  } catch (err) {
+    console.error("Error starting consultation:", err);
+    res.status(500).json({ message: err.message });
   }
 };
-
 exports.startOnlineConsultation = async (req, res) => {
   try {
     const doctorId = req.user.id; // doctor ID from JWT
