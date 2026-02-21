@@ -19,7 +19,7 @@ exports.createConsultationRoom = async (req, res) => {
     const roomId = "CONS-" + crypto.randomBytes(2).toString("hex").toUpperCase();
     const password = Math.floor(1000 + Math.random() * 9000);
 
-    const room = await consultation.create({
+    const room = await consulation.create({
       appointment: appointmentId,
       patient: patientId,
       doctor: doctor._id,  // ✅ FIXED
@@ -71,7 +71,7 @@ exports.createConsultationRoom = async (req, res) => {
     setTimeout(async () => {
 
       const updatedRoom =
-        await consultation.findById(room._id);
+        await consulation.findById(room._id);
 
       if (
         updatedRoom &&
@@ -133,7 +133,6 @@ exports.startConsultation = async (req, res) => {
     }
 
     // ✅ Update status
-    appointment.status = "CURRENT";
     await appointment.save();
 
     res.json({
@@ -169,7 +168,7 @@ exports.startOnlineConsultation = async (req, res) => {
     };
 
     // Optional: Save to DB
-    await ConsultationModel.create(room);
+    await consulation.create(room);
 
     // 4️⃣ Return room details to frontend
     res.json(room);

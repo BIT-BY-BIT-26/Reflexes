@@ -1,101 +1,110 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import socket from "../socket/socket";
 
-const LiveCall = () => {
-  const videoRef = useRef(null);
-  const remoteVideoRef = useRef(null);
-  const peerRef = useRef(null);
-
+const LiveCall = ({ room }) => {
+  const videoRef = useRef(null);        // Local video
+  const remoteVideoRef = useRef(null);  // Patient video
+  const peerRef = useRef(null);         // RTCPeerConnection
   const [stream, setStream] = useState(null);
   const [started, setStarted] = useState(false);
 
-  // 1️⃣ Start camera
-  const startCamera = async () => {
-    try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      });
+  const roomId = room.roomId; // roomId passed from Dashboard
 
-      videoRef.current.srcObject = mediaStream;
-      setStream(mediaStream);
-      setStarted(true);
-    } catch (err) {
-      console.error(err);
-      alert("Camera permission allow karo");
-    }
-  };
+  // 1️⃣ Start Camera automatically on mount
+  useEffect(() => {
+    const startCamera = async () => {
+      try {
+        const mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true,
+        });
+        videoRef.current.srcObject = mediaStream;
+        setStream(mediaStream);
+        setStarted(true);
+      } catch (err) {
+        console.error("Camera permission denied:", err);
+        alert("Camera permission allow karo");
+      }
+    };
 
-  // 2️⃣ Create Offer (YAHAN add karna tha 👇)
+    startCamera();
+  }, []);
+
+  // 2️⃣ Create Peer Connection & Offer
   const createOffer = async () => {
+    if (!stream) return alert("Camera not started yet!");
+
     const pc = new RTCPeerConnection({
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
     });
 
-    // save reference
     peerRef.current = pc;
 
-    // add local stream
-    stream.getTracks().forEach((track) => {
-      pc.addTrack(track, stream);
-    });
+    // Add local tracks
+    stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
-    // remote stream receive
+    // Remote tracks
     pc.ontrack = (event) => {
       remoteVideoRef.current.srcObject = event.streams[0];
     };
 
-    // send ice candidates
+    // ICE candidates
     pc.onicecandidate = (event) => {
       if (event.candidate) {
         socket.emit("ice-candidate", {
-            roomId: appointmentId,
-            candidate: event.candidate
+          roomId,
+          candidate: event.candidate,
         });
-
       }
     };
 
-    // create offer
+    // Create Offer
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
 
+    // Send offer to server
     socket.emit("offer", {
-        roomId: "ROOM_ID_YAHAN",
-        offer: offer
+      roomId,
+      offer,
     });
-
-    console.log("✅ OFFER SENT:", offer);
+    console.log("✅ Offer sent to patient");
   };
 
+  // 3️⃣ Listen for Answer from patient
+  useEffect(() => {
+    socket.on("answer", async ({ answer }) => {
+      if (!peerRef.current) return;
+      await peerRef.current.setRemoteDescription(answer);
+      console.log("✅ Answer received from patient");
+    });
+
+    socket.on("ice-candidate", async ({ candidate }) => {
+      if (peerRef.current && candidate) {
+        try {
+          await peerRef.current.addIceCandidate(candidate);
+        } catch (err) {
+          console.error("Error adding ICE candidate:", err);
+        }
+      }
+    });
+
+    return () => {
+      socket.off("answer");
+      socket.off("ice-candidate");
+    };
+  }, []);
+
   return (
-    <div className="h-screen flex flex-col items-center justify-center bg-black">
-
-      {!started && (
-        <button
-          onClick={startCamera}
-          className="bg-green-500 text-white px-6 py-3 rounded-lg"
-        >
-          Start Camera
-        </button>
-      )}
-
-      {started && (
-        <button
-          onClick={createOffer}
-          className="bg-blue-500 text-white px-6 py-3 rounded-lg mt-4"
-        >
-          Call Patient
-        </button>
-      )}
+    <div className="h-screen flex flex-col items-center justify-center bg-gray-900">
+      <h2 className="text-white text-xl font-bold mb-4">Live Consultation</h2>
 
       {/* Local Video */}
       <video
         ref={videoRef}
         autoPlay
-        playsInline
         muted
-        className="mt-6 w-80 h-56 rounded-lg border-4 border-white object-cover"
+        playsInline
+        className="w-80 h-56 rounded-lg border-4 border-white object-cover mb-4"
       />
 
       {/* Remote Video */}
@@ -103,8 +112,18 @@ const LiveCall = () => {
         ref={remoteVideoRef}
         autoPlay
         playsInline
-        className="mt-6 w-80 h-56 rounded-lg border-4 border-red-500 object-cover"
+        className="w-80 h-56 rounded-lg border-4 border-red-500 object-cover mb-4"
       />
+
+      {/* Start Call Button */}
+      {started && (
+        <button
+          className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded font-semibold transition duration-200"
+          onClick={createOffer}
+        >
+          Call Patient
+        </button>
+      )}
     </div>
   );
 };
