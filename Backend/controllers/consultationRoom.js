@@ -115,36 +115,47 @@ const appointmentModel = require("../models/appointmentModel");
 //     res.status(500).json({ error: error.message });
 //   }
 // };
+
 exports.startConsultation = async (req, res) => {
   try {
     const doctorId = req.user.id;
     const { appointmentId, patientId } = req.body;
 
-    // ✅ 1. Find appointment
+    // 1️⃣ Find the appointment
     const appointment = await appointmentModel.findById(appointmentId);
-    if (!appointment) return res.status(404).json({ message: "Appointment not found" });
+    if (!appointment) {
+      return res.status(404).json({ message: "Appointment not found" });
+    }
 
-    // ✅ 2. Mark as CURRENT
+    // 2️⃣ Update appointment status to CURRENT
     appointment.status = "CURRENT";
     await appointment.save();
 
-    // ✅ 3. Create consultation room
+    // 3️⃣ Create a unique consultation room
     const roomId = "CONS-" + crypto.randomBytes(2).toString("hex").toUpperCase();
-    const password = Math.floor(1000 + Math.random() * 9000);
+    const password = Math.floor(1000 + Math.random() * 9000).toString();
 
-    const room = await ConsultationModel.create({
+    const room = await consulation.create({
       appointment: appointmentId,
       patient: patientId,
       doctor: doctorId,
       roomId,
       password,
-      status: "ACTIVE",
+      status: "ACTIVE", // room status
       startedAt: new Date(),
       doctorJoined: false,
       patientJoined: false,
     });
 
-    res.json(room); // return room object to frontend
+    // 4️⃣ Send room details to frontend
+    res.json({
+      roomId: room.roomId,
+      password: room.password,
+      status: room.status,
+      appointmentId: room.appointment,
+      patientId: room.patient,
+      doctorId: room.doctor,
+    });
   } catch (err) {
     console.error("Error starting consultation:", err);
     res.status(500).json({ message: err.message });

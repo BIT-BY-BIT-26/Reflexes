@@ -125,8 +125,8 @@ const Dashboard = () => {
   if (room) return <LiveCall room={room} />;
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-3xl font-bold text-gray-800">Today's Online Patients</h1>
+    <div className="p-6 space-y-6 text-black">
+      <h1 className="text-3xl font-bold text-gray-200">Today's Online Patients</h1>
       {data.patients.length === 0 && <p>No patients in queue</p>}
       {data.patients.map(p => (
         <div key={p.appointmentId} className="bg-white p-4 rounded shadow">
