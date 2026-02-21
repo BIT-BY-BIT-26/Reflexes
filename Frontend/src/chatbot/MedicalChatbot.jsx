@@ -39,8 +39,8 @@ const MedicalChatbot = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto p-4">
-      <h2 className="text-xl font-bold mb-2">Medical Chatbot</h2>
+    <div className="max-w-md mx-auto p-4 text-black ">
+      <h2 className="text-xl font-bold mb-2 text-white">Medical Chatbot</h2>
       <div className="border rounded p-4 h-80 overflow-y-auto mb-4">
         {messages.map((m, i) => (
           <div
