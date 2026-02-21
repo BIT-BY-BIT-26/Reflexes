@@ -175,7 +175,7 @@ exports.startOnlineConsultation = async (req, res) => {
     res.json(room);
   } catch (err) {
     console.error("Error starting consultation:", err);
-    res.status(500).json({ success: false, msg: "Internal Server Error" });
+    res.status(500).json({ success: false, msg: err.message });
   }
 };
 
