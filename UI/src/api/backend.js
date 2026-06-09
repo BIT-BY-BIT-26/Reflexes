@@ -4,3 +4,7 @@ const API=" http://localhost:3000"
 export const signup = (email,password)=>{
     return axios.post(`${API}/signup`);
 }
+
+export const registerHospital = (hospitalData) => {
+  return axios.post(`${API}/api/hospitals`, hospitalData);
+};
