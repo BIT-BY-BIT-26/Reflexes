@@ -1,7 +1,8 @@
 import React from 'react'
 import { Navigate } from 'react-router-dom';
+import { ROLE } from '../constants/Role';
 
-const protectedRoutes = ({children,allowedRoles}) => {
+const ProtectedRoutes = ({children,allowedRoles}) => {
   const token = localStorage.getItem("token");
   const role = localStorage.getItem("role");
   if(!token){
@@ -13,7 +14,7 @@ const protectedRoutes = ({children,allowedRoles}) => {
   }
 
   if(allowedRoles && !allowedRoles.includes(role)){
-    if(role ===ROLE.admin) return <Navigate to='/admin-dashboard' />
+    if(role ===ROLE.admin) return <Navigate to='/hospital-dashboard' />
     if(role ===ROLE.doctor) return <Navigate to='/doctor-dashboard' />
     if(role ===ROLE.patient) return <Navigate to='/patient-dashboard' />
     if(role ===ROLE.pharmacy) return <Navigate to='/pharmacy-dashboard' />
@@ -22,4 +23,4 @@ const protectedRoutes = ({children,allowedRoles}) => {
   return children;
 }
 
-export default protectedRoutes
+export default ProtectedRoutes
