@@ -79,7 +79,7 @@ const platformOwnerRoute = require("./routes/platformOwnerRoute.js");
 const app = express();
 app.use(cors({
     origin: [
-        "http://localhost:5173", // local dev
+        "http://localhost:5174", // local dev
         // "https://your-frontend-deploy-url.com" // frontend deployed URL
     ],
     credentials: true, // if sending cookies
