@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:patient_app/features/appointment/provider/appointment_provider.dart';
+import 'package:patient_app/features/auth/login_page.dart';
 import 'package:patient_app/features/auth/login_screen.dart';
 import 'package:patient_app/features/auth/provider/auth_provider.dart';
+import 'package:patient_app/features/auth/register_page.dart';
 import 'package:patient_app/features/departments/provider/department_provider.dart';
 import 'package:patient_app/features/doctors/provider/doctor_provider.dart';
 import 'package:patient_app/features/hospitals/provider/hospital_provider.dart';
@@ -54,7 +56,7 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightBlue),
       ),
-      home: const SplashScreen()
+      home: const RegisterPage()
     );
   }
 }

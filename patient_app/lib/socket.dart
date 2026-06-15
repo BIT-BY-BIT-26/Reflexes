@@ -18,7 +18,7 @@ class SocketService {
     if (socket != null && socket!.connected) return;
 
     socket = IO.io(
-      "http://192.168.137.1:3000",
+      "https://reflexes.onrender.com",
       IO.OptionBuilder()
           .setTransports(['websocket'])
           .enableAutoConnect()
@@ -32,7 +32,7 @@ class SocketService {
     });
 
     socket!.onDisconnect((_) {
-      print("🔴 Patient socket disconnected");
+      print("🔴 Patient socket disnconnected");
     });
 
     // ✅ Appointment confirmed

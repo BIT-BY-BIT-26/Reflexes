@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:patient_app/features/auth/login_screen.dart';
 import 'package:patient_app/features/auth/provider/auth_provider.dart';
 import 'package:patient_app/features/departments/department_screen.dart';
+import 'package:patient_app/features/hospital_route/hospital_route_screen.dart';
 import 'package:patient_app/features/hospitals/provider/hospital_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -151,7 +152,7 @@ class _HospitalScreenState extends State<HospitalScreen> {
                     icon: const Icon(Icons.my_location),
                     label: const Text("Hospitals near me"),
                     onPressed: () {
-                      // context.read<HospitalProvider>().fetchNearbyHospitals();
+                      context.read<HospitalProvider>().fetchNearbyHospitals();
                     },
                   ),
                 ),
@@ -199,15 +200,15 @@ class _HospitalScreenState extends State<HospitalScreen> {
                                     IconButton(
                                       icon: const Icon(Icons.directions),
                                       onPressed: () {
-                                        // Navigator.push(
-                                        //   context,
-                                        //   MaterialPageRoute(
-                                        //     builder: (_) => NavigationMapScreen(
-                                        //       hospitalId: h.id,
-                                        //       //hospitalName: h.name,
-                                        //     ),
-                                        //   ),
-                                        // );
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => NavigationMapScreen(
+                                              hospitalId: h.id,
+                                              //hospitalName: h.name,
+                                            ),
+                                          ),
+                                        );
                                       },
                                     ),
 
