@@ -12,7 +12,7 @@ const sendEmail = require('../utils/sendEmail');
 const registerHospital = async (req, res) => {
     try {
         
-        const { name, city, email, state, pincode, hospitalLicense,phone_number, lat, lng} = req.body;
+        const { name, city, email, state, pincode, hospitalLicense,phone_number, lat, lng ,adminName, adminEmail, adminPassword} = req.body;
 
         const existingHospital = await HospitalModel.findOne({ hospitalLicense });
         if (existingHospital) {
@@ -30,18 +30,30 @@ const registerHospital = async (req, res) => {
             pincode,
             hospitalLicense,
             phone_number,
-            status:"pending",
-            isActive:false,
             location: {
                 type: 'Point',
                 coordinates: [lng, lat]  // MongoDB uses [lng, lat]
             }
         });
+        const hashedPassword = await bcrypt.hash(adminPassword, 10);
+        const admin=  await userModel.create({
+            name:adminName,
+            email:adminEmail,
+            password:hashedPassword,
+            role:ROLE.admin,
+            hospitalId:hospital._id 
+        }) 
+
+        const accessToken = jwt.sign({
+            id:admin._id,email:admin.email, role:admin.role,hospitalId:hospital
+        },process.env.JWT_SECRET,{expiresIn:"1d"});
 
         res.status(201).json({
             success: true,
-            msg:  "Hospital registered successfully. Awaiting admin approval.",
-            hospital
+            msg: "Hospital & Admin registered successfully",
+            data: { hospital, admin },
+            accessToken,
+            tokenType:"Bearer"
         });
 
     } catch (e) {
@@ -51,6 +63,82 @@ const registerHospital = async (req, res) => {
             error: e.message
         });
     }
+};
+
+const updateHospitalProfile = async(req,res)=>{
+  console.log(req.body);
+console.log(req.files);
+  try{
+    const hospitalId = req.user.hospitalId;
+
+    const updateData = {
+      description: req.body.description,
+      address:req.body.address,
+      facilities:JSON.parse(req.body.facilities || "[]"),
+      timings:JSON.parse(req.body.timings || "{}")
+    };
+    if(req.files.logo){
+      updateData.logo=req.files.logo[0].path;
+    }
+
+    if(req.files.coverImage){
+      updateData.coverImage=
+      req.files.coverImage[0].path;
+    }
+
+    if (req.files.galleryImages) {
+      updateData.galleryImages =
+        req.files.galleryImages.map(
+          img => img.path
+        );
+    }
+
+    const hospital =
+      await HospitalModel.findByIdAndUpdate(
+        hospitalId,
+        updateData,
+        { new: true }
+      );
+
+    res.status(200).json({
+      success:true,
+      data:hospital
+    })
+  }catch(error){
+    res.status(500).json({
+      success:false,
+      message:error.message
+    })
+  }
+}
+
+
+const getHospitalProfile = async (req, res) => {
+  try {
+    const hospitalId = req.user.hospitalId;
+
+    const hospital = await HospitalModel.findById(hospitalId);
+
+    if (!hospital) {
+      return res.status(404).json({
+        success: false,
+        message: "Hospital not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: hospital
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
 };
 
 const approveHospital = async (req, res) => {
@@ -275,4 +363,4 @@ const getHospitalCities = async (req, res) => {
   }
 };
 
-module.exports= { registerHospital,approveHospital,getAllHospitals,getHospitalsQuery, getHospitals, getHospitalCities, getHospitalStates};
+module.exports= { registerHospital,updateHospitalProfile,getHospitalProfile,approveHospital,getAllHospitals,getHospitalsQuery, getHospitals, getHospitalCities, getHospitalStates};
