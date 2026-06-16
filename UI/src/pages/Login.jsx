@@ -69,10 +69,10 @@ const Login = () => {
               {/* User Type */}
               <div className="grid grid-cols-2 bg-gray-100 rounded-lg p-1 mb-8">
                 <button className="py-2 rounded-md text-gray-600">
-                  Register
+                  Hospital
                 </button>
                 <button className="py-2 rounded-md bg-white text-blue-600 font-semibold shadow">
-                  Login
+                  Doctor
                 </button>
               </div>
 
