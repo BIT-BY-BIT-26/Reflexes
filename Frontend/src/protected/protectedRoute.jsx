@@ -25,7 +25,7 @@ if (allowedRoles && !allowedRoles.includes(role)) {
   if (role === ROLE.doctor) return <Navigate to="/doctor-dashboard" />;
   if (role === ROLE.patient) return <Navigate to="/patient-dashboard" />;
   if (role === ROLE.pharmacy) return <Navigate to="/pharmacy-dashboard" />
-}
+}//"User galat page par aa gaya hai. Use uske apne dashboard par wapas bhej do."
 
 
   return children;
