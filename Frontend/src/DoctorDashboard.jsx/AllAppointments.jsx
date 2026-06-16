@@ -19,20 +19,20 @@ const AllAppointments = ({appointments=[], onPatientClick})=>{
             alert("Unable to confirm appointments");
         }
     }
-        const completeAppointment = async (appointmentId) => {
+    const completeAppointment = async (appointmentId) => {
 
-            const confirm = window.confirm("Mark patient as completed?");
+        const confirm = window.confirm("Mark patient as completed?");
 
-            if (!confirm) return;
+        if (!confirm) return;
 
-            try {
-                await api.patch(`/appointments/${appointmentId}/complete`);
-                dispatch(fetchTodayAppointments());
-            } catch (err) {
-                console.error(err);
-                alert("Unable to complete appointment");
-            }
-        };
+        try {
+            await api.patch(`/appointments/${appointmentId}/complete`);
+            dispatch(fetchTodayAppointments());
+        } catch (err) {
+            console.error(err);
+            alert("Unable to complete appointment");
+        }
+    };
     return(
     <div className="bg-gradient-to-br from-blue-900 via-blue-300 to-blue-500 rounded-2xl shadow-lg p-6 mb-6 max-w-8xl ml-10">
         <motion.h2

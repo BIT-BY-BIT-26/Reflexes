@@ -74,11 +74,12 @@ const doctorRouter = require("./routes/doctor.js");
 const consultationRouter = require("./routes/consultationRoute.js");
 const { addMedicineToInventory } = require("./controllers/inventoryController.js");
 const inventoryRouter = require("./routes/inventoryRoute.js");
+const platformOwnerRoute = require("./routes/platformOwnerRoute.js");
 
 const app = express();
 app.use(cors({
     origin: [
-        "http://localhost:5173", // local dev
+        "http://localhost:5174", // local dev
         // "https://your-frontend-deploy-url.com" // frontend deployed URL
     ],
     credentials: true, // if sending cookies
@@ -118,6 +119,7 @@ socketHandler(io,onlineDoctors,onlinePatients);
 // Routes
 app.use("/api", hospitalRoutes);
 app.use("/api/auth", authRoute);
+app.use("/api/platform", platformOwnerRoute);
 app.use("/api/prescription", prescriptionRoute);
 app.use("/api/departments", departmentRouter);
 app.use("/api/patients", patientRoute);

@@ -43,7 +43,17 @@ const HospitalSchema= new Mongoose.Schema({
             type: [Number],
             required: true
         }
+    },
+    status:{
+        type:String,
+        enum:["pending","approved","rejected"],
+        default:"pending"
+    },
+    isActive:{
+        type:Boolean,
+        default:false
     }
+
 },{ timestamps: true })
 
 HospitalSchema.index({ location: "2dsphere" });
