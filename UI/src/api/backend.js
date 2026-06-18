@@ -15,6 +15,13 @@ export const registerHospital = (hospitalData) => {
   return axios.post(`${API}/hospitals`, hospitalData);
 };
 
+export const loginUser = (data) => {
+  return axios.post(
+    `${API}/auth/login`,
+    data
+  );
+};
+
 export const logout = ()=>{
   localStorage.removeItem("token");
   localStorage.removeItem("role");

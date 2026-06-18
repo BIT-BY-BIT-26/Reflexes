@@ -5,8 +5,67 @@ import {
   Pill,
   UserRound,
 } from "lucide-react";
+import { loginUser } from "../api/backend";
+import { Navigate, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { ROLE } from "../constants/Role";
+import { useState } from "react";
 
 const Login = () => {
+  const navigate = useNavigate();
+
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+
+  const [loading, setLoading] = useState(false);
+  const handleChange = (e) => {
+  setFormData({
+    ...formData,
+    [e.target.name]: e.target.value,
+  });
+};
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  console.log("loggin clicked");
+  try {
+    setLoading(true);
+
+    const res = await loginUser(formData);
+
+    const data = res.data;
+
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("role", data.role);
+    localStorage.setItem("user", JSON.stringify(data.user));
+
+    toast.success("Login Successful 🎉");
+
+    if (data.role === "HOSPITAL_ADMIN") {
+  navigate("/hospital-dashboard");
+}
+    else if (data.role === ROLE.doctor) {
+      navigate("/doctor-dashboard");
+    }
+    else if (data.role === ROLE.patient) {
+      navigate("/patient-dashboard");
+    }
+    else if (data.role === ROLE.pharmacy) {
+      navigate("/pharmacy-dashboard");
+    }
+
+  } catch (error) {
+    toast.error(
+      error?.response?.data?.msg ||
+      "Login failed"
+    );
+  } finally {
+    setLoading(false);
+  }
+};
+
   return (
     <div className="min-h-screen bg-gradient-to-r from-[#03131f] via-[#02111d] to-[#123b59] flex items-center justify-center px-4">
       <div className="w-full max-w-6xl bg-black/40 backdrop-blur-md border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
@@ -84,14 +143,17 @@ const Login = () => {
                 Secure, fast and reliable healthcare access.
               </p>
 
-              <form className="space-y-5">
+              <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
                   <label className="text-sm font-medium text-gray-600">
                     Email / Phone Number
                   </label>
                   <input
                     type="text"
-                    placeholder="Enter email or phone"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="Enter email"
                     className="w-full mt-2 border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -102,6 +164,9 @@ const Login = () => {
                   </label>
                   <input
                     type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
                     placeholder="********"
                     className="w-full mt-2 border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -117,11 +182,12 @@ const Login = () => {
                 </div>
 
                 <button
-                  type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition"
-                >
-                  Login
-                </button>
+                type="submit"
+                disabled={loading}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition"
+              >
+                {loading ? "Logging in..." : "Login"}
+              </button>
 
                 <button
                   type="button"

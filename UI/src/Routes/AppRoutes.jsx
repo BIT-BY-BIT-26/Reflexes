@@ -10,14 +10,26 @@ import HospitalDashboard from '../pages/HospitalDashboard'
 import LoginPlatformAdmin from '../pages/Auth/LoginPlatformAdmin'
 import PlatFormDashboard from '../pages/PlatFormDashboard'
 import { ROLE } from '../constants/Role'
+import PublicRoute from './PublicRoute'
 
 const AppRoutes = () => {
   return (
     <Routes>
-        <Route path='/' element={<LandingPage />} />
+        <Route path='/' element={
+           <PublicRoute>
+            <LandingPage />
+          </PublicRoute>
+        } />
         <Route path='/signup' element={<SelectRole />} />
         <Route path='/signup/hospital' element={<HospitalSignup />} />
-        <Route path='/login' element={<Login />} />
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
         <Route path='/signup/pharmacy' element={<PharmacySignup />} />
         <Route path='/admin/login' element={<LoginPlatformAdmin />} />
 
