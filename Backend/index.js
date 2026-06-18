@@ -72,6 +72,7 @@ const pharmacyRouter = require("./routes/pharmacy");
 const doctorRouter = require("./routes/doctor.js");
 const consultationRouter = require("./routes/consultationRoute.js");
 const inventoryRouter = require("./routes/inventoryRoute.js");
+const platformOwnerRoute = require("./routes/platformOwnerRoute.js");
 
 const app = express();
 app.use(express.json());
@@ -126,6 +127,7 @@ io.on("connection", (socket) => {
 // Routes
 app.use("/api", hospitalRoutes);
 app.use("/api/auth", authRoute);
+app.use("/api/platform", platformOwnerRoute);
 app.use("/api/prescription", prescriptionRoute);
 app.use("/api/departments", departmentRouter);
 app.use("/api/patients", patientRoute);
