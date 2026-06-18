@@ -8,6 +8,9 @@ const fs = require("fs");
 const path = require("path");
 const { ROLE } = require('../config/role');
 const sendEmail = require('../utils/sendEmail');
+const docterModel = require('../models/docterModel');
+const departmentModel = require('../models/departmentModel');
+const appointmentModel = require('../models/appointmentModel');
 
 const registerHospital = async (req, res) => {
     try {
@@ -140,6 +143,35 @@ const getHospitalProfile = async (req, res) => {
     });
   }
 };
+
+const getStats = async(req,res)=>{
+  console.log("entered");
+  try{
+    const hospitalId = req.user.hospitalId;
+    const countDoctor = await userModel.countDocuments({
+      hospitalId:hospitalId,
+      role:"DOCTOR"
+    });
+    const countDepartment = await departmentModel.countDocuments({
+      hospitalId:hospitalId,
+    })
+    const countAppointment= await appointmentModel.countDocuments({
+      hospitalId:hospitalId,
+    })
+    res.status(200).json({
+      success:true,
+      countDoctor,
+      countDepartment,
+      countAppointment
+    });
+    console.log("left")
+  }catch(error){
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
 
 const approveHospital = async (req, res) => {
     try {
@@ -363,4 +395,4 @@ const getHospitalCities = async (req, res) => {
   }
 };
 
-module.exports= { registerHospital,updateHospitalProfile,getHospitalProfile,approveHospital,getAllHospitals,getHospitalsQuery, getHospitals, getHospitalCities, getHospitalStates};
+module.exports= { registerHospital,updateHospitalProfile,getHospitalProfile, getStats, approveHospital,getAllHospitals,getHospitalsQuery, getHospitals, getHospitalCities, getHospitalStates};

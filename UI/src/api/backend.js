@@ -36,3 +36,12 @@ export const getHospitalProfile = async()=>{
     },
   });
 }
+
+export const getStats = async()=>{
+  const token = localStorage.getItem("token");
+  return axios.get(`${API}/statistics`,{
+    headers:{
+      Authorization:`Bearer ${token}`,
+    },
+  });
+}
