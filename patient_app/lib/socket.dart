@@ -1,83 +1,69 @@
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class SocketService {
-  static final SocketService _instance = SocketService._internal();
+
+  static final SocketService _instance =
+      SocketService._internal();
+
   factory SocketService() => _instance;
+
   SocketService._internal();
 
   IO.Socket? socket;
 
-  // callbacks
-  Function(Map data)? onAppointmentConfirmed;
-  Function(Map data)? onConsultationStarted;
-  Function()? onCallRejected;
-  Function()? onCallEnded;
-  Function(String role)? onUserJoined;
-
-  void connectPatient(String patientId) {
+    void connect({
+    required String baseUrl,
+    required Function(Map<String, dynamic>) onQueueUpdate,
+    required Function(Map<String, dynamic>) onPaused,
+    required Function(Map<String, dynamic>) onResumed,
+    required Function(Map<String, dynamic>) onStopped,
+  }) {
     if (socket != null && socket!.connected) return;
 
     socket = IO.io(
-      "http://https://reflexes.onrender.com",
+      "http://localhost:3000",
       IO.OptionBuilder()
           .setTransports(['websocket'])
           .enableAutoConnect()
           .build(),
     );
-
+    
     socket!.onConnect((_) {
-      print("🟢 Patient socket connected");
+      print("✅ Socket Connected");
+    });
 
-      socket!.emit("patient-join", {"patientId": patientId});
+    // 🔥 MAIN LIVE UPDATE
+    socket!.on("queueUpdated", (data) {
+      onQueueUpdate(Map<String, dynamic>.from(data));
+    });
+
+    socket!.on("opdPaused", (data) {
+      onPaused(Map<String, dynamic>.from(data));
+    });
+
+    socket!.on("opdResumed", (data) {
+      onResumed(Map<String,dynamic>.from(data));
+    });
+
+    socket!.on("opdStopped", (data) {
+      onStopped(Map<String, dynamic>.from(data));
     });
 
     socket!.onDisconnect((_) {
-      print("🔴 Patient socket disconnected");
-    });
-
-    // ✅ Appointment confirmed
-    socket!.on("APPOINTMENT_CONFIRMED", (data) {
-      onAppointmentConfirmed?.call(data);
-    });
-
-    // ✅ Doctor started consultation
-    socket!.on("consultation-started", (data) {
-      print("📞 Doctor started consultation");
-      onConsultationStarted?.call(data);
-    });
-
-    // ✅ Call rejected
-    socket!.on("call-rejected", (_) {
-      onCallRejected?.call();
-    });
-
-    // ✅ Call ended
-    socket!.on("call-ended", (_) {
-      onCallEnded?.call();
-    });
-
-    // ✅ Someone joined room
-    socket!.on("user-joined", (data) {
-      onUserJoined?.call(data["role"]);
+      print("🟥 Socket Disconnected");
     });
   }
 
-  // 🔵 Join Call Room
-  void joinCallRoom(String roomId) {
-    socket?.emit("join-call-room", {"roomId": roomId, "role": "PATIENT"});
-  }
-
-  // 🔴 End Call
-  void endCall(String roomId) {
-    socket?.emit("end-call", {"roomId": roomId});
+  void joinDoctorRoom(String doctorId) {
+    socket?.emit(
+      "joinDoctorRoom",
+      doctorId,
+    );
   }
 
   void disconnect() {
-    if (socket != null) {
-      socket!.disconnect();
-      socket!.dispose();
-      socket = null;
-      print("🛑 Socket disposed");
-    }
+    socket?.disconnect();
+    socket?.dispose();
+    socket = null;
   }
 }

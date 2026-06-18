@@ -1,5 +1,5 @@
 const express = require('express');
-const { registerPatient, getMyReports, getPatientAppointments, getMyProfile, updatePatientProfile, getPatientReportForDoctor, getPatientProfile } = require('../controllers/patientController');
+const { registerPatient, getMyReports, getPatientAppointments, getMyProfile, updatePatientProfile, getPatientReportForDoctor, getPatientProfile, getActiveQueueStatus } = require('../controllers/patientController');
 const { ROLE } = require('../config/role');
 const auth = require('../middleware/auth');
 const authorize = require('../middleware/authorize');
@@ -13,5 +13,6 @@ patientRoute.get("/me",auth,authorize(ROLE.patient),getMyProfile);
 patientRoute.get('/get-appointments/:patientId',auth,getPatientAppointments);
 patientRoute.get('/get-my-reports',auth,authorize(ROLE.patient), getMyReports);
 patientRoute.get('/get-reports/:patientId',auth, getPatientReportForDoctor);
+patientRoute.get("/active-queue-status",auth,getActiveQueueStatus);
 
 module.exports=patientRoute;

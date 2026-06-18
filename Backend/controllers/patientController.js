@@ -314,6 +314,97 @@ const getMyProfile = async (req, res) => {
   }
 }
 
+const getActiveQueueStatus = async (req, res) => {
+  try {
 
+    const patient = await patientModel.findOne({
+      userId: req.user.id
+    });
 
-module.exports = { registerPatient,getMyProfile,createWalkInPatient,updatePatientProfile,getPatientAppointments,getPatientProfile ,getPatientReportForDoctor, updatePatientProfile,getMyReports};
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: "Patient not found"
+      });
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // Patient ka aaj ka active appointment
+    const appointment = await appointmentModel.findOne({
+      patient: patient._id,
+      date: {
+        $gte: today,
+        $lt: tomorrow
+      },
+      status: {
+        $in: ["CONFIRMED", "CURRENT"]
+      }
+    })
+      .populate({
+        path: "doctor",
+        populate: {
+          path: "userId",
+          select: "name"
+        }
+      })
+      .populate("department", "name");
+
+    if (!appointment) {
+      return res.status(200).json({
+        success: true,
+        hasActiveQueue: false
+      });
+    }
+
+    const doctor = appointment.doctor;
+
+    const currentAppointment =
+      await appointmentModel.findOne({
+        doctor: doctor._id,
+        status: "CURRENT",
+        date: {
+          $gte: today,
+          $lt: tomorrow
+        }
+      });
+
+    const currentToken =
+      currentAppointment?.token ?? 0;
+
+    const yourToken =
+      appointment.token ?? 0;
+
+    const patientsAhead =
+      currentToken >= yourToken
+        ? 0
+        : yourToken - currentToken;
+
+    return res.status(200).json({
+      success: true,
+      hasActiveQueue: true,
+      appointmentId: appointment._id,
+      doctorId: doctor._id,
+      doctorName:doctor.userId?.name ?? "Doctor",
+      department:appointment.department?.name ?? "Department",
+      currentToken,
+      yourToken,
+      patientsAhead,
+      isPaused: doctor.opdPaused,
+      isOpdClosed: !doctor.opdStarted,
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+
+  }
+};
+
+module.exports = { registerPatient,getActiveQueueStatus,getMyProfile,createWalkInPatient,getPatientAppointments,getPatientProfile ,getPatientReportForDoctor, updatePatientProfile,getMyReports};

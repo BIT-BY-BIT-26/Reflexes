@@ -115,58 +115,58 @@ exports.createConsultationRoom = async (req, res) => {
 //     res.status(500).json({ error: error.message });
 //   }
 // };
-exports.startConsultation = async (req, res) => {
-  try {
-    const { appointmentId } = req.params;
+// exports.startConsultation = async (req, res) => {
+//   try {
+//     const { appointmentId } = req.params;
 
-    const appointment = await appointmentModel.findById(appointmentId);
+//     const appointment = await appointmentModel.findById(appointmentId);
 
-    if (!appointment) {
-      return res.status(404).json({ message: "Appointment not found" });
-    }
+//     if (!appointment) {
+//       return res.status(404).json({ message: "Appointment not found" });
+//     }
 
-    // ✅ Only offline appointments allowed
-    if (appointment.appointmentType?.toLowerCase() !== "offline") {
-      return res.status(400).json({
-        message: "Start consultation allowed only for offline appointments",
-      });
-    }
+//     // ✅ Only offline appointments allowed
+//     if (appointment.appointmentType?.toLowerCase() !== "offline") {
+//       return res.status(400).json({
+//         message: "Start consultation allowed only for offline appointments",
+//       });
+//     }
 
-    // ✅ Update status
-    appointment.status = "CURRENT";
-    await appointment.save();
+//     // ✅ Update status
+//     appointment.status = "CURRENT";
+//     await appointment.save();
 
-    res.json({
-      message: "Consultation started successfully",
-      appointment,
-    });
+//     res.json({
+//       message: "Consultation started successfully",
+//       appointment,
+//     });
 
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-// GET consultation by appointmentId
-exports.getConsultationAppointment = async (req, res) => {
-  try {
-    const consultation = await consulation.findOne({
-      appointment: req.params.appointmentId,
-    });
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+// // GET consultation by appointmentId
+// exports.getConsultationAppointment = async (req, res) => {
+//   try {
+//     const consultation = await consulation.findOne({
+//       appointment: req.params.appointmentId,
+//     });
 
-    if (!consultation) {
-      return res.status(404).json({
-        success: false,
-        message: "Consultation not found",
-      });
-    }
+//     if (!consultation) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Consultation not found",
+//       });
+//     }
 
-    res.json({
-      success: true,
-      consultation,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
-  }
-}
+//     res.json({
+//       success: true,
+//       consultation,
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       message: "Server error",
+//     });
+//   }
+// }

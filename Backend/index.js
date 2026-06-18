@@ -50,7 +50,6 @@
 //     console.log(`Listening to port ${PORT}`);
 // })
 
-
 const express = require("express");
 const mongoose = require("mongoose");
 const http = require("http");
@@ -72,48 +71,57 @@ const reportsRoute = require("./routes/reports.js");
 const pharmacyRouter = require("./routes/pharmacy");
 const doctorRouter = require("./routes/doctor.js");
 const consultationRouter = require("./routes/consultationRoute.js");
-const { addMedicineToInventory } = require("./controllers/inventoryController.js");
 const inventoryRouter = require("./routes/inventoryRoute.js");
 
 const app = express();
-app.use(cors({
-    origin: [
-        "http://localhost:5173", // local dev
-        "https://your-frontend-deploy-url.com" // frontend deployed URL
-    ],
-    credentials: true, // if sending cookies
-}));
 app.use(express.json());
+app.use(cors());
+
 
 // MongoDB
 mongoose
   .connect(process.env.MONGO_URI)
   .then(async () => {
     console.log("✅ MongoDB connected successfully");
-
   })
   .catch((err) => console.log("❌ MongoDB connection error", err));
 
 // Root
 app.get("/", (req, res) => {
-  res.json("Server is running 🚀");
+  res.send("Server is running 🚀");
 });
 
 // HTTP + Socket.IO
 const server = http.createServer(app);
-
 const io = new Server(server, {
   cors: {
-    origin: "*",
-  },
+    origin: "*"
+  }
 });
-const onlineDoctors = new Map();
-const onlinePatients = new Map();
-app.set("onlineDoctors", onlineDoctors);
-app.set("onlinePatients", onlinePatients);
-
 app.set("io", io);
-socketHandler(io,onlineDoctors,onlinePatients);
+
+
+io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
+  socket.on("joinDoctorRoom", (doctorId) => {
+    socket.join(`doctor_${doctorId}`);
+    console.log(
+      `Socket ${socket.id} joined doctor_${doctorId}`
+    );
+  });
+  socket.on("disconnect", () => {
+    console.log("User disconnected");
+  });
+});
+
+
+// const onlineDoctors = new Map();
+// const onlinePatients = new Map();
+// app.set("onlineDoctors", onlineDoctors);
+// app.set("onlinePatients", onlinePatients);
+// app.set("io", io);
+// socketHandler(io,onlineDoctors,onlinePatients);
+
 
 // Routes
 app.use("/api", hospitalRoutes);
@@ -124,12 +132,10 @@ app.use("/api/patients", patientRoute);
 app.use('/api/doctors', doctorRouter)
 app.use("/api",appointmentRouter);
 app.use("/api/reports",reportsRoute);
-app.use("/api/doctors",doctorRouter);
 app.use("/api/pharmacy",inventoryRouter);
-
 // app.use("/api/consulation",consultationRouter);
-app.use("/api/pharmacy",pharmacyRouter);
-app.use("/api/consulation",consultationRouter);
+
+
 // Listen
 server.listen(process.env.PORT, () => {
   console.log(`Listening to port ${process.env.PORT}`);

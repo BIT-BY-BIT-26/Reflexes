@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:patient_app/features/appointment/booked_appointment_screen.dart';
 import 'package:patient_app/features/hospitals/hospital_screen.dart';
 import 'package:patient_app/features/profile/profile_screen.dart';
+import 'package:patient_app/features/queue/queue_screen.dart';
 
 
 
@@ -16,7 +17,7 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
   int _selectedIndex = 0;
 
   final List<Widget> _pages = [
-  HospitalScreen(), MyAppointmentsScreen(), PatientProfileScreen()
+  HospitalScreen(), MyAppointmentsScreen(),QueueScreen(), PatientProfileScreen()
   ];
 
   void _onItemTapped(int index) {
@@ -44,19 +45,19 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
               onPressed: () => _onItemTapped(0),
             ),
             IconButton(
-              icon: Icon(Icons.watch_later,size: 35,),
+              icon: Icon(Icons.history,size: 35,),
               color:_selectedIndex==1?Colors.blueAccent:Colors.grey,
               onPressed: () => _onItemTapped(1),
             ),
-            // IconButton(
-            //   icon: Icon(Icons.add,size: 35,),
-            //   color:_selectedIndex==2?Colors.blueAccent:Colors.grey,
-            //   onPressed: () => _onItemTapped(2),
-            // ),
             IconButton(
-              icon: Icon(Icons.person,size: 35,),
+              icon: Icon(Icons.groups,size: 35,),
               color:_selectedIndex==2?Colors.blueAccent:Colors.grey,
               onPressed: () => _onItemTapped(2),
+            ),
+            IconButton(
+              icon: Icon(Icons.person,size: 35,),
+              color:_selectedIndex==3?Colors.blueAccent:Colors.grey,
+              onPressed: () => _onItemTapped(3),
             ),
             
           ],
