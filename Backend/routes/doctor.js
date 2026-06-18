@@ -2,7 +2,7 @@ const express = require("express");
 const auth = require("../middleware/auth");
 const authorize = require("../middleware/authorize");
 const { ROLE } = require("../config/role");
-const { getDoctorByHospital, submitProfile, getDoctorsByDepartment ,getMyProfile, getCompletedAppointments, updateProfile, toggleDoctorOnline, toggleOpd, uploadDoctorPhoto } = require("../controllers/DoctorController");
+const { getDoctorByHospital, submitProfile, getDoctorsByDepartment ,getMyProfile, getCompletedAppointments, updateProfile, toggleDoctorOnline, toggleOpd, uploadDoctorPhoto, stopConsultation, pauseConsultation, resumeConsultation, callNext, skipPatient, startConsultation } = require("../controllers/DoctorController");
 const upload = require("../middleware/uploadCloud");
 const { addDoctor } = require("../controllers/addDoctorController");
 const doctorRouter = express.Router();
@@ -50,6 +50,14 @@ doctorRouter.post(
   authorize(ROLE.doctor),
   submitProfile
 );
+
+doctorRouter.post("/consultation/start",auth,startConsultation);
+doctorRouter.post("/consultation/stop",auth,stopConsultation);
+doctorRouter.post("/consultation/pause",auth,pauseConsultation);
+doctorRouter.post("/consultation/resume",auth,resumeConsultation);
+doctorRouter.post("/consultation/next",auth,callNext);
+doctorRouter.post("/consultation/skip",auth,skipPatient);
+//doctorRouter.get("/queue-status/:appointmentId",auth,getQueueStatus);
 doctorRouter.post('/add-doctor',auth,  authorize(ROLE.admin),addDoctor);
 doctorRouter.get('/get-doctors',auth,authorize(ROLE.admin), getDoctorByHospital);
 doctorRouter.get("/appointments/completed",auth,getCompletedAppointments);
@@ -58,4 +66,5 @@ doctorRouter.patch("/update-profile", auth, updateProfile);
 doctorRouter.patch("/toggle-online", auth, toggleDoctorOnline);
 doctorRouter.patch("/toggle-opd", auth, toggleOpd);
 doctorRouter.patch("/upload-photo",auth, upload.single("photo"),uploadDoctorPhoto);
+
 module.exports = doctorRouter;

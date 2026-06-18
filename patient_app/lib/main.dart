@@ -6,6 +6,8 @@ import 'package:patient_app/features/departments/provider/department_provider.da
 import 'package:patient_app/features/doctors/provider/doctor_provider.dart';
 import 'package:patient_app/features/hospital_route/provider/hospital_route_provider.dart';
 import 'package:patient_app/features/hospitals/provider/hospital_provider.dart';
+import 'package:patient_app/features/queue/provider/queue_provider.dart';
+import 'package:patient_app/features/queue/queue_screen.dart';
 import 'package:patient_app/features/reports/provider/reports_provider.dart';
 import 'package:patient_app/features/profile/provider/patient_profile_provider.dart';
 import 'package:patient_app/splash_screen.dart';
@@ -16,6 +18,7 @@ void main() {
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_)=>QueueProvider()),
         ChangeNotifierProvider(create: (_) => NavigationProvider()),
         ChangeNotifierProvider(create:  (_)=>ReportProvider()),
         ChangeNotifierProvider(create:  (_) => PatientProvider()),

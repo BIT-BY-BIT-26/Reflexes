@@ -352,6 +352,7 @@ exports.getMyAppointments = async (req, res) => {
 
     const result = appointments.map((a) => ({
       id: a._id,
+      doctorId: a.doctor?._id,
       doctorName: a.doctor?.userId?.name || "Doctor",
       department: a.department?.name || "Department",
       hospital: a.hospital?.name || "Hospital",

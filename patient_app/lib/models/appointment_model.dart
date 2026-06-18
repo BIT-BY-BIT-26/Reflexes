@@ -1,6 +1,7 @@
 class AppointmentModel {
   final String id;
   final String doctorName;
+  final String doctorId;
   final String hospitalName;
   final String departmentName;
   final String appointmentType; // 👈 final karo (better practice)
@@ -11,6 +12,7 @@ class AppointmentModel {
   AppointmentModel({
     required this.id,
     required this.doctorName,
+    required this.doctorId,
     required this.hospitalName,
     required this.departmentName,
     required this.appointmentType, // 👈 add karo
@@ -22,6 +24,7 @@ class AppointmentModel {
     return AppointmentModel(
       id: json['id'] ?? '',
       doctorName: json['doctorName'] ?? 'Unknown Doctor',
+      doctorId: json['doctorId'] ?? '',
       hospitalName: json['hospital'] ?? 'Unknown Hospital',
       departmentName: json['department'] ?? 'Unknown Department',
       appointmentType: json['appointmentType'] ?? 'offline', // 👈 VERY IMPORTANT
