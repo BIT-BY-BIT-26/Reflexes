@@ -7,11 +7,12 @@ dotenv.config();
 const fs = require("fs");
 const path = require("path");
 const { ROLE } = require('../config/role');
+const sendEmail = require('../utils/sendEmail');
 
 const registerHospital = async (req, res) => {
     try {
         
-        const { name, city, email, state, pincode, hospitalLicense,phone_number, lat, lng ,adminName, adminEmail, adminPassword} = req.body;
+        const { name, city, email, state, pincode, hospitalLicense,phone_number, lat, lng} = req.body;
 
         const existingHospital = await HospitalModel.findOne({ hospitalLicense });
         if (existingHospital) {
@@ -29,36 +30,129 @@ const registerHospital = async (req, res) => {
             pincode,
             hospitalLicense,
             phone_number,
+            status:"pending",
+            isActive:false,
             location: {
                 type: 'Point',
                 coordinates: [lng, lat]  // MongoDB uses [lng, lat]
             }
         });
-        const hashedPassword = await bcrypt.hash(adminPassword, 10);
-        const admin=  await userModel.create({
-            name:adminName,
-            email:adminEmail,
-            password:hashedPassword,
-            role:ROLE.admin,
-            hospitalId:hospital._id 
-        }) 
-
-        const accessToken = jwt.sign({
-            id:admin._id,email:admin.email, role:admin.role,hospitalId:hospital
-        },process.env.JWT_SECRET,{expiresIn:"1d"});
 
         res.status(201).json({
             success: true,
-            msg: "Hospital & Admin registered successfully",
-            data: { hospital, admin },
-            accessToken,
-            tokenType:"Bearer"
+            msg:  "Hospital registered successfully. Awaiting admin approval.",
+            hospital
         });
 
     } catch (e) {
         res.status(500).json({
             success: false,
             message: "Hospital registration failed",
+            error: e.message
+        });
+    }
+};
+
+const approveHospital = async (req, res) => {
+    try {
+        const hospitalId = req.params.id;
+
+        const hospital = await HospitalModel.findById(hospitalId);
+
+        if (!hospital) {
+            return res.status(404).json({
+                success: false,
+                message: "Hospital not found"
+            });
+        }
+
+        // check duplicate user
+        const existingUser = await userModel.findOne({ email: hospital.email });
+
+        if (existingUser) {
+            return res.status(400).json({
+                success: false,
+                message: "Admin already exists for this hospital"
+            });
+        }
+
+        // approve hospital
+        hospital.status = "approved";
+        hospital.isActive = true;
+        await hospital.save();
+
+        // create admin
+        await userModel.create({
+            name: `${hospital.name} Admin`,
+            email: hospital.email,
+            role: ROLE.admin,
+            hospitalId: hospital._id,
+            isActive: true
+        });
+
+        // send email
+        await sendEmail({
+            to: hospital.email,
+            subject: "Medireach Account Approved 🎉",
+            text: `
+Your hospital has been approved.
+
+Login here:
+http://localhost:3000/login
+            `
+        });
+
+        res.status(200).json({
+            success: true,
+            message: "Hospital approved successfully",
+
+        });
+
+    } catch (e) {
+        res.status(500).json({
+            success: false,
+            message: "Approval failed",
+            error: e.message
+        });
+    }
+};
+
+const getAllHospitals = async(req,res)=>{
+  try{
+    const hospitals = await HospitalModel.find();
+    res.status(200).json({
+            success: true,
+            data: hospitals
+        });
+  }catch(e){
+     res.status(500).json({
+            success: false,
+            message: "Failed to fetch hospitals",
+            error: e.message
+        });
+  }
+}
+
+const getHospitalsQuery = async (req, res) => {
+    try {
+        const { status } = req.query;
+        console.log("REQ QUERY:", req.query);
+        let filter = {};
+
+        if (status) {
+            filter.status = status;
+        }
+console.log("FILTER:", filter);
+        const hospitals = await HospitalModel.find(filter);
+        res.status(200).json({
+            success: true,
+            data: hospitals
+        });
+
+    } catch (e) {
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch hospitals",
             error: e.message
         });
     }
@@ -181,4 +275,4 @@ const getHospitalCities = async (req, res) => {
   }
 };
 
-module.exports= { registerHospital, getHospitals, getHospitalCities, getHospitalStates};
+module.exports= { registerHospital,approveHospital,getAllHospitals,getHospitalsQuery, getHospitals, getHospitalCities, getHospitalStates};

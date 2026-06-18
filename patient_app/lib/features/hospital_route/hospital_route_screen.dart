@@ -59,7 +59,7 @@ class _NavigationMapScreenState extends State<NavigationMapScreen> {
           // 4️⃣ OSM Tiles
           TileLayer(
             urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-            userAgentPackageName: 'com.meditrack.app',
+            userAgentPackageName: 'com.example.patient_app',
           ),
 
           // 5️⃣ Route Polyline
