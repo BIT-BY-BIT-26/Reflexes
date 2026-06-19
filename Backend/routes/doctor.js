@@ -3,8 +3,9 @@ const auth = require("../middleware/auth");
 const authorize = require("../middleware/authorize");
 const { ROLE } = require("../config/role");
 const { getDoctorByHospital, submitProfile, getDoctorsByDepartment ,getMyProfile, getCompletedAppointments, updateProfile, toggleDoctorOnline, toggleOpd, uploadDoctorPhoto } = require("../controllers/DoctorController");
-const upload = require("../middleware/uploadCloud");
+
 const { addDoctor } = require("../controllers/addDoctorController");
+const { upload } = require("../middleware/uploadCloud");
 const doctorRouter = express.Router();
 
 /* ================= ADMIN ROUTES ================= */
