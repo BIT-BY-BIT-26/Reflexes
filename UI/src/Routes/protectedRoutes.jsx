@@ -18,6 +18,7 @@ const ProtectedRoutes = ({children,allowedRoles}) => {
     if(role ===ROLE.doctor) return <Navigate to='/doctor-dashboard' />
     if(role ===ROLE.patient) return <Navigate to='/patient-dashboard' />
     if(role ===ROLE.pharmacy) return <Navigate to='/pharmacy-dashboard' />
+    if(role === ROLE.platform_admin) return <Navigate to='/platform-dashboard' />
     //"User galat page par aa gaya hai. Use uske apne dashboard par wapas bhej do."
   }
   return children;
