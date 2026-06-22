@@ -24,7 +24,7 @@ const roles = [
       "Access your patients, appointments, and prescriptions.",
     icon: Stethoscope,
     color: "from-violet-500 to-purple-500",
-    route: "/login/doctor",
+    route: "/login",
     loginOnly: true,
   },
   {

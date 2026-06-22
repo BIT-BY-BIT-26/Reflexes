@@ -10,6 +10,16 @@ const storage = new CloudinaryStorage({
   }
 });
 
-const upload = multer({ storage });
+const hospitalStorage = new CloudinaryStorage({
+  cloudinary,
+  params:{
+    folder:"medireach/hospitals"
+  }
+});
 
-module.exports = upload;
+
+const upload = multer({ storage });
+const hospitalUpload = multer({
+  storage:hospitalStorage
+})
+module.exports = {upload,hospitalUpload};
