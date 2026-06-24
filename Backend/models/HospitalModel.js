@@ -52,7 +52,47 @@ const HospitalSchema= new Mongoose.Schema({
     isActive:{
         type:Boolean,
         default:false
+    },
+    description:{
+    type:String,
+    default:""
+    },
+
+    address:{
+        type:String,
+        default:""
+    },
+
+    logo:{
+        type:String,
+        default:""
+    },
+
+    coverImage:{
+        type:String,
+        default:""
+    },
+
+    galleryImages:{
+        type:[String],
+        default:[]
+    },
+
+    facilities:{
+        type:[String],
+        default:[]
+    },
+
+    timings:{
+        monday:String,
+        tuesday:String,
+        wednesday:String,
+        thursday:String,
+        friday:String,
+        saturday:String,
+        sunday:String
     }
+
 
 },{ timestamps: true })
 

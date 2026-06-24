@@ -10,7 +10,8 @@ import { FaHospitalUser } from "react-icons/fa";
 import { TbHeartRateMonitor } from "react-icons/tb";
 
 import { LiaUsersSolid } from "react-icons/lia";
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { ROLE } from '../constants/Role';
 
 const LandingPage = () => {
     const navigate = useNavigate();

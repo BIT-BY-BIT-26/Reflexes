@@ -1,0 +1,60 @@
+hospital   "adminEmail": "sunilfaf@gmail.com",
+  "adminPassword": "sunil@123"
+
+
+  doctor {
+    "email":"iamnishu6920@gmail.com",
+    "password":"08e1953c"
+}
+
+
+
+doctor {
+    "password":"d4354c8e",
+    "email":"nishu.240103211@iiitbh.ac.in"
+}
+
+
+//https://github.com/BIT-BY-BIT-26/Reflexes
+
+
+// const registerHospital = async (req, res) => {
+//     try {
+
+//         const { name, city, email, state, pincode, hospitalLicense,phone_number, lat, lng ,adminName, adminEmail, adminPassword} = req.body;
+
+
+//         const existingHospital = await HospitalModel.findOne({ hospitalLicense });
+//         if (existingHospital) {
+//             pincode,
+//             hospitalLicense,
+//             phone_number,
+//             location: {
+//                 type: 'Point',
+//                 coordinates: [lng, lat]  // MongoDB uses [lng, lat]
+//             }
+//         });
+//         const hashedPassword = await bcrypt.hash(adminPassword, 10);
+//         const admin=  await userModel.create({
+//             name:adminName,
+//             email:adminEmail,
+//             password:hashedPassword,
+//             role:ROLE.admin,
+//             hospitalId:hospital._id 
+//         }) 
+
+//         const accessToken = jwt.sign({
+//             id:admin._id,email:admin.email, role:admin.role,hospitalId:hospital
+//         },process.env.JWT_SECRET,{expiresIn:"1d"});
+
+//         res.status(201).json({
+//             success: true,
+//             msg: "Hospital & Admin registered successfully",
+//             data: { hospital, admin },
+//             accessToken,
+//             tokenType:"Bearer"
+//         });
+
+//     } catch (e) {
+//     }
+// };

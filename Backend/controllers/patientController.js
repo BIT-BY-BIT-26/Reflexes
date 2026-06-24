@@ -235,15 +235,8 @@ const updatePatientProfile = async (req, res) => {
       });
     }
     
-    if (req.file) {
-      const result = await cloudinary.uploader.upload(
-        req.file.path,
-        {
-          folder: "medireach/patients",
-        }
-      );
-
-      patient.profileImage = result.secure_url;
+    if (req.file && req.file.path) {
+      patient.profileImage = req.file.path; // direct Cloudinary URL
     }
 
     // update only provided fields
