@@ -55,6 +55,7 @@ class HospitalProvider extends ChangeNotifier {
   String selectedCity = "All";
   
   List<Hospital> hospitals = [];
+  List<Hospital> nearbyHospitals = [];
 
   // =====================
   // UI STATE
@@ -133,6 +134,9 @@ class HospitalProvider extends ChangeNotifier {
   // FETCH NEARBY HOSPITALS
   //========================
 Future<void> fetchNearbyHospitals() async {
+  if (nearbyHospitals.isNotEmpty) {
+    return;
+  }
   try {
     loading = true;
     isNearbyMode = true;
@@ -140,7 +144,7 @@ Future<void> fetchNearbyHospitals() async {
 
     final position = await LocationHelper.getCurrentLocation();
 
-    hospitals = await service.getHospitals(
+    nearbyHospitals = await service.getHospitals(
       lat: position.latitude,
       lng: position.longitude,
       radius: 5000,
@@ -149,7 +153,7 @@ Future<void> fetchNearbyHospitals() async {
     error = null;
   } catch (e) {
     error = e.toString();
-    hospitals = [];
+    nearbyHospitals = [];
   } finally {
     loading = false;
     notifyListeners();

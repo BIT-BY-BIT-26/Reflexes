@@ -335,6 +335,7 @@ exports.getMyAppointments = async (req, res) => {
     const appointments = await appointmentModel.find({ patient: patient._id   })
       .populate({
         path:"doctor",
+        select:"profile_photo",
         populate:{
           path:"userId",
           select:"name"
@@ -354,6 +355,7 @@ exports.getMyAppointments = async (req, res) => {
       id: a._id,
       doctorId: a.doctor?._id,
       doctorName: a.doctor?.userId?.name || "Doctor",
+      doctorProfilePhoto: a.doctor.profile_photo ||"",
       department: a.department?.name || "Department",
       hospital: a.hospital?.name || "Hospital",
       status: a.status,

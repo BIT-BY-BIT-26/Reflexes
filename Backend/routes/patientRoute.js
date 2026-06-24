@@ -3,12 +3,13 @@ const { registerPatient, getMyReports, getPatientAppointments, getMyProfile, upd
 const { ROLE } = require('../config/role');
 const auth = require('../middleware/auth');
 const authorize = require('../middleware/authorize');
+const upload = require('../middleware/multer');
 
 const patientRoute = express.Router();
 
 patientRoute.post('/register',registerPatient);
 patientRoute.get('/get-patient-profile/:patientId',getPatientProfile);
-patientRoute.patch('/update-patient-profile',auth, updatePatientProfile);
+patientRoute.patch('/update-patient-profile',auth,upload.single("profileImage") ,updatePatientProfile);
 patientRoute.get("/me",auth,authorize(ROLE.patient),getMyProfile);
 patientRoute.get('/get-appointments/:patientId',auth,getPatientAppointments);
 patientRoute.get('/get-my-reports',auth,authorize(ROLE.patient), getMyReports);

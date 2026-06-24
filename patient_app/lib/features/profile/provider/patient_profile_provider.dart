@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:patient_app/models/patient_model.dart';
 import 'package:patient_app/features/profile/services/patient_profile_service.dart';
@@ -27,10 +29,11 @@ class PatientProvider extends ChangeNotifier {
   
   Future<void> updateProfile({
     required String token,
-    String? age,
+    DateTime? dob,
     String? gender,
     String? bloodGroup,
     String? phone,
+    File? image,
   }) async {
     try {
       loading = true;
@@ -38,10 +41,11 @@ class PatientProvider extends ChangeNotifier {
 
       patient = await service.updateProfile(
         token: token,
-        age: age,
+        dob: dob,
         gender: gender,
         bloodGroup: bloodGroup,
         phone: phone,
+        image: image,
       );
 
       loading = false;

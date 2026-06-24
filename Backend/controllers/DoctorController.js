@@ -728,7 +728,7 @@ const skipPatient = async (req, res) => {
     io.to(`doctor_${doctor.id}`).emit("queueUpdated", {
       currentToken: nextAppointment.token,
       skippedToken: currentAppointment.token,
-      status: "RUNNING"
+      status: "RUNNING" 
     });
 
     return res.status(200).json({

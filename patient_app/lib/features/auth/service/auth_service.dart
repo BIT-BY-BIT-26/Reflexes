@@ -26,13 +26,24 @@ class AuthApiService {
     required String name,
     required String email,
     required String password,
+    required String gender,
+    required DateTime dob,
+    required String bloodGroup,
+    required String phone,
   }) async {
     final response = await http.post(
       Uri.parse("$baseUrl/patients/register"),
       headers: {"Content-Type": "application/json"},
-      body: jsonEncode({"name": name, "email": email, "password": password}),
+      body: jsonEncode({
+        "name": name, 
+        "email": email, 
+        "password": password,
+        "gender": gender,
+        "dob": dob.toIso8601String(),
+        "bloodGroup": bloodGroup,
+        "phone_number":phone
+        }),
     );
-
     return jsonDecode(response.body)as Map<String, dynamic>;
   }
 
@@ -47,4 +58,5 @@ class AuthApiService {
     );
     return jsonDecode(response.body);
   }
+
 }

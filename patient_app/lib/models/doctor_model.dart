@@ -5,18 +5,20 @@ class DoctorModel {
   final int experience;
   final String position;
   final String specialisation;
+  final String profilePhoto;
   final String hospitalName;
   final String departmentName; // agar department populate karoge
 
-  DoctorModel( {
+  DoctorModel({
     required this.id,
     required this.name,
     required this.email,
     required this.experience,
     required this.specialisation,
     required this.hospitalName,
-    required this.departmentName, 
+    required this.departmentName,
     required this.position,
+    required this.profilePhoto, 
   });
 
   factory DoctorModel.fromJson(Map<String, dynamic> json) {
@@ -30,7 +32,8 @@ class DoctorModel {
       hospitalName: json['hospital']?['name'] ?? '',
       departmentName: json['department'] is Map
           ? json['department']['name'] ?? ''
-          : (json['department'] ?? '').toString(),
+          : (json['department'] ?? '').toString(), 
+      profilePhoto: json['profile_photo']??'',
     );
   }
 }
