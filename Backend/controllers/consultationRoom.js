@@ -115,107 +115,58 @@ const appointmentModel = require("../models/appointmentModel");
 //     res.status(500).json({ error: error.message });
 //   }
 // };
+// exports.startConsultation = async (req, res) => {
+//   try {
+//     const { appointmentId } = req.params;
 
-exports.startConsultation = async (req, res) => {
-  try {
-    const doctorId = req.user.id;
-    const { appointmentId, patientId } = req.body;
+//     const appointment = await appointmentModel.findById(appointmentId);
 
-    // 1️⃣ Find the appointment
-    const appointment = await appointmentModel.findById(appointmentId);
-    if (!appointment) {
-      return res.status(404).json({ message: "Appointment not found" });
-    }
+//     if (!appointment) {
+//       return res.status(404).json({ message: "Appointment not found" });
+//     }
 
-    // 2️⃣ Update appointment status to CURRENT
-    appointment.status = "CURRENT";
-    await appointment.save();
+//     // ✅ Only offline appointments allowed
+//     if (appointment.appointmentType?.toLowerCase() !== "offline") {
+//       return res.status(400).json({
+//         message: "Start consultation allowed only for offline appointments",
+//       });
+//     }
 
-    // 3️⃣ Create a unique consultation room
-    const roomId = "CONS-" + crypto.randomBytes(2).toString("hex").toUpperCase();
-    const password = Math.floor(1000 + Math.random() * 9000).toString();
+//     // ✅ Update status
+//     appointment.status = "CURRENT";
+//     await appointment.save();
 
-    const room = await consulation.create({
-      appointment: appointmentId,
-      patient: patientId,
-      doctor: doctorId,
-      roomId,
-      password,
-      status: "ACTIVE", // room status
-      startedAt: new Date(),
-      doctorJoined: false,
-      patientJoined: false,
-    });
+//     res.json({
+//       message: "Consultation started successfully",
+//       appointment,
+//     });
 
-    // 4️⃣ Send room details to frontend
-    res.json({
-      roomId: room.roomId,
-      password: room.password,
-      status: room.status,
-      appointmentId: room.appointment,
-      patientId: room.patient,
-      doctorId: room.doctor,
-    });
-  } catch (err) {
-    console.error("Error starting consultation:", err);
-    res.status(500).json({ message: err.message });
-  }
-};
-exports.startOnlineConsultation = async (req, res) => {
-  try {
-    const doctorId = req.user.id; // doctor ID from JWT
-    const { appointmentId, patientId } = req.body;
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+// // GET consultation by appointmentId
+// exports.getConsultationAppointment = async (req, res) => {
+//   try {
+//     const consultation = await consulation.findOne({
+//       appointment: req.params.appointmentId,
+//     });
 
-    // 1️⃣ Find appointment
-    const appointment = await appointmentModel.findById(appointmentId);
-    if (!appointment)
-      return res.status(404).json({ success: false, msg: "Appointment not found" });
+//     if (!consultation) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Consultation not found",
+//       });
+//     }
 
-    // 2️⃣ Mark appointment as IN_PROGRESS
-    appointment.status = "CURRENT";
-    await appointment.save();
-
-    // 3️⃣ Create a consultation room object
-    const room = {
-      roomId: appointmentId, // you can generate a unique ID if needed
-      doctor: doctorId,
-      patient: patientId,
-      startedAt: new Date(),
-    };
-
-    // Optional: Save to DB
-    await consulation.create(room);
-
-    // 4️⃣ Return room details to frontend
-    res.json(room);
-  } catch (err) {
-    console.error("Error starting consultation:", err);
-    res.status(500).json({ success: false, msg: err.message });
-  }
-};
-
-// GET consultation by appointmentId
-exports.getConsultationAppointment = async (req, res) => {
-  try {
-    const consultation = await consulation.findOne({
-      appointment: req.params.appointmentId,
-    });
-
-    if (!consultation) {
-      return res.status(404).json({
-        success: false,
-        message: "Consultation not found",
-      });
-    }
-
-    res.json({
-      success: true,
-      consultation,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
-  }
-}
+//     res.json({
+//       success: true,
+//       consultation,
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       message: "Server error",
+//     });
+//   }
+// }

@@ -7,10 +7,11 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const getSignedUrl = require("../utils/getSignedUrl");
 const reportModel = require("../models/reportModel");
+const cloudinary  = require("../config/cloudinary");
 
 const registerPatient = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, bloodGroup,dob, gender } = req.body;
 
     // Basic validation
     if (!name || !email || !password) {
@@ -42,7 +43,10 @@ const registerPatient = async (req, res) => {
     });
 
     const patient = await patientModel.create({
-      userId: user._id
+      userId: user._id,
+      bloodGroup:bloodGroup,
+      dob:dob,
+      gender:gender
     });
 
     //token generate--
@@ -65,6 +69,9 @@ const registerPatient = async (req, res) => {
       role:user.role,
       token,
       user: {
+        bloodGroup:patient.bloodGroup,
+        gender:patient.gender,
+        dob:patient.dob,
         id: user._id,
         patientId:patient._id,
         name: user.name,
@@ -216,10 +223,10 @@ const getPatientAppointments = async(req,res)=>{
 //============== UPDATE PATIENT PROFILE====================
 const updatePatientProfile = async (req, res) => {
   try {
-    const { age, gender, bloodGroup,phone_number } = req.body;
+    const { dob, gender, bloodGroup,phone_number,address } = req.body;
 
     // logged-in user se patient nikalo
-    const patient = await patientModel.findOne({ userId: req.user.id });
+    const patient = await patientModel.findOne({ userId: req.user.id }).populate("userId");;
 
     if (!patient) {
       return res.status(404).json({
@@ -227,20 +234,43 @@ const updatePatientProfile = async (req, res) => {
         msg: "Patient profile not found"
       });
     }
+    
+    if (req.file && req.file.path) {
+      patient.profileImage = req.file.path; // direct Cloudinary URL
+    }
 
     // update only provided fields
-    if (age !== undefined) patient.age = age;
+    if (dob) patient.dob = dob;
     if (gender) patient.gender = gender;
     if (bloodGroup) patient.bloodGroup = bloodGroup;
     if(phone_number) patient.phone_number = phone_number;
+    if (address) {
+      patient.address = {
+        ...patient.address,
+        ...address,
+      };
+    }
+
 
     await patient.save();
 
-    res.status(200).json({
-      success: true,
-      msg: "Patient profile updated successfully",
-      patient
-    });
+    return res.status(200).json({
+    success: true,
+    msg: "Patient profile updated successfully",
+    patient: {
+      _id: patient._id,
+      dob: patient.dob,
+      gender: patient.gender,
+      bloodGroup: patient.bloodGroup,
+      phone_number: patient.phone_number,
+      profileImage: patient.profileImage,
+      userId: {
+        _id: patient.userId._id,
+        name: patient.userId.name,
+        email: patient.userId.email
+      }
+    }
+  });
 
   } catch (err) {
     res.status(500).json({
@@ -314,6 +344,97 @@ const getMyProfile = async (req, res) => {
   }
 }
 
+const getActiveQueueStatus = async (req, res) => {
+  try {
 
+    const patient = await patientModel.findOne({
+      userId: req.user.id
+    });
 
-module.exports = { registerPatient,getMyProfile,createWalkInPatient,updatePatientProfile,getPatientAppointments,getPatientProfile ,getPatientReportForDoctor, updatePatientProfile,getMyReports};
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: "Patient not found"
+      });
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // Patient ka aaj ka active appointment
+    const appointment = await appointmentModel.findOne({
+      patient: patient._id,
+      date: {
+        $gte: today,
+        $lt: tomorrow
+      },
+      status: {
+        $in: ["CONFIRMED", "CURRENT"] 
+      }
+    })
+      .populate({
+        path: "doctor",
+        populate: {
+          path: "userId",
+          select: "name"
+        }
+      })
+      .populate("department", "name");
+
+    if (!appointment) {
+      return res.status(200).json({
+        success: true,
+        hasActiveQueue: false
+      });
+    }
+
+    const doctor = appointment.doctor;
+
+    const currentAppointment =
+      await appointmentModel.findOne({
+        doctor: doctor._id,
+        status: "CURRENT",
+        date: {
+          $gte: today,
+          $lt: tomorrow
+        }
+      });
+
+    const currentToken =
+      currentAppointment?.token ?? 0;
+
+    const yourToken =
+      appointment.token ?? 0;
+
+    const patientsAhead =
+      currentToken >= yourToken
+        ? 0
+        : yourToken - currentToken;
+
+    return res.status(200).json({
+      success: true,
+      hasActiveQueue: true,
+      appointmentId: appointment._id,
+      doctorId: doctor._id,
+      doctorName:doctor.userId?.name ?? "Doctor",
+      department:appointment.department?.name ?? "Department",
+      currentToken,
+      yourToken,
+      patientsAhead,
+      isPaused: doctor.opdPaused,
+      isOpdClosed: !doctor.opdStarted,
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+
+  }
+};
+
+module.exports = { registerPatient,getActiveQueueStatus,getMyProfile,createWalkInPatient,getPatientAppointments,getPatientProfile ,getPatientReportForDoctor, updatePatientProfile,getMyReports};

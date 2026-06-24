@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:patient_app/features/auth/login_screen.dart';
 import 'package:patient_app/features/auth/provider/auth_provider.dart';
+import 'package:patient_app/utils/constants.dart';
 import 'package:patient_app/widgets/custom_bottom_nav.dart';
-
 import 'package:provider/provider.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -47,6 +47,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
