@@ -66,6 +66,10 @@ class AuthProvider with ChangeNotifier {
     required String name,
     required String email,
     required String password,
+    required String gender,
+    required DateTime dob,
+    required String bloodGroup,
+    required String phone,
   }) async {
     try {
       _setLoading(true);
@@ -73,7 +77,11 @@ class AuthProvider with ChangeNotifier {
       final res = await AuthApiService.register(
         name: name,
         email: email,
-        password: password,
+        password: password, 
+        gender: gender, 
+        dob: dob, 
+        phone: phone,
+        bloodGroup: bloodGroup,
       );
 
       // if (res['success'] != true) {
