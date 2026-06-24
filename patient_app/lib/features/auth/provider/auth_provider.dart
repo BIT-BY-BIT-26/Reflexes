@@ -43,10 +43,10 @@ class AuthProvider with ChangeNotifier {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', _token!);
 
-        // 🔥 SOCKET CONNECT
-        if (_user?.patientId != null) {
-          SocketService().connectPatient(_user!.patientId!);
-        }
+        // // 🔥 SOCKET CONNECT
+        // if (_user?.patientId != null) {
+        //   SocketService().connectPatient(_user!.patientId!);
+        // }
 
         print("Saved token: $_token");
         print("User: ${_user!.name}");
@@ -66,6 +66,10 @@ class AuthProvider with ChangeNotifier {
     required String name,
     required String email,
     required String password,
+    required String gender,
+    required DateTime dob,
+    required String bloodGroup,
+    required String phone,
   }) async {
     try {
       _setLoading(true);
@@ -73,7 +77,11 @@ class AuthProvider with ChangeNotifier {
       final res = await AuthApiService.register(
         name: name,
         email: email,
-        password: password,
+        password: password, 
+        gender: gender, 
+        dob: dob, 
+        phone: phone,
+        bloodGroup: bloodGroup,
       );
 
       // if (res['success'] != true) {
@@ -86,10 +94,10 @@ class AuthProvider with ChangeNotifier {
 
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('token', _token!);
-        // 🔥 SOCKET CONNECT
-        if (_user?.patientId != null) {
-          SocketService().connectPatient(_user!.patientId!);
-        }
+        // // 🔥 SOCKET CONNECT
+        // if (_user?.patientId != null) {
+        //   SocketService().connectPatient(_user!.patientId!);
+        // }
 
         //notifyListeners();
       } else {
@@ -142,9 +150,9 @@ class AuthProvider with ChangeNotifier {
       final res = await AuthApiService.getProfile(_token!);
       _user = UserModel.fromJson(res);
 
-      if (_user?.patientId != null) {
-        SocketService().connectPatient(_user!.patientId!);
-      }
+      // if (_user?.patientId != null) {
+      //   SocketService().connectPatient(_user!.patientId!);
+      // }
 
       notifyListeners();
       return true;

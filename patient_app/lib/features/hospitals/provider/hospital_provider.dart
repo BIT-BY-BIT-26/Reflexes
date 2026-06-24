@@ -38,6 +38,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:patient_app/features/hospitals/service/hospital_service.dart';
+import 'package:patient_app/helpers/location_helper.dart';
 import 'package:patient_app/models/hospital_model.dart';
 
 
@@ -54,6 +55,7 @@ class HospitalProvider extends ChangeNotifier {
   String selectedCity = "All";
   
   List<Hospital> hospitals = [];
+  List<Hospital> nearbyHospitals = [];
 
   // =====================
   // UI STATE
@@ -128,32 +130,35 @@ class HospitalProvider extends ChangeNotifier {
     }
   }
 
-//   //========================
-//   // FETCH NEARBY HOSPITALS
-//   //========================
-// Future<void> fetchNearbyHospitals() async {
-//   try {
-//     loading = true;
-//     isNearbyMode = true;
-//     notifyListeners();
+  //========================
+  // FETCH NEARBY HOSPITALS
+  //========================
+Future<void> fetchNearbyHospitals() async {
+  if (nearbyHospitals.isNotEmpty) {
+    return;
+  }
+  try {
+    loading = true;
+    isNearbyMode = true;
+    notifyListeners();
 
-//     final position = await LocationHelper.getCurrentLocation();
+    final position = await LocationHelper.getCurrentLocation();
 
-//     hospitals = await service.getHospitals(
-//       lat: position.latitude,
-//       lng: position.longitude,
-//       radius: 5,
-//     );
+    nearbyHospitals = await service.getHospitals(
+      lat: position.latitude,
+      lng: position.longitude,
+      radius: 5000,
+    );
 
-//     error = null;
-//   } catch (e) {
-//     error = e.toString();
-//     hospitals = [];
-//   } finally {
-//     loading = false;
-//     notifyListeners();
-//   }
-// }
+    error = null;
+  } catch (e) {
+    error = e.toString();
+    nearbyHospitals = [];
+  } finally {
+    loading = false;
+    notifyListeners();
+  }
+}
 
 
   // =====================

@@ -1,9 +1,11 @@
-const express = require("express");
-const consultationRouter = express.Router();
-const auth = require("../middleware/auth");
-const { createConsultationRoom, getConsultationAppointment, startConsultation, startOnlineConsultation } = require("../controllers/consultationRoom");
+// const express = require("express");
+// const consultationRouter = express.Router();
+// const auth = require("../middleware/auth");
+// const { createConsultationRoom, getConsultationAppointment, startConsultation } = require("../controllers/consultationRoom");
 
-consultationRouter.post("/start", auth,startConsultation);
-consultationRouter.get("/by-appointment/:appointmentId",getConsultationAppointment);
-consultationRouter.post("/start-online", auth, startOnlineConsultation);
-module.exports = consultationRouter;
+// consultationRouter.post("/start", auth,createConsultationRoom);
+// consultationRouter.get("/by-appointment/:appointmentId",getConsultationAppointment);
+
+// consultationRouter.patch("/start-consultation/:appointmentId",startConsultation);
+
+// module.exports = consultationRouter;
