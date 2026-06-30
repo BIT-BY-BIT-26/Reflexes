@@ -258,10 +258,10 @@ const getPatientProfile = async(req,res)=>{
       return res.status(400).json({messgae:"Patient not found"});
     }
     res.json({
-      // id:patient._id,
-      // name:patient.userId.name,
-      // email:patient.userId.email,
-      // email:patient.userId.gender,
+      id:patient._id,
+      name:patient.userId.name,
+      email:patient.userId.email,
+      email:patient.userId.gender,
       patient
     })
   }catch(e){

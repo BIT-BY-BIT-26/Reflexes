@@ -91,9 +91,11 @@ const HospitalSchema= new Mongoose.Schema({
         friday:String,
         saturday:String,
         sunday:String
+    },
+    profileCompleted:{
+        type:Boolean,
+        default:false
     }
-
-
 },{ timestamps: true })
 
 HospitalSchema.index({ location: "2dsphere" });

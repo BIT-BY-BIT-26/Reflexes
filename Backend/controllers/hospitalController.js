@@ -11,6 +11,7 @@ const sendEmail = require('../utils/sendEmail');
 const docterModel = require('../models/docterModel');
 const departmentModel = require('../models/departmentModel');
 const appointmentModel = require('../models/appointmentModel');
+const patientModel = require('../models/patientModel');
 
 const registerHospital = async (req, res) => {
     try {
@@ -69,8 +70,9 @@ const registerHospital = async (req, res) => {
 };
 
 const updateHospitalProfile = async(req,res)=>{
-  console.log(req.body);
-console.log(req.files);
+
+  console.log("FILES:");
+  console.log(req.files);
   try{
     const hospitalId = req.user.hospitalId;
 
@@ -80,22 +82,32 @@ console.log(req.files);
       facilities:JSON.parse(req.body.facilities || "[]"),
       timings:JSON.parse(req.body.timings || "{}")
     };
-    if(req.files.logo){
+    if(req.files?.logo){
       updateData.logo=req.files.logo[0].path;
     }
 
-    if(req.files.coverImage){
+    if(req.files?.coverImage){
       updateData.coverImage=
       req.files.coverImage[0].path;
     }
 
-    if (req.files.galleryImages) {
+    if (req.files?.galleryImages) {
       updateData.galleryImages =
         req.files.galleryImages.map(
           img => img.path
         );
     }
+    const isComplete =
+      updateData.description &&
+      updateData.address &&
+      updateData.facilities?.length > 0 &&
+      Object.keys(updateData.timings || {}).length > 0 &&
+      updateData.logo &&
+      updateData.coverImage &&
+      updateData.galleryImages?.length > 0;
 
+    updateData.profileCompleted = !!isComplete;
+console.log("hospitalId:", hospitalId);
     const hospital =
       await HospitalModel.findByIdAndUpdate(
         hospitalId,
@@ -105,7 +117,8 @@ console.log(req.files);
 
     res.status(200).json({
       success:true,
-      data:hospital
+      data:hospital,
+      profileCompleted:hospital.profileCompleted
     })
   }catch(error){
     res.status(500).json({
@@ -114,6 +127,7 @@ console.log(req.files);
     })
   }
 }
+
 
 
 const getHospitalProfile = async (req, res) => {
@@ -153,16 +167,20 @@ const getStats = async(req,res)=>{
       role:"DOCTOR"
     });
     const countDepartment = await departmentModel.countDocuments({
-      hospitalId:hospitalId,
+      hospital:hospitalId,
     })
     const countAppointment= await appointmentModel.countDocuments({
       hospitalId:hospitalId,
+    })
+    const countPatient = await patientModel.countDocuments({
+      hospitalId:hospitalId
     })
     res.status(200).json({
       success:true,
       countDoctor,
       countDepartment,
-      countAppointment
+      countAppointment,
+      countPatient
     });
     console.log("left")
   }catch(error){
