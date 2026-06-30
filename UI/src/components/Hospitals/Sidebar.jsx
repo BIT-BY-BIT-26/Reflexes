@@ -168,7 +168,7 @@ export default function Sidebar() {
         openAllMenus();
       }}
       onMouseLeave={handleMouseLeave}
-      className={`bg-slate-900 h-screen fixed left-0 top-0 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-800 text-white py-4 transition-all ${
+      className={`z-50 bg-black h-screen fixed left-0 top-0 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-black text-white py-4 transition-all ${
         expanded ? "w-80" : "w-20"
       }`}
     >
@@ -200,7 +200,7 @@ export default function Sidebar() {
                 onClick={() => toggleMenu(menu.id)}
                 className="flex items-center gap-2 p-3 hover:bg-slate-800 rounded-lg w-full"
               >
-                <Icon strokeWidth={3.5} className="text-slate-400 " size={25} />
+                <Icon strokeWidth={2.5} className="text-slate-400 " size={25} />
                 {expanded && <span className="text-blue-300  text-xl font-bold uppercase">{menu.title}</span>}
               </button>
 

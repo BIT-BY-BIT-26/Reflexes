@@ -52,7 +52,7 @@ export const menuItems = [
       },
       {
         title: "Add Doctor",
-        route: "/hospital-dashboard/doctors/add",
+        route: "/hospital-dashboard/doctors",
       },
       {
         title: "Doctor Availability",
