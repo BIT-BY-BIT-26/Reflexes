@@ -1,66 +1,88 @@
 import 'package:flutter/material.dart';
 import 'package:patient_app/features/appointment/booked_appointment_screen.dart';
-import 'package:patient_app/features/hospitals/hospital_screen.dart';
-import 'package:patient_app/profile/profile_screen.dart';
-
-
+import 'package:patient_app/features/home/home_screen.dart';
+import 'package:patient_app/features/profile/profile_screen.dart';
+import 'package:patient_app/features/queue/queue_screen.dart';
+import 'package:patient_app/utils/constants.dart';
+import 'package:sliding_clipped_nav_bar/sliding_clipped_nav_bar.dart';
 
 class CustomBottomNav extends StatefulWidget {
   const CustomBottomNav({super.key});
 
   @override
-  _CustomBottomNavState createState() => _CustomBottomNavState();
+  State<CustomBottomNav> createState() => _CustomBottomNavState();
 }
 
 class _CustomBottomNavState extends State<CustomBottomNav> {
-  int _selectedIndex = 0;
+  int selectedIndex = 0;
 
-  final List<Widget> _pages = [
-  HospitalScreen(), MyAppointmentsScreen(), PatientProfileScreen()
-  ];
+  final PageController controller = PageController();
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_selectedIndex],
+      body: PageView(
+        controller: controller,
+        physics: const NeverScrollableScrollPhysics(),
+        children: const [
+          HomeScreen(),
+          MyAppointmentsScreen(),
+          QueueScreen(),
+          PatientProfileScreen(),
+        ],
+      ),
 
-      bottomNavigationBar: BottomAppBar(
-        height: 61,
-        color:const Color.fromARGB(255, 255, 255, 255),
-        shape: CircularNotchedRectangle(), // notch for FAB
-        notchMargin:4.0,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: <Widget>[
-            IconButton(
-              icon: Icon(Icons.business_outlined,size: 35,),
-              color:_selectedIndex==0?Colors.blueAccent:Colors.grey,
-              onPressed: () => _onItemTapped(0),
-            ),
-            IconButton(
-              icon: Icon(Icons.watch_later,size: 35,),
-              color:_selectedIndex==1?Colors.blueAccent:Colors.grey,
-              onPressed: () => _onItemTapped(1),
-            ),
-            // IconButton(
-            //   icon: Icon(Icons.add,size: 35,),
-            //   color:_selectedIndex==2?Colors.blueAccent:Colors.grey,
-            //   onPressed: () => _onItemTapped(2),
-            // ),
-            IconButton(
-              icon: Icon(Icons.person,size: 35,),
-              color:_selectedIndex==2?Colors.blueAccent:Colors.grey,
-              onPressed: () => _onItemTapped(2),
-            ),
-            
-          ],
-        ),
+      bottomNavigationBar: SlidingClippedNavBar.colorful(
+        backgroundColor: AppColors.background,
+
+        selectedIndex: selectedIndex,
+
+        iconSize: 28,
+
+        onButtonPressed: (index) {
+          setState(() {
+            selectedIndex = index;
+          });
+
+          controller.animateToPage(
+            index,
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeInOut,
+          );
+        },
+
+        barItems: [
+          BarItem(
+            icon: Icons.home_rounded,
+            title: 'Home',
+            activeColor: Color.fromARGB(255, 21, 146, 230),
+            inactiveColor: Colors.grey,
+          ),
+          BarItem(
+            icon: Icons.calendar_month_rounded,
+            title: 'Appointments',
+            activeColor: Color.fromARGB(255, 21, 146, 230),
+            inactiveColor: Colors.grey,
+          ),
+          BarItem(
+            icon: Icons.groups_rounded,
+            title: 'Queue',
+            activeColor: Color.fromARGB(255, 21, 146, 230),
+            inactiveColor: Colors.grey,
+          ),
+          BarItem(
+            icon: Icons.person_rounded,
+            title: 'Profile',
+            activeColor: Color.fromARGB(255, 21, 146, 230),
+            inactiveColor: Colors.grey,
+          ),
+        ],
       ),
     );
   }

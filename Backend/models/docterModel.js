@@ -77,6 +77,16 @@ const doctorSchema = new mongoose.Schema({
     default:false
   },
 
+  opdPaused: {
+    type: Boolean,
+    default: false
+  },
+
+  opdStartedAt: {
+    type: Date,
+    default: null
+  },
+
   lastSeen:{
     type:Date
   },

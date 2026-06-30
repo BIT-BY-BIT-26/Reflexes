@@ -18,10 +18,13 @@ class Signup extends StatefulWidget {
 
 class _SignupState extends State<Signup> {
   TextEditingController emailController = TextEditingController();
-
   TextEditingController passwordController = TextEditingController();
-
   TextEditingController nameController = TextEditingController();
+  TextEditingController phoneController= TextEditingController();
+  String? selectedGender;
+  String? selectedBloodGroup;
+  DateTime? selectedDob;
+
 
   @override
   Widget build(BuildContext context) {
@@ -46,20 +49,19 @@ class _SignupState extends State<Signup> {
                 left: 0,
                 right: 0,
                 bottom: 0,
-                child: KeyboardAvoider(
-                  autoScroll: true,
-                  child: Container(
-                    height: size.height,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(40),
-                        topRight: Radius.circular(40),
-                      ),
-                      color: const Color.fromARGB(255, 238, 238, 237),
+                child: Container(
+                  height: size.height,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(40),
+                      topRight: Radius.circular(40),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
+                    color: const Color.fromARGB(255, 238, 238, 237),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: SingleChildScrollView(
                       child: Column(
                         children: [
                           Text(
@@ -94,13 +96,116 @@ class _SignupState extends State<Signup> {
                             text: "Enter password",
                             filled: false,
                           ),
-                          SizedBox(height: 5),
-                  
+                          SizedBox(height: 15),
+                          TextFieldWidget(
+                            controller: phoneController,
+                            text: "Enter Phone",
+                            filled: false,
+                          ),
+                          SizedBox(height: 15),
+                          ListTile(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: const BorderSide(
+                                color: Colors.grey,
+                              ),
+                            ),
+                            leading: const Icon(Icons.cake),
+                            title: Text(
+                              selectedDob == null
+                                  ? "Select Date of Birth"
+                                  : "${selectedDob!.day}/${selectedDob!.month}/${selectedDob!.year}",
+                            ),
+                            onTap: () async {
+                              final picked = await showDatePicker(
+                                context: context,
+                                initialDate: DateTime(2000),
+                                firstDate: DateTime(1900),
+                                lastDate: DateTime.now(),
+                              );
+                      
+                              if (picked != null) {
+                                setState(() {
+                                  selectedDob = picked;
+                                });
+                              }
+                            },
+                          ),
+                          SizedBox(height: 15),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: DropdownButtonFormField<String>(
+                                  value: selectedGender,
+                                  decoration: const InputDecoration(
+                                    border: OutlineInputBorder(),
+                                    labelText: "Gender",
+                                  ),
+                                  items: const [
+                                    DropdownMenuItem(
+                                      value: "MALE",
+                                      child: Text("Male"),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: "FEMALE",
+                                      child: Text("Female"),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: "OTHER",
+                                      child: Text("Other"),
+                                    ),
+                                  ],
+                                  onChanged: (value) {
+                                    setState(() {
+                                      selectedGender = value;
+                                    });
+                                  },
+                                ),
+                              ),
+                              SizedBox(width: 10,),
+                              Expanded(
+                                child: DropdownButtonFormField<String>(
+                                  value: selectedBloodGroup,
+                                  decoration: const InputDecoration(
+                                    border: OutlineInputBorder(),
+                                    labelText: "Blood Group",
+                                  ),
+                                  items: const [
+                                    "A+",
+                                    "A-",
+                                    "B+",
+                                    "B-",
+                                    "AB+",
+                                    "AB-",
+                                    "O+",
+                                    "O-",
+                                  ]
+                                      .map(
+                                        (e) => DropdownMenuItem(
+                                          value: e,
+                                          child: Text(e),
+                                        ),
+                                      )
+                                      .toList(),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      selectedBloodGroup = value;
+                                    });
+                                  },
+                                ),
+                              )
+                            ],
+                          ),
+                          //SizedBox(height: 5),                 
                           SizedBox(height: 15),
                           Button(
                             nameController: nameController,
                             emailController: emailController,
                             passwordController: passwordController,
+                            phoneController:phoneController,
+                            selectedGender: selectedGender, 
+                            selectedDob: selectedDob, 
+                            selectedBloodGroup: selectedBloodGroup,
                           ),
                           SizedBox(height: 5),
                           Row(
@@ -160,11 +265,19 @@ class Button extends StatefulWidget {
   final TextEditingController emailController;
   final TextEditingController passwordController;
   final TextEditingController nameController;
+  final TextEditingController phoneController;
+  final String? selectedGender;
+  final DateTime? selectedDob;
+  final String? selectedBloodGroup;
   const Button({
     super.key,
     required this.emailController,
     required this.passwordController,
     required this.nameController,
+    required this.phoneController,
+    required this.selectedGender,
+    required this.selectedDob,
+    required this.selectedBloodGroup,
   });
 
   @override
@@ -185,6 +298,10 @@ class _ButtonState extends State<Button> {
                 name: widget.nameController.text.trim(),
                 email: widget.emailController.text.trim(),
                 password: widget.passwordController.text.trim(),
+                gender: widget.selectedGender!,
+                dob: widget.selectedDob!,
+                bloodGroup: widget.selectedBloodGroup!,
+                phone: widget.phoneController.text.trim(),             
               );
 
               ScaffoldMessenger.of(context).showSnackBar(
@@ -195,7 +312,10 @@ class _ButtonState extends State<Button> {
                 context,
                 MaterialPageRoute(builder: (_) => const CustomBottomNav()),
               );
-            } catch (e) {
+            } catch (e, stackTrace) {
+              print(e);
+              print(stackTrace);
+
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(e.toString())),
               );

@@ -11,11 +11,13 @@ class AppointmentProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
 
   Future<void> fetchMyAppointments(String token) async {
+    print("fetchMyAppointments called");
     _isLoading = true;
     notifyListeners();
 
     try {
       _appointments = await AppointmentService.getMyAppointments(token);
+      print(_appointments);
     } catch (e) {
       _appointments = [];
       debugPrint("Error fetching appointments: $e");
@@ -24,7 +26,6 @@ class AppointmentProvider with ChangeNotifier {
     _isLoading = false;
     notifyListeners();
   }
-  
 
   // 🔥 SOCKET UPDATE
   void confirmAppointmentSocket({
@@ -49,4 +50,3 @@ class AppointmentProvider with ChangeNotifier {
     }
   }
 }
-

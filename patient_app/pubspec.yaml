@@ -43,6 +43,16 @@ dependencies:
   file_picker: ^10.3.10
   url_launcher: ^6.3.2
   syncfusion_flutter_pdfviewer: ^32.2.5
+  geolocator: ^14.0.2
+  latlong2: ^0.9.1
+  flutter_map: ^8.2.2
+  font_awesome_flutter: ^11.0.0
+  flutter_svg: ^2.3.0
+  google_fonts: ^8.1.0
+  sliding_clipped_nav_bar: ^3.1.1
+  intl: ^0.20.2
+  cached_network_image: ^3.4.1
+  image_picker: ^1.2.2
 
 dev_dependencies:
   flutter_test:
