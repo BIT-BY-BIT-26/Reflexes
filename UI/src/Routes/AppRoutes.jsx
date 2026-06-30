@@ -11,6 +11,15 @@ import LoginPlatformAdmin from '../pages/Auth/LoginPlatformAdmin'
 import PlatFormDashboard from '../pages/PlatFormDashboard'
 import { ROLE } from '../constants/Role'
 import PublicRoute from './PublicRoute'
+import AddDepartment from '../features/Admin/AddDepartment'
+import CompleteProfile from '../features/Admin/CompleteProfile'
+import Profile from '../components/Hospitals/Profile'
+import DoctorDashboard from '../pages/DoctorDashboard'
+import AllDepartments from '../features/Admin/AllDepartments'
+import HospitalLayout from '../pages/HospitalLayout'
+import AddDoctor from '../features/Admin/AddDoctor'
+import AllDoctor from '../features/Admin/AllDoctor'
+import Appointment from '../components/Doctors/Appointment'
 
 const AppRoutes = () => {
   return (
@@ -41,11 +50,37 @@ const AppRoutes = () => {
             </ProtectedRoutes>
           }
         />
-        
-        <Route path='/hospital-dashboard' 
+        <Route path='/hospital-dashboard' element={<ProtectedRoutes allowedRoles={[ROLE.admin]}>
+          <HospitalLayout />
+        </ProtectedRoutes>}>
+          <Route index element={<HospitalDashboard />} />
+          <Route path='departments' element={<AllDepartments />} />
+          <Route path='departments/add' element={<AddDepartment />}/>
+          <Route path='doctors/add' element={<AddDoctor />}/>
+          <Route path='doctors' element={<AllDoctor />}/>
+          
+        </Route>
+
+
+        <Route path='/doctor-dashboard' element={<ProtectedRoutes allowedRoles={[ROLE.doctor]}>
+          <HospitalLayout />
+        </ProtectedRoutes>}>
+          <Route index element={<DoctorDashboard />} />
+          <Route path='appointments' element={<Appointment />} />
+          
+        </Route>
+
+        <Route path='/hospital-dashboard/profile' 
           element={
             <ProtectedRoutes allowedRoles={[ROLE.admin]}>
-              <HospitalDashboard />
+              <CompleteProfile />
+            </ProtectedRoutes>
+          }
+        />
+        <Route path='/hospital-dashboard/hospital-profile' 
+          element={
+            <ProtectedRoutes allowedRoles={[ROLE.admin]}>
+              <Profile />
             </ProtectedRoutes>
           }
         />

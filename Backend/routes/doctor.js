@@ -2,8 +2,8 @@ const express = require("express");
 const auth = require("../middleware/auth");
 const authorize = require("../middleware/authorize");
 const { ROLE } = require("../config/role");
-const { getDoctorByHospital, submitProfile, getDoctorsByDepartment ,getMyProfile, getCompletedAppointments, updateProfile, toggleDoctorOnline, toggleOpd, uploadDoctorPhoto, stopConsultation, pauseConsultation, resumeConsultation, callNext, skipPatient, startConsultation } = require("../controllers/DoctorController");
-const {upload} = require("../middleware/uploadCloud");
+const { getDoctorByHospital, submitProfile, getDoctorsByDepartment ,getMyProfile, getCompletedAppointments, updateProfile, toggleDoctorOnline, toggleOpd, uploadDoctorPhoto, getProfileStatus,getUniquePatients, getDoctorDashboard } = require("../controllers/DoctorController");
+
 const { addDoctor } = require("../controllers/addDoctorController");
 const doctorRouter = express.Router();
 
@@ -37,11 +37,11 @@ doctorRouter.get(
 /* ================= DOCTOR PROFILE ================= */
 
 // Check profile status
-// doctorRouter.get(
-//   "/profile-status",
-//   auth,
-//   getProfileStatus
-// );
+doctorRouter.get(
+  "/profile-status",
+  auth,
+  getProfileStatus
+);
 
 // Submit doctor profile
 doctorRouter.post(
@@ -62,9 +62,17 @@ doctorRouter.post('/add-doctor',auth,  authorize(ROLE.admin),addDoctor);
 doctorRouter.get('/get-doctors',auth,authorize(ROLE.admin), getDoctorByHospital);
 doctorRouter.get("/appointments/completed",auth,getCompletedAppointments);
 doctorRouter.get("/me", auth, getMyProfile);
+doctorRouter.get("/profile-status", auth, getProfileStatus);
+doctorRouter.post("/submit-profile",auth,submitProfile);
 doctorRouter.patch("/update-profile", auth, updateProfile);
 doctorRouter.patch("/toggle-online", auth, toggleDoctorOnline);
 doctorRouter.patch("/toggle-opd", auth, toggleOpd);
 doctorRouter.patch("/upload-photo",auth, upload.single("photo"),uploadDoctorPhoto);
+// doctorRouter.get("/all-completed",auth,getTotalCompletedAppointments);
+// doctorRouter.get("/today-completed",auth,getTodayCompletedConsultations);
+// doctorRouter.get("/today-new",auth,getTodayNewPatients);
+// doctorRouter.get('/all-unique-counts',auth,getTotalUniquePatientsCounts);
+doctorRouter.get('/all-unique',auth,getUniquePatients);
+doctorRouter.get('/all-data',auth,getDoctorDashboard);
 
 module.exports = doctorRouter;

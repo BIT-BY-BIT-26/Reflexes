@@ -8,6 +8,7 @@ const {
   toggleDepartmentStatus,
   deleteDepartment,
   getDepartmentsByHospital,
+  getAllDepartmentsWithCounts,
 } = require("../controllers/departmentController");
 const auth = require("../middleware/auth");
 const authorize = require("../middleware/authorize");
@@ -19,7 +20,8 @@ const departmentRouter = express.Router();
 departmentRouter.post("/",auth,authorize(ROLE.admin), createDepartment);
 
 // ✅ Get all departments of hospital (Admin)
-departmentRouter.get("/",auth, getAllDepartments);
+departmentRouter.get("/",auth,authorize(ROLE.admin,ROLE.doctor),getAllDepartments);
+departmentRouter.get("/doctor-count",auth, getAllDepartmentsWithCounts);
 
 // ✅Get all departments of repective hospital (user)
 departmentRouter.get("/hospital/:hospitalId",getDepartmentsByHospital);
