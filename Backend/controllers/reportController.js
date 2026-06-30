@@ -16,6 +16,7 @@ exports.uploadReport = async(req,res)=>{
             patient:patient._id,
             title: title,
             type: type,
+            fileUrl:req.file.path,
             filePublicId:req.file.filename,
             fileType
         });

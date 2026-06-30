@@ -16,6 +16,30 @@ const patientSchema = new mongoose.Schema(
       type: Number
     },
     
+    dob: {
+      type: Date
+    },
+
+    address: {
+      line: String,
+      city: String,
+      state: String,
+      pincode: String,
+
+      // 🧭 ADD THIS (IMPORTANT)
+      location: {
+        type: {
+          type: String,
+          enum: ["Point"],
+          default: "Point"
+        },
+        coordinates: {
+          type: [Number], // [lng, lat]
+          default: undefined
+        }
+      }
+    },
+    
 
     gender: {
       type: String,
@@ -23,11 +47,13 @@ const patientSchema = new mongoose.Schema(
     },
 
     bloodGroup: {
-      type: String
+      type: String,
+      enum: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]
     },
     phone_number:{
-      type:Number
-    }
+      type:String
+    },
+    profileImage: String
   },
   { timestamps: true }
 );

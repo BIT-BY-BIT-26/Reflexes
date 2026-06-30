@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:patient_app/features/appointment/provider/appointment_provider.dart';
+import 'package:patient_app/features/auth/login_page.dart';
 import 'package:patient_app/features/auth/login_screen.dart';
 import 'package:patient_app/features/auth/provider/auth_provider.dart';
+import 'package:patient_app/features/auth/register_page.dart';
 import 'package:patient_app/features/departments/provider/department_provider.dart';
 import 'package:patient_app/features/doctors/provider/doctor_provider.dart';
+import 'package:patient_app/features/home/home_screen.dart';
+import 'package:patient_app/features/hospital_route/provider/hospital_route_provider.dart';
 import 'package:patient_app/features/hospitals/provider/hospital_provider.dart';
+import 'package:patient_app/features/queue/provider/queue_provider.dart';
+import 'package:patient_app/features/queue/queue_screen.dart';
 import 'package:patient_app/features/reports/provider/reports_provider.dart';
-import 'package:patient_app/profile/provider/patient_profile_provider.dart';
+import 'package:patient_app/features/profile/provider/patient_profile_provider.dart';
 import 'package:patient_app/splash_screen.dart';
 import 'package:provider/provider.dart';
 
@@ -15,6 +21,8 @@ void main() {
   runApp(
     MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_)=>QueueProvider()),
+        ChangeNotifierProvider(create: (_) => NavigationProvider()),
         ChangeNotifierProvider(create:  (_)=>ReportProvider()),
         ChangeNotifierProvider(create:  (_) => PatientProvider()),
         ChangeNotifierProvider(create: (_) => DoctorProvider()),
