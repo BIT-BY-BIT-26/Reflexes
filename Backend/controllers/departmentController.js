@@ -1,4 +1,3 @@
-
 const departmentModel = require("../models/departmentModel");
 const docterModel = require("../models/docterModel");
 const HospitalModel = require("../models/HospitalModel");

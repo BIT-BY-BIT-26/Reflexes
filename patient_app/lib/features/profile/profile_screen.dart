@@ -622,7 +622,18 @@ Widget _profileCard(PatientModel patient) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical:16,horizontal: 16),
       decoration: BoxDecoration(
-        color: const Color.fromARGB(255, 12, 17, 26), 
+        //color: const Color.fromARGB(255, 12, 17, 26),
+        gradient: 
+        const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            
+            Color(0xFF161D2B),
+            Color(0xFF0E1522),
+            Color.fromARGB(255, 12, 17, 26),
+          ],
+        ), 
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -672,7 +683,18 @@ Widget _profileCard(PatientModel patient) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical:16,horizontal: 16),
       decoration: BoxDecoration(
-        color: const Color.fromARGB(255, 12, 17, 26),
+        //color: const Color.fromARGB(255, 12, 17, 26),
+        gradient: 
+        const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            
+            Color(0xFF161D2B),
+            Color(0xFF0E1522),
+            Color.fromARGB(255, 12, 17, 26),
+          ],
+        ),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
