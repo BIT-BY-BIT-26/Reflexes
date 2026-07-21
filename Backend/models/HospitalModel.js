@@ -104,6 +104,10 @@ const HospitalSchema= new Mongoose.Schema({
         default: 0,
     },
 
+    profileCompleted:{
+        type:Boolean,
+        default:false
+    }
 },{ timestamps: true })
 
 HospitalSchema.index({ location: "2dsphere" });

@@ -1,5 +1,6 @@
+const { default: mongoose } = require("mongoose");
 const departmentModel = require("../models/departmentModel");
-const Department = require("../models/departmentModel");
+const docterModel = require("../models/docterModel");
 const HospitalModel = require("../models/HospitalModel");
 const mongoose = require("mongoose");
 
@@ -38,13 +39,67 @@ exports.createDepartment = async (req, res) => {
   }
 };
 
+exports.getAllDepartmentsWithCounts = async (req, res) => {
+  try {
+    //  console.log(req.user);
+    //   console.log("hospitalId =", req.user.hospitalId);
+    const hospitalId = req.user.hospitalId;
+    const departments = await departmentModel.aggregate([
+      {
+        $match: {
+          hospital: new mongoose.Types.ObjectId(hospitalId)
+        }
+      },
+      {
+        $lookup: {
+          from: "doctors",
+          localField: "_id",
+          foreignField: "department",
+          as: "doctors",
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          description: 1,
+          totalDoctors: {
+            $size: "$doctors",
+          },
+          status: {
+            $cond: ["$isActive", "Active", "Inactive"],
+          },
+          createdAt: 1,
+        },
+      },
+      {
+        $sort: {
+          name: 1,
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      count: departments.length,
+      departments,
+    });
+  } catch (error) {
+    console.error("Get Departments Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch departments",
+    });
+  }
+};
 
 exports.getAllDepartments = async (req, res) => {
   try {
     const hospitalId = req.user.hospitalId;
 
     const hospital = await HospitalModel.findById(hospitalId).select("name");
-    const departments = await Department.find({
+    const departments = await departmentModel.find({
       hospital: hospitalId,
     }).select("name description isActive createdAt").sort({ createdAt: -1 });
 
@@ -109,22 +164,64 @@ exports.getDepartmentsByHospital = async (req, res) => {
 };
 
 
+// exports.getDepartmentById = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+
+//     const department = await Department.findById(id);
+
+//     if (!department) {
+//       return res.status(404).json({ message: "Department not found" });
+//     }
+
+//     res.json(department);
+//   } catch (err) {
+//     res.status(500).json({ message: err.message });
+//   }
+// };
+
 exports.getDepartmentById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const department = await Department.findById(id);
+    const department = await departmentModel.findById(id);
 
     if (!department) {
-      return res.status(404).json({ message: "Department not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Department not found",
+      });
     }
 
-    res.json(department);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    const doctors = await docterModel.find({
+      department: id,
+      isActive: true,
+    })
+      .populate("userId", "name email")
+      .select(
+        "position experience specialisation profile_photo opd_timing availableDays"
+      );
+
+    return res.status(200).json({
+      success: true,
+      department: {
+        _id: department._id,
+        name: department.name,
+        description: department.description,
+        isActive: department.isActive,
+        totalDoctors: doctors.length,
+        doctors,
+      },
+    });
+  } catch (error) {
+    console.error("Get Department Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch department",
+    });
   }
 };
-
 
 exports.updateDepartment = async (req, res) => {
   try {
