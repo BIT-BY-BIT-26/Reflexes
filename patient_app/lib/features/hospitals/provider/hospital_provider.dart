@@ -37,10 +37,11 @@
 // }
 
 import 'package:flutter/material.dart';
+import 'package:patient_app/features/auth/provider/auth_provider.dart';
 import 'package:patient_app/features/hospitals/service/hospital_service.dart';
 import 'package:patient_app/helpers/location_helper.dart';
 import 'package:patient_app/models/hospital_model.dart';
-
+import 'package:provider/provider.dart';
 
 class HospitalProvider extends ChangeNotifier {
   final HospitalService service = HospitalService();
@@ -53,9 +54,13 @@ class HospitalProvider extends ChangeNotifier {
 
   String selectedState = "All";
   String selectedCity = "All";
-  
+
   List<Hospital> hospitals = [];
   List<Hospital> nearbyHospitals = [];
+
+  Hospital? hospitalProfile;
+  bool profileLoading = false;
+  String? profileError;
 
   // =====================
   // UI STATE
@@ -80,6 +85,30 @@ class HospitalProvider extends ChangeNotifier {
       error = "Failed to load states";
     } finally {
       loading = false;
+      notifyListeners();
+    }
+  }
+
+  //===========================
+  //HOSPITAL PROFILE
+  //===========================
+  Future<void> fetchHospitalProfile(String id) async {
+    try {
+      profileLoading = true;
+      profileError = null;
+      notifyListeners();
+
+      //final token = Provider.of<AuthProvider>(context, listen: false).token;
+
+      // if (token == null) {
+      //   throw Exception("Token not found");
+      // }
+
+      hospitalProfile = await service.getHospitalProfile(id);
+    } catch (e) {
+      profileError = e.toString();
+    } finally {
+      profileLoading = false;
       notifyListeners();
     }
   }
@@ -133,33 +162,32 @@ class HospitalProvider extends ChangeNotifier {
   //========================
   // FETCH NEARBY HOSPITALS
   //========================
-Future<void> fetchNearbyHospitals() async {
-  if (nearbyHospitals.isNotEmpty) {
-    return;
+  Future<void> fetchNearbyHospitals() async {
+    if (nearbyHospitals.isNotEmpty) {
+      return;
+    }
+    try {
+      loading = true;
+      isNearbyMode = true;
+      notifyListeners();
+
+      final position = await LocationHelper.getCurrentLocation();
+
+      nearbyHospitals = await service.getHospitals(
+        lat: position.latitude,
+        lng: position.longitude,
+        radius: 5000,
+      );
+
+      error = null;
+    } catch (e) {
+      error = e.toString();
+      nearbyHospitals = [];
+    } finally {
+      loading = false;
+      notifyListeners();
+    }
   }
-  try {
-    loading = true;
-    isNearbyMode = true;
-    notifyListeners();
-
-    final position = await LocationHelper.getCurrentLocation();
-
-    nearbyHospitals = await service.getHospitals(
-      lat: position.latitude,
-      lng: position.longitude,
-      radius: 5000,
-    );
-
-    error = null;
-  } catch (e) {
-    error = e.toString();
-    nearbyHospitals = [];
-  } finally {
-    loading = false;
-    notifyListeners();
-  }
-}
-
 
   // =====================
   // STATE SELECTED

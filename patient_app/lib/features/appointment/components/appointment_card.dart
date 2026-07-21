@@ -22,8 +22,18 @@ class AppointmentCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color.fromARGB(255, 12, 17, 26),
-        borderRadius: BorderRadius.circular(18),
+      gradient: 
+        const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            
+            Color(0xFF161D2B),
+            Color(0xFF0E1522),
+            Color.fromARGB(255, 12, 17, 26),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(
           color: Colors.white.withOpacity(0.08),
         ),
