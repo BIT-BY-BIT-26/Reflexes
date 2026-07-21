@@ -1,6 +1,7 @@
 const departmentModel = require("../models/departmentModel");
 const Department = require("../models/departmentModel");
 const HospitalModel = require("../models/HospitalModel");
+const mongoose = require("mongoose");
 
 
 exports.createDepartment = async (req, res) => {
@@ -64,12 +65,35 @@ exports.getDepartmentsByHospital = async (req, res) => {
         message:"Hospital not found",
       });
     }
-    const departments = await Department.find({
-      hospital: hospitalId,
-      isActive: true, // user ko sirf active departments dikhega 
-    })
-      .select("name isActive createdAt")
-      .sort({ name: 1 });
+      const departments = await Department.aggregate([
+        {
+          $match: {
+            hospital: new mongoose.Types.ObjectId(hospitalId),
+            isActive: true,
+          },
+        },
+        {
+          $lookup: {
+            from: "doctors",           // Doctor collection
+            localField: "_id",
+            foreignField: "department",
+            as: "doctors",
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            name: 1,
+            isActive: 1,
+            createdAt: 1,
+            doctorCount: { $size: "$doctors" },
+          },
+        },
+        {
+          $sort: { name: 1 },
+        },
+      ]);
+
 
     res.json({
       success: true,
