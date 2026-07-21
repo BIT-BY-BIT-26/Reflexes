@@ -2,9 +2,10 @@ const express = require("express");
 const auth = require("../middleware/auth");
 const authorize = require("../middleware/authorize");
 const { ROLE } = require("../config/role");
-const { getDoctorByHospital, submitProfile, getDoctorsByDepartment ,getMyProfile, getCompletedAppointments, updateProfile, toggleDoctorOnline, toggleOpd, uploadDoctorPhoto, getProfileStatus,getUniquePatients, getDoctorDashboard } = require("../controllers/DoctorController");
+const { getDoctorByHospital, submitProfile, getDoctorsByDepartment ,getMyProfile, getCompletedAppointments, updateProfile, toggleDoctorOnline, toggleOpd, uploadDoctorPhoto, getProfileStatus,getUniquePatients, getDoctorDashboard, startConsultation, stopConsultation, pauseConsultation, resumeConsultation, callNext, skipPatient } = require("../controllers/DoctorController");
 
 const { addDoctor } = require("../controllers/addDoctorController");
+const { upload } = require("../middleware/uploadCloud");
 const doctorRouter = express.Router();
 
 /* ================= ADMIN ROUTES ================= */
