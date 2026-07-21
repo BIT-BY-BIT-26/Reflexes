@@ -1,8 +1,6 @@
-
-
 const express = require('express');
 const { getRouteToHospital } = require('../controllers/locationController.js');
-const { getHospitalStates, getHospitalCities, getHospitals, registerHospital, updateHospitalProfile, getHospitalProfile, getStats } = require('../controllers/hospitalController.js');
+const { getHospitalStates, getHospitalCities, getHospitals, registerHospital, updateHospitalProfile, getHospitalProfile, getStats, getHospitalById } = require('../controllers/hospitalController.js');
 const { hospitalUpload } = require('../middleware/uploadCloud.js');
 const auth = require('../middleware/auth.js');
 
@@ -23,6 +21,7 @@ route.patch('/profile',auth, hospitalUpload.fields([{name:"logo",maxCount:1},
 ]),updateHospitalProfile)
 
 route.get('/profile', auth, getHospitalProfile)
+route.get("/hospitals/profile/:id", getHospitalById);
 route.get('/statistics',auth,getStats);
 
 
