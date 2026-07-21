@@ -60,7 +60,6 @@ exports.createAppointment = async (req, res) => {
     //     }
     //   }
     // )
-    const io = req.app.get("io");
     const onlineDoctors = req.app.get("onlineDoctors");
     const doctorSocket = onlineDoctors.get(doctorData._id.toString());
     const populatedAppointment = await appointmentModel.findById(appointment._id)
@@ -88,9 +87,11 @@ exports.createAppointment = async (req, res) => {
     });
 
   } catch (err) {
-    success: false,
-    res.status(500).json({ error: err.message });
-  }
+      return res.status(500).json({
+        success: false,
+        message: err.message
+      });
+    }
 };
 
 
@@ -102,7 +103,8 @@ exports.confirmAppointment = async (req, res) => {
   const io = req.app.get("io");
 
   try {
-    const appointment = await appointmentModel.findById(req.params.id);
+    const { id } = req.params;
+    const appointment = await appointmentModel.findById(id);
 
     if (!appointment) {
       return res.status(404).json({
@@ -323,53 +325,64 @@ exports.getAppointmentById = async (req, res) => {
   }
 };
 
-
 exports.getMyAppointments = async (req, res) => {
   try {
-    const patient = await patientModel.findOne({ userId: req.user.id });
+    const { status,appointmentType } = req.query;
 
-    if (!patient) {
-      return res.status(404).json({ message: "Patient not found" });
-    }
-
-    const appointments = await appointmentModel.find({ patient: patient._id   })
-      .populate({
-        path:"doctor",
-        select:"profile_photo",
-        populate:{
-          path:"userId",
-          select:"name"
-        }
-      })
-      .populate({
-        path:"department",
-        select:"name",
-      })
-      .populate({
-        path:"hospital",
-        select:"name"
-      })
-      .sort({ createdAt: -1 }); // latest first
-
-    const result = appointments.map((a) => ({
-      id: a._id,
-      doctorId: a.doctor?._id,
-      doctorName: a.doctor?.userId?.name || "Doctor",
-      doctorProfilePhoto: a.doctor.profile_photo ||"",
-      department: a.department?.name || "Department",
-      hospital: a.hospital?.name || "Hospital",
-      status: a.status,
-      token: a.token ?? null,
-      date: a.date,
-      appointmentType: a.appointmentType
-    }));
-
-    res.status(200).json({
-      appointments: result
+    const doctor = await docterModel.findOne({
+      userId: req.user.id,
     });
 
-  } catch (err) {
-    res.status(500).json({ message: `Failed to fetch appointments: ${err.message}` });
+    if (!doctor) {
+      return res.status(404).json({
+        success: false,
+        message: "Doctor not found",
+      });
+    }
+
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+
+    const filter = {
+      doctor: doctor._id,
+      date: {
+        $gte: start,
+        $lte: end,
+      },
+    };
+
+    if (status) {
+      filter.status = status.toUpperCase();
+    }
+    if (appointmentType) {
+      filter.appointmentType = appointmentType;
+    }
+
+    const appointments = await appointmentModel.find(filter)
+      .populate({
+        path: "patient",
+        populate: {
+          path: "userId",
+          select: "name email gender phone",
+        },
+      })
+      .select("patient token appointmentType date status")
+      .sort({ token: 1 });
+
+    return res.status(200).json({
+      success: true,
+      total: appointments.length,
+      appointments,
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
@@ -468,6 +481,7 @@ exports.getTodayStats = async(req,res)=>{
       confirmed:appointments.filter(a=>a.status === "CONFIRMED").length,
       cancelled:appointments.filter(a=>a.status === "CANCELLED").length,
       current:appointments.filter(a=>a.status === "INPROGRESS").length,  
+      completed:appointments.filter(a=>a.status === "COMPLETED").length,  
     }
     res.json(stats);
   }catch(error){
