@@ -8,7 +8,8 @@ const HospitalSchema= new Mongoose.Schema({
     email:{
         type:String,
         required:true,
-        unique:true
+        unique:
+        true
     },
      hospitalLicense: {
         type: String,
@@ -91,8 +92,17 @@ const HospitalSchema= new Mongoose.Schema({
         friday:String,
         saturday:String,
         sunday:String
-    }
+    },
 
+    averageRating: {
+        type: Number,
+        default: 0,
+    },
+
+    totalReviews: {
+        type: Number,
+        default: 0,
+    },
 
 },{ timestamps: true })
 
