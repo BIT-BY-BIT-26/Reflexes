@@ -70,6 +70,7 @@ const registerHospital = async (req, res) => {
 };
 
 const updateHospitalProfile = async(req,res)=>{
+  console.log(req.body);
 
   console.log("FILES:");
   console.log(req.files);
@@ -157,6 +158,32 @@ const getHospitalProfile = async (req, res) => {
     });
   }
 };
+
+const getHospitalById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const hospital = await HospitalModel.findById(id);
+
+    if (!hospital) {
+      return res.status(404).json({
+        success: false,
+        message: "Hospital not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: hospital,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 
 const getStats = async(req,res)=>{
   console.log("entered");
@@ -413,4 +440,4 @@ const getHospitalCities = async (req, res) => {
   }
 };
 
-module.exports= { registerHospital,updateHospitalProfile,getHospitalProfile, getStats, approveHospital,getAllHospitals,getHospitalsQuery, getHospitals, getHospitalCities, getHospitalStates};
+module.exports= { registerHospital,getHospitalById,updateHospitalProfile,getHospitalProfile, getStats, approveHospital,getAllHospitals,getHospitalsQuery, getHospitals, getHospitalCities, getHospitalStates};
