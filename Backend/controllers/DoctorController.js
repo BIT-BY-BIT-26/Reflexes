@@ -803,5 +803,444 @@ const uploadDoctorPhoto = async (req, res) => {
   }
 };
 
+///////////////
+const startConsultation = async (req, res) => {
+  try {
+    const io = req.app.get("io");
 
-module.exports={getDoctorDashboard,getUniquePatients,toggleOpd,toggleDoctorOnline,getProfileStatus,submitProfile,getDoctorById, getDoctorByHospital, searchPatient,getDoctorsByDepartment,getMyProfile,getCompletedAppointments,updateProfile,uploadDoctorPhoto};
+    const doctor = await docterModel.findOne({ userId: req.user.id });
+
+    if (!doctor) {
+      return res.status(404).json({
+        success: false,
+        message: "Doctor not found"
+      });
+    }
+
+    if (!doctor.opdStarted) {
+      return res.status(400).json({
+        success: false,
+        message: "OPD not started"
+      });
+    }
+
+    if (doctor.opdPaused) {
+      return res.status(400).json({
+        success: false,
+        message: "OPD is paused"
+      });
+    }
+
+    const alreadyRunning = await Appointment.findOne({
+      doctor: doctor.id,
+      status: "CURRENT"
+    });
+
+    if (alreadyRunning) {
+      return res.status(400).json({
+        success: false,
+        message: "Consultation already started"
+      });
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const firstAppointment = await Appointment.findOne({
+      doctor: doctor.id,
+      status: "CONFIRMED",
+      date: { $gte: today, $lt: tomorrow }
+    }).sort({ token: 1 });
+
+    if (!firstAppointment) {
+      return res.status(400).json({
+        success: false,
+        message: "No patients in queue"
+      });
+    }
+
+    firstAppointment.status = "CURRENT";
+    firstAppointment.consultationStartedAt = new Date();
+    await firstAppointment.save();
+
+    io.to(`doctor_${doctor.id}`).emit("queueUpdated", {
+      currentToken: firstAppointment.token,
+      status: "RUNNING"
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Consultation started",
+      currentAppointment: firstAppointment
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+///STOP
+const stopConsultation = async (req, res) => {
+  try {
+    const io = req.app.get("io");
+
+    const doctor = await docterModel.findOne({ userId: req.user.id });
+
+    if (!doctor) {
+      return res.status(404).json({
+        success: false,
+        message: "Doctor not found"
+      });
+    }
+
+    if (!doctor.opdStarted) {
+      return res.status(400).json({
+        success: false,
+        message: "Consultation not started"
+      });
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // Complete current patient if any
+    const currentAppointment = await Appointment.findOne({
+      doctor: doctor.id,
+      status: "CURRENT",
+      date: { $gte: today, $lt: tomorrow }
+    });
+
+    if (currentAppointment) {
+      currentAppointment.status = "COMPLETED";
+      currentAppointment.consultationEndedAt = new Date();
+      await currentAppointment.save();
+    }
+
+    // End OPD
+    doctor.opdStarted = false;
+    doctor.opdPaused = false;
+    await doctor.save();
+
+    // Notify patients
+    io.to(`doctor_${doctor.id}`).emit("opdStopped", {
+      message: "OPD Stopped",
+      status: "STOPPED"
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Consultation stopped successfully"
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+const pauseConsultation = async (req, res) => {
+  try {
+    const io = req.app.get("io");
+
+
+    const doctor = await docterModel.findOne({ userId: req.user.id });
+
+    if (!doctor) {
+      return res.status(404).json({
+        success: false,
+        message: "Doctor not found"
+      });
+    }
+
+    if (!doctor.opdStarted) {
+      return res.status(400).json({
+        success: false,
+        message: "OPD not started"
+      });
+    }
+
+    if (doctor.opdPaused) {
+      return res.status(400).json({
+        success: false,
+        message: "OPD already paused"
+      });
+    }
+
+    doctor.opdPaused = true;
+
+    await doctor.save();
+
+
+    io.to(`doctor_${doctor.id}`).emit("opdPaused", {
+      message: "OPD Paused"
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "OPD paused successfully"
+    });
+
+  } catch (error) {
+
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+
+  }
+};
+
+
+/////////////////
+const resumeConsultation = async (req, res) => {
+ 
+  try {
+    const io = req.app.get("io");
+    const doctor = await docterModel.findOne({ userId: req.user.id });
+    if (!doctor) {
+      return res.status(404).json({
+        success: false,
+        message: "Doctor not found"
+      });
+    }
+    if (!doctor.opdStarted) {
+      return res.status(400).json({
+        success: false,
+        message: "OPD not started"
+      });
+    }
+    if (!doctor.opdPaused) {
+      return res.status(400).json({
+        success: false,
+        message: "OPD is already running"
+      });
+    }
+    doctor.opdPaused = false;
+    await doctor.save();
+
+    const currentAppointment =
+      await Appointment.findOne({
+        doctor: doctor.id,
+        status: "CURRENT"
+      });
+
+
+    io.to(`doctor_${doctor.id}`).emit("opdResumed", {
+      currentToken: currentAppointment?.token ?? null
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "OPD resumed successfully"
+    });
+
+  } catch (error) {
+
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+
+  }
+};
+
+
+/////////////////////////////////////////////
+const skipPatient = async (req, res) => {
+  try {
+    const io = req.app.get("io");
+    const doctor = await docterModel.findOne({ userId: req.user.id });
+
+    if (!doctor) {
+      return res.status(404).json({
+        success: false,
+        message: "Doctor not found"
+      });
+    }
+
+    if (!doctor.opdStarted) {
+      return res.status(400).json({
+        success: false,
+        message: "OPD not started"
+      });
+    }
+
+    if (doctor.opdPaused) {
+      return res.status(400).json({
+        success: false,
+        message: "OPD is paused"
+      });
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // 1. Find CURRENT patient
+    const currentAppointment = await Appointment.findOne({
+      doctor: doctor.id,
+      status: "CURRENT",
+      date: { $gte: today, $lt: tomorrow }
+    });
+
+    if (!currentAppointment) {
+      return res.status(400).json({
+        success: false,
+        message: "No current patient to skip"
+      });
+    }
+
+    // 2. Mark CURRENT → SKIPPED
+    currentAppointment.status = "SKIPPED";
+    currentAppointment.skippedAt = new Date();
+    await currentAppointment.save();
+
+    // 3. Find next CONFIRMED patient
+    const nextAppointment = await Appointment.findOne({
+      doctor: doctor.id,
+      status: "CONFIRMED",
+      date: { $gte: today, $lt: tomorrow }
+    }).sort({ token: 1 });
+
+    let message = "Patient skipped";
+
+    if (!nextAppointment) {
+      doctor.opdStarted = false;
+      await doctor.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "No more patients. OPD ended after skip."
+      });
+    }
+
+    // 4. Make next CURRENT
+    nextAppointment.status = "CURRENT";
+    nextAppointment.consultationStartedAt = new Date();
+    await nextAppointment.save();
+
+    io.to(`doctor_${doctor.id}`).emit("queueUpdated", {
+      currentToken: nextAppointment.token,
+      skippedToken: currentAppointment.token,
+      status: "RUNNING"
+    });
+
+    return res.status(200).json({
+      success: true,
+      message,
+      currentAppointment: nextAppointment
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+
+const callNext = async (req, res) => {
+  
+  try {
+    const io = req.app.get("io");
+    const doctor = await docterModel.findOne({ userId: req.user.id });
+
+    if (!doctor) {
+      return res.status(404).json({
+        success: false,
+        message: "Doctor not found"
+      });
+    }
+
+    if (!doctor.opdStarted) {
+      return res.status(400).json({
+        success: false,
+        message: "OPD not started"
+      });
+    }
+
+    if (doctor.opdPaused) {
+      return res.status(400).json({
+        success: false,
+        message: "OPD is paused"
+      });
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // 1. Find current patient
+    const currentAppointment = await Appointment.findOne({
+      doctor: doctor.id,
+      status: "CURRENT",
+      date: { $gte: today, $lt: tomorrow }
+    });
+
+    if (currentAppointment) {
+      currentAppointment.status = "COMPLETED";
+      currentAppointment.consultationEndedAt = new Date();
+      await currentAppointment.save();
+    }
+
+    // 2. Find next patient
+    const nextAppointment = await Appointment.findOne({
+      doctor: doctor.id,
+      status: "CONFIRMED",
+      date: { $gte: today, $lt: tomorrow }
+    }).sort({ token: 1 });
+
+    if (!nextAppointment) {
+      doctor.opdStarted = false;
+      await doctor.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "No more patients. OPD ended."
+      });
+    }
+
+    // 3. Make next patient CURRENT
+    nextAppointment.status = "CURRENT";
+    nextAppointment.consultationStartedAt = new Date();
+    await nextAppointment.save();
+
+    //SOCKET
+    io.to(`doctor_${doctor.id}`).emit("queueUpdated", {
+      currentToken: nextAppointment.token,
+      status: "RUNNING"
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Next patient called",
+      currentAppointment: nextAppointment
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+
+//module.exports={toggleOpd,resumeConsultation,pauseConsultation,callNext,skipPatient,startConsultation,stopConsultation,toggleDoctorOnline,getProfileStatus,submitProfile, getDoctorByHospital, searchPatient,getDoctorsByDepartment,getMyProfile,getCompletedAppointments,updateProfile,uploadDoctorPhoto};
+module.exports={getDoctorDashboard,getUniquePatients,toggleOpd,toggleDoctorOnline,getProfileStatus,submitProfile,getDoctorById, getDoctorByHospital, searchPatient,getDoctorsByDepartment,getMyProfile,getCompletedAppointments,updateProfile,uploadDoctorPhoto,callNext,skipPatient,pauseConsultation,resumeConsultation,stopConsultation,startConsultation};

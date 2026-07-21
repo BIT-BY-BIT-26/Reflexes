@@ -15,8 +15,9 @@ class QuickAccessCard extends StatelessWidget {
       width: 100,
       height: 100,
       child: Card(
-        
+        elevation: 10,
         color: const Color.fromARGB(255, 12, 17, 26),
+        
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
           side: const BorderSide(

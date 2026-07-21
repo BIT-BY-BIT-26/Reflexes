@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:patient_app/features/auth/service/auth_service.dart';
 import 'package:patient_app/helpers/token_expiry_helper.dart';
 import 'package:patient_app/models/user_model.dart';
@@ -7,6 +6,7 @@ import 'package:patient_app/socket.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthProvider with ChangeNotifier {
+  
   UserModel? _user;
   String? _token;
   bool _loading = false;
