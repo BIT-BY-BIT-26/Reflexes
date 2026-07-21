@@ -283,9 +283,9 @@ const updatePatientProfile = async (req, res) => {
 
 const getPatientProfile = async(req,res)=>{
   try{
-    const patient = await patientModel.findById(req.params.patientId).populate("userId","name email gender");
+    const patient = await patientModel.findById(req.params.patientId).populate("userId","name email");
     if(!patient){
-      return res.status(400).json({messgae:"Patient not found"});
+      return res.status(400).json({message:"Patient not found"});
     }
     res.json({
       id:patient._id,

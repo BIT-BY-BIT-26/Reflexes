@@ -1,11 +1,13 @@
 const mongoose= require('mongoose');
+const DEPARTMENTS = require('../constants/departments');
 
 const departmentSchema = new mongoose.Schema( 
     {
         name: {
             type: String,
             required: true,
-            trim: true
+            trim: true,
+            enum: DEPARTMENTS
         },
         hospital: {
             type: mongoose.Schema.Types.ObjectId,

@@ -56,6 +56,27 @@ const appointmentSchema = new mongoose.Schema({
     default: null
   },
 
+  // Reason
+    reason: {
+      type: String,
+      enum: [
+        "General Consultation",
+        "Follow-up",
+        "Prescription Renewal",
+        "Test Report Discussion",
+        "Emergency",
+        "Other",
+      ],
+      required: true,
+    },
+
+    description: {
+      type: String,
+      maxlength: 500,
+      default: "",
+    },
+
+
   date: {
     type: Date,
     required: true
