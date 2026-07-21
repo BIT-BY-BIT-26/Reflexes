@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:patient_app/features/home/components/hospital_card.dart';
 import 'package:patient_app/features/home/components/quick_access_card.dart';
+import 'package:patient_app/features/hospitals/hospital_profile_page.dart';
 import 'package:patient_app/features/hospitals/hospital_screen.dart';
 import 'package:patient_app/features/hospitals/provider/hospital_provider.dart';
 import 'package:patient_app/utils/constants.dart';
@@ -133,41 +134,44 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children:[
-                  InkWell(
-                    onTap: () {
-                      // Navigate to the desired screen when the card is tapped
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => HospitalScreen()),
-                      );
-                    },
-                    child: QuickAccessCard(
-                      size: 25,
-                      iconPath: FontAwesomeIcons.hospital,
-                      text: "Find Hospitals",
+              SingleChildScrollView(
+                scrollDirection:Axis.horizontal,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children:[
+                    GestureDetector(
+                      onTap: () {
+                        // Navigate to the desired screen when the card is tapped
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => HospitalScreen()),
+                        );
+                      },
+                      child: QuickAccessCard(
+                        size: 25,
+                        iconPath: FontAwesomeIcons.hospital,
+                        text: "Find Hospitals",
+                      ),
                     ),
-                  ),
-                  QuickAccessCard(
-                    size: 25,
-                    iconPath: FontAwesomeIcons.userDoctor,
-          
-                    text: "Top Doctors",
-                  ),
-                  QuickAccessCard(
-                    size: 25,
-                    iconPath: FontAwesomeIcons.truckMedical,
-                    text: "Emergency",
-                  ),
-                  QuickAccessCard(
-                    size: 25,
-                    iconPath: FontAwesomeIcons.pills,
-                    text: "Pharmacy",
-                  ),
-                ]
-                
+                    QuickAccessCard(
+                      size: 25,
+                      iconPath: FontAwesomeIcons.userDoctor,
+                              
+                      text: "Top Doctors",
+                    ),
+                    QuickAccessCard(
+                      size: 25,
+                      iconPath: FontAwesomeIcons.truckMedical,
+                      text: "Emergency",
+                    ),
+                    QuickAccessCard(
+                      size: 25,
+                      iconPath: FontAwesomeIcons.pills,
+                      text: "Pharmacy",
+                    ),
+                  ]
+                  
+                ),
               ),
               SizedBox(height: 20),
               Row(
@@ -210,9 +214,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: TextStyle(color: Colors.white70),
                     );
                   }
-
+    
                   final top3 = provider.nearbyHospitals.take(3).toList();
-
+    
                   return Column(
                     children: [
                       ...top3.map((h) {
@@ -227,7 +231,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         );
                       }),
-
+    
                       SizedBox(height: 10),
                     ],
                   );
