@@ -123,11 +123,6 @@
 // }
 
 
-
-
-
-
-
 import { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import menuItems from "./MenuItem";
@@ -168,7 +163,7 @@ export default function Sidebar() {
         openAllMenus();
       }}
       onMouseLeave={handleMouseLeave}
-      className={`z-50 bg-black h-screen fixed left-0 top-0 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-black text-white py-4 transition-all ${
+      className={`z-50 bg-white dark:bg-black h-screen fixed left-0 top-0 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-slate-600 scrollbar-track-white dark:scrollbar-track-black text-gray-900 dark:text-white border-r border-gray-200 dark:border-transparent py-4 transition-all ${
         expanded ? "w-80" : "w-20"
       }`}
     >
@@ -198,18 +193,18 @@ export default function Sidebar() {
               
               <button
                 onClick={() => toggleMenu(menu.id)}
-                className="flex items-center gap-2 p-3 hover:bg-slate-800 rounded-lg w-full"
+                className="flex items-center gap-2 p-3 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg w-full"
               >
-                <Icon strokeWidth={2.5} className="text-slate-400 " size={25} />
-                {expanded && <span className="text-blue-300  text-xl font-bold uppercase">{menu.title}</span>}
+                <Icon strokeWidth={2.5} className="text-gray-500 dark:text-slate-400 " size={25} />
+                {expanded && <span className="text-blue-600 dark:text-blue-300  text-xl font-bold uppercase">{menu.title}</span>}
               </button>
 
               {expanded && (
                 <button onClick={() => toggleMenu(menu.id)}>
                   {isOpen ? (
-                    <IoMdArrowDropdown size={16} />
+                    <IoMdArrowDropdown size={16} className="text-gray-500 dark:text-white" />
                   ) : (
-                    <IoMdArrowDropup  size={16} />
+                    <IoMdArrowDropup  size={16} className="text-gray-500 dark:text-white" />
                   )}
                 </button>
               )}
@@ -221,7 +216,7 @@ export default function Sidebar() {
                 {menu.children.map((child, index) => (
                   <div
                     key={index}
-                    className="text-xl cursor-pointer p-2 hover:bg-slate-600 hover:rounded-lg"
+                    className="text-xl text-gray-700 dark:text-white cursor-pointer p-2 hover:bg-gray-100 dark:hover:bg-slate-600 hover:rounded-lg"
                   >
                     {child.title}
                   </div>
