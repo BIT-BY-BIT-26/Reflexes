@@ -1,4 +1,5 @@
 import React from "react";
+
 import {
   Building2,
   Stethoscope,
@@ -10,9 +11,14 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { ROLE } from "../constants/Role";
 import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { loginSuccess } from "../redux/slices/authSlice";
+
+
 
 const Login = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -29,37 +35,46 @@ const Login = () => {
 
 const handleSubmit = async (e) => {
   e.preventDefault();
-  console.log("loggin clicked");
+
   try {
     setLoading(true);
 
     const res = await loginUser(formData);
-
     const data = res.data;
 
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("role", data.role);
-    localStorage.setItem("user", JSON.stringify(data.user));
+    dispatch(
+      loginSuccess({
+        token: data.token,
+        role: data.role,
+        user: data.user,
+      })
+    );
 
     toast.success("Login Successful 🎉");
 
-    if (data.role === "HOSPITAL_ADMIN") {
-  navigate("/hospital-dashboard");
-}
-    else if (data.role === ROLE.doctor) {
-      navigate("/doctor-dashboard");
-    }
-    else if (data.role === ROLE.patient) {
-      navigate("/patient-dashboard");
-    }
-    else if (data.role === ROLE.pharmacy) {
-      navigate("/pharmacy-dashboard");
-    }
+    switch (data.role) {
+      case ROLE.hospital_admin:
+        navigate("/hospital-dashboard");
+        break;
 
+      case ROLE.doctor:
+        navigate("/doctor-dashboard");
+        break;
+
+      case ROLE.patient:
+        navigate("/patient-dashboard");
+        break;
+
+      case ROLE.pharmacy:
+        navigate("/pharmacy-dashboard");
+        break;
+
+      default:
+        navigate("/");
+    }
   } catch (error) {
     toast.error(
-      error?.response?.data?.msg ||
-      "Login failed"
+      error?.response?.data?.msg || "Login failed"
     );
   } finally {
     setLoading(false);

@@ -186,6 +186,72 @@ exports.confirmAppointment = async (req, res) => {
 };
 
 
+exports.cancelAppointment = async (req, res) => {
+  const io = req.app.get("io");
+
+  try {
+    const { id } = req.params;
+
+    const appointment = await appointmentModel.findById(id);
+
+    if (!appointment) {
+      return res.status(404).json({
+        success: false,
+        message: "Appointment not found",
+      });
+    }
+
+    // Already cancelled
+    if (appointment.status === "CANCELLED") {
+      return res.status(400).json({
+        success: false,
+        message: "Appointment already cancelled",
+      });
+    }
+
+    // Completed appointment cancel nahi ho sakti
+    if (appointment.status === "COMPLETED") {
+      return res.status(400).json({
+        success: false,
+        message: "Completed appointment cannot be cancelled",
+      });
+    }
+
+    // Status update
+    appointment.status = "CANCELLED";
+
+    // Offline token remove kar do
+    if (appointment.appointmentType === "offline") {
+      appointment.token = null;
+    }
+
+    await appointment.save();
+
+    // Patient ko notify karo
+    io.to(`patient_${appointment.patient.toString()}`).emit(
+      "APPOINTMENT_CANCELLED",
+      {
+        appointmentId: appointment._id,
+        message: "Your appointment has been cancelled by the doctor.",
+      }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Appointment cancelled successfully",
+      appointment,
+    });
+
+  } catch (error) {
+    console.error("Cancel Appointment Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to cancel appointment",
+      error: error.message,
+    });
+  }
+};
 
 exports.getAllAppointmentsForDate = async(req,res)=>{
   try{
