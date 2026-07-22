@@ -48,7 +48,7 @@ class AppointmentService {
   static Future<List<AppointmentModel>> getMyAppointments(String token) async {
     try {
       final res = await http.get(
-        Uri.parse("$baseUrl/appointments/my"),
+        Uri.parse("$baseUrl/appointments/my/patients"),
         headers: {
           "Authorization": "Bearer $token",
         },

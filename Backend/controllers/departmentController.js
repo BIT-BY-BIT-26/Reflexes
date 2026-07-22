@@ -119,7 +119,7 @@ exports.getDepartmentsByHospital = async (req, res) => {
         message:"Hospital not found",
       });
     }
-      const departments = await Department.aggregate([
+      const departments = await departmentModel.aggregate([
         {
           $match: {
             hospital: new mongoose.Types.ObjectId(hospitalId),
@@ -155,6 +155,7 @@ exports.getDepartmentsByHospital = async (req, res) => {
       departments,
     });
   } catch (err) {
+    console.log(err)
     res.status(500).json({
       success: false,
       message: err.message,
