@@ -11,11 +11,4 @@ const redisClient = new Redis({
 redisClient.on("connect", () => console.log("✅ Redis connected"));
 redisClient.on("error", (err) => console.error("❌ Redis error:", err));
 
-
-async function testRedis(){
-    await redisClient.set("name","nishu");
-    const value = await redisClient.get("name");
-    console.log(value);
-}
-testRedis();
-module.exports = {redisClient, testRedis};
+module.exports = {redisClient};
