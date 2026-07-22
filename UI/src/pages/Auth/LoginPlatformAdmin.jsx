@@ -3,15 +3,16 @@ import { ShieldCheck } from "lucide-react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { platformLogin } from "../../api/backend";
 import { ROLE } from "../../constants/Role";
+import { useDispatch, useSelector } from "react-redux";
+import { loginSuccess } from "../../redux/slices/authSlice";
+
 const LoginPlatformAdmin = () => {
+  const dispatch = useDispatch();
+  const { token, role } = useSelector((state) => state.auth);
 
-const token = localStorage.getItem("token");
-const role = localStorage.getItem("role");
-
-if (token && role === ROLE.platform_admin) {
-  return <Navigate to="/platform-dashboard" replace />;
-}
-
+  if (token && role === ROLE.platform_admin) {
+    return <Navigate to="/platform-dashboard" replace />;
+  }
 
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -36,15 +37,11 @@ if (token && role === ROLE.platform_admin) {
       );
       console.log(response.data);
       if (response.data.success) {
-      localStorage.setItem(
-        "role",
-        response.data.user.role
-      );
-
-      localStorage.setItem(
-        "token",
-        response.data.token
-      );
+      dispatch(loginSuccess({
+        token: response.data.token,
+        role: response.data.user.role,
+        user: response.data.user,
+      }));
 
       navigate("/platform-dashboard");
     }
