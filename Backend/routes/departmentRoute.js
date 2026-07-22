@@ -9,6 +9,7 @@ const {
   deleteDepartment,
   getDepartmentsByHospital,
   getAllDepartmentsWithCounts,
+  getDepartmentList,
 } = require("../controllers/departmentController");
 const auth = require("../middleware/auth");
 const authorize = require("../middleware/authorize");
@@ -23,8 +24,13 @@ departmentRouter.post("/",auth,authorize(ROLE.admin), createDepartment);
 departmentRouter.get("/",auth,authorize(ROLE.admin,ROLE.doctor),getAllDepartments);
 departmentRouter.get("/doctor-count",auth, getAllDepartmentsWithCounts);
 
+
+departmentRouter.get("/list",auth,getDepartmentList);
+
 // ✅Get all departments of repective hospital (user)
 departmentRouter.get("/hospital/:hospitalId",getDepartmentsByHospital);
+
+
 
 // ✅ Get single department
 departmentRouter.get("/:id", getDepartmentById);

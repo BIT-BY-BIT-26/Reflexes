@@ -1,3 +1,5 @@
+const { redisClient } = require("../config/redisClient");
+const DEPARTMENTS = require("../constants/departments");
 const departmentModel = require("../models/departmentModel");
 const docterModel = require("../models/docterModel");
 const HospitalModel = require("../models/HospitalModel");
@@ -38,11 +40,55 @@ exports.createDepartment = async (req, res) => {
   }
 };
 
+
+exports.getDepartmentList = async (req, res) => {
+  try {
+    const cacheKey = "departments:master-list";
+
+    const cached = await redisClient.get(cacheKey);
+
+    if (cached) {
+      return res.status(200).json({
+        success: true,
+        departments: JSON.parse(cached),
+        cached: true,
+      });
+    }
+
+    // Save master list in Redis
+    await redisClient.set(
+      cacheKey,
+      JSON.stringify(DEPARTMENTS),
+      "EX",
+      24 * 60 * 60
+    );
+
+    return res.status(200).json({
+      success: true,
+      departments: DEPARTMENTS,
+      cached: false,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
 exports.getAllDepartmentsWithCounts = async (req, res) => {
   try {
     //  console.log(req.user);
     //   console.log("hospitalId =", req.user.hospitalId);
     const hospitalId = req.user.hospitalId;
+
+    const cacheKey = `departments:counts:${hospitalId}`;
+    const cached = await redisClient.get(cacheKey);
+    if(cached){
+      const department = JSON.parse(cached);
+      return res.status(200).json({success:true, count:department.length, department, cached:true});
+
+    }
     const departments = await departmentModel.aggregate([
       {
         $match: {
@@ -77,6 +123,8 @@ exports.getAllDepartmentsWithCounts = async (req, res) => {
         },
       },
     ]);
+
+    await redisClient.set(cacheKey, JSON.stringify(departments),"EX",300);
 
     return res.status(200).json({
       success: true,
@@ -119,7 +167,7 @@ exports.getDepartmentsByHospital = async (req, res) => {
         message:"Hospital not found",
       });
     }
-      const departments = await Department.aggregate([
+      const departments = await departmentModel.aggregate([
         {
           $match: {
             hospital: new mongoose.Types.ObjectId(hospitalId),
@@ -163,21 +211,6 @@ exports.getDepartmentsByHospital = async (req, res) => {
 };
 
 
-// exports.getDepartmentById = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-
-//     const department = await Department.findById(id);
-
-//     if (!department) {
-//       return res.status(404).json({ message: "Department not found" });
-//     }
-
-//     res.json(department);
-//   } catch (err) {
-//     res.status(500).json({ message: err.message });
-//   }
-// };
 
 exports.getDepartmentById = async (req, res) => {
   try {
