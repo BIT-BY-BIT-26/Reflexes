@@ -1,15 +1,37 @@
-import React, { useState } from "react";
-import { addDepartment } from "../../api/backend";
+import React, { useEffect, useState } from "react";
+import { addDepartment, getDepartmentList } from "../../api/backend";
 import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const AddDepartment = () => {
+    console.log("AddDepartment Rendered");
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     name: "",
     description: "",
   });
+
+  const [departmentOptions, setDepartmentOptions] = useState([]);
+  const [loadingList, setLoadingList] = useState(true);
+
+useEffect(() => {
+  const fetchDepartments = async () => {
+    try {
+      const res = await getDepartmentList();
+      setDepartmentOptions(res.data.departments);
+      console.log(res.data);
+      console.log(departmentOptions);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoadingList(false);
+    }
+  };
+
+  fetchDepartments();
+}, []);
+
 
   const handleChange = (e) => {
     setFormData({
@@ -60,13 +82,20 @@ const AddDepartment = () => {
           {/* Name */}
           <div>
             <label className="text-sm text-slate-300">Department Name</label>
-            <input
+            <select
               name="name"
               value={formData.name}
               onChange={handleChange}
               className="w-full mt-1 px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 focus:ring-2 focus:ring-blue-500 outline-none"
               required
-            />
+            >
+              <option value="" disabled>{loadingList?"Loading departments...":"Select department"}</option>
+              {departmentOptions.map((dept) => (
+                <option key={dept} value={dept}>
+                  {dept}
+                </option>
+              ))}
+            </select >
           </div>
 
           {/* Description */}
