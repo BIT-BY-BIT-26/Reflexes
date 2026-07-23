@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { addDepartment, getDepartmentList } from "../../api/backend";
 import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const AddDepartment = () => {
     console.log("AddDepartment Rendered");
@@ -44,13 +45,19 @@ useEffect(() => {
     e.preventDefault();
 
     try {
-      await addDepartment(formData);
-      setFormData({ name: "", description: "" });
-
-      // 🔥 navigate after success
-      navigate("/hospital-dashboard");
+      const res =await addDepartment(formData);
+      console.log("Response:",res);
+      if(res.data.success){
+        toast.success(res.data.message || "Department created successfully");
+        setFormData({ name: "", description: "" });
+        // 🔥 navigate after success
+        navigate("/hospital-dashboard");
+      }
     } catch (error) {
       console.log(error);
+      toast.error(
+        error.response?.data?.message || error.message || "Something went wrong"
+      );
     }
   };
 

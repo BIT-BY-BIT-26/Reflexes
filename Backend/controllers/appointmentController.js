@@ -1,3 +1,5 @@
+const { source } = require("../config/cloudinary");
+const { redisClient } = require("../config/redisClient");
 const appointmentModel = require("../models/appointmentModel");
 const docterModel = require("../models/docterModel");
 const patientModel = require("../models/patientModel");
@@ -255,12 +257,24 @@ exports.cancelAppointment = async (req, res) => {
 
 exports.getAllAppointmentsForDate = async(req,res)=>{
   try{
+    console.log("entered");
     const doctorUserId = req.user.id;
     const doctor = await docterModel.findOne({userId:doctorUserId})
     .populate("department hospital","name");
     if(!doctor){
       return res.status(404).json({
         message:"Doctor profile not found",
+      })
+    }
+
+    const cacheKey = `doctor:todayAppointments:${doctor._id}`;
+    const cachedAppointments = await redisClient.get(cacheKey);
+    if(cachedAppointments){
+
+  console.log("✅ Redis HIT");
+      return res.status(200).json({
+        ...JSON.parse(cachedAppointments),
+        source:"redis"
       })
     }
     //today's date range
@@ -295,7 +309,8 @@ exports.getAllAppointmentsForDate = async(req,res)=>{
       bookedAt:appt.createdAt
     }))
 
-    return res.status(200).json({
+    const response ={
+      success:true,
       message:"Today's appointments fetched successfully",
       doctor:{
         id:doctor._id,
@@ -305,7 +320,19 @@ exports.getAllAppointmentsForDate = async(req,res)=>{
       },
       total:appointments.length,
       patients,
+    };
+
+    await redisClient.set(
+      cacheKey,
+      JSON.stringify(response),
+      "EX",
+      60
+    )
+    return res.status(200).json({
+      ...response,
+      source:"mongodb"
     });
+
   }catch(error){
     console.error("getAllAppointmentForToday error:", error);
     res.status(500).json({
