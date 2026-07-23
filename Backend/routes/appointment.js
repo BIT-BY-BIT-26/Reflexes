@@ -10,7 +10,8 @@ const {
   getMyAppointments,
   getTodayStats,
   getOnlineAppointmentsForDate,
-  getTodayOnlineStats
+  getTodayOnlineStats,
+  getMyAppointmentsPatients
 } = require("../controllers/appointmentController");
 
 const { ROLE } = require("../config/role");
@@ -33,6 +34,7 @@ appointmentRouter.patch(
 
 appointmentRouter.get("/appointments/today",auth,getAllAppointmentsForDate);
 appointmentRouter.get("/appointments/my", auth, getMyAppointments);
+appointmentRouter.get("/appointments/my/patients", auth, getMyAppointmentsPatients);
 appointmentRouter.get("/appointments/today-stats",auth,getTodayStats);
 appointmentRouter.get("/appointments/online-stats",auth,getTodayOnlineStats);
 appointmentRouter.get("/appointments/online",auth,getOnlineAppointmentsForDate);

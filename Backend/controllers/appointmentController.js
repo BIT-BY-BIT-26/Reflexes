@@ -418,6 +418,7 @@ exports.getAppointmentById = async (req, res) => {
   }
 };
 
+//doc--
 exports.getMyAppointments = async (req, res) => {
   try {
     const { status,appointmentType } = req.query;
@@ -478,6 +479,66 @@ exports.getMyAppointments = async (req, res) => {
     });
   }
 };
+
+// Patient - Get My Appointments
+exports.getMyAppointmentsPatients = async (req, res) => {
+  try {
+    const patient = await patientModel.findOne({
+      userId: req.user.id,
+    });
+
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: "Patient not found",
+      });
+    }
+
+    const appointments = await appointmentModel
+      .find({ patient: patient._id })
+      .populate({
+        path: "doctor",
+        select: "profile_photo",
+        populate: {
+          path: "userId",
+          select: "name",
+        },
+      })
+      .populate({
+        path: "department",
+        select: "name",
+      })
+      .populate({
+        path: "hospital",
+        select: "name",
+      })
+      .sort({ createdAt: -1 });
+
+    const result = appointments.map((a) => ({
+      id: a._id,
+      doctorId: a.doctor?._id,
+      doctorName: a.doctor?.userId?.name || "Doctor",
+      doctorProfilePhoto: a.doctor?.profile_photo || "",
+      department: a.department?.name || "Department",
+      hospital: a.hospital?.name || "Hospital",
+      status: a.status,
+      token: a.token ?? null,
+      date: a.date,
+      appointmentType: a.appointmentType,
+    }));
+
+    return res.status(200).json({
+      success: true,
+      appointments: result,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: `Failed to fetch appointments: ${err.message}`,
+    });
+  }
+};
+
 
 exports.getOnlineAppointments = async (req, res) => {
   try {

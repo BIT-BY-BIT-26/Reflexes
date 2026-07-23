@@ -12,6 +12,7 @@ const docterModel = require('../models/docterModel');
 const departmentModel = require('../models/departmentModel');
 const appointmentModel = require('../models/appointmentModel');
 const patientModel = require('../models/patientModel');
+const { redisClient } = require('../config/redisClient');
 
 const registerHospital = async (req, res) => {
     try {
@@ -326,19 +327,30 @@ console.log("FILTER:", filter);
 const getHospitals = async (req, res) => {
   try {
     const { state, city, lat, lng, radius = 10 } = req.query;
-
     // normal filter
     let matchStage = {};
 
-    if (state) {
-//         regex → case insensitive match
-// "bhagalpur" == "Bhagalpur"
+    if (state) {//         regex → case insensitive match// "bhagalpur" == "Bhagalpur"
       matchStage.state = { $regex: `^${state}$`, $options: "i" };
     }
 
     if (city) {
       matchStage.city = { $regex: `^${city}$`, $options: "i" };
     }
+
+    let cacheKey = "";
+    if (lat && lng) {
+        cacheKey = `hospital:nearby:${lat}:${lng}:${radius}:${state || "all"}:${city || "all"}`;
+    } else {
+        cacheKey = `hospital:list:${state || "all"}:${city || "all"}`;
+    }
+
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+        console.log("✅ Cache HIT - Hospitals");
+        return res.status(200).json(JSON.parse(cachedData));
+    }
+    console.log("❌ Cache MISS - Hospitals");
 
     // ✅ If location provided → use geoNear
     if (lat && lng) {
@@ -371,24 +383,42 @@ const getHospitals = async (req, res) => {
         { $sort: { distanceMeters: 1 } }//ascending order
       ]);
 
-      return res.status(200).json({
+      const response = {
         success: true,
         msg: "Nearby hospitals with distance",
         count: hospitals.length,
         data: hospitals
-      });
+      };
+
+      await redisClient.set(
+        cacheKey,
+        JSON.stringify(response),
+        "EX",
+        300
+      );
+
+      return res.status(200).json(response);
     }
 
     // ✅ If no lat/lng → normal search
     const hospitals = await HospitalModel.find(matchStage)
       .sort({ createdAt: -1 });
 
-    res.status(200).json({
+    const response = {
       success: true,
       msg: "Hospitals list",
       count: hospitals.length,
       data: hospitals
-    });
+    };
+
+    await redisClient.set(
+      cacheKey,
+      JSON.stringify(response),
+      "EX",
+      300
+    );
+
+    return res.status(200).json(response);
 
   } catch (e) {
     res.status(500).json({
@@ -402,12 +432,25 @@ const getHospitals = async (req, res) => {
 
 const getHospitalStates = async (req, res) => {
   try {
+    const cacheKey="hospital:states";
+    const cachedData=await redisClient.get(cacheKey);
+    if(cachedData){
+      return res.status(200).json(JSON.parse(cachedData));
+    }
     const states = await HospitalModel.distinct("state");
 
-    res.status(200).json({
+    const response = {
       success: true,
       data: states
-    });
+    };
+
+    await redisClient.set(
+      cacheKey,
+      JSON.stringify(response),
+      "EX",
+      300
+    );
+    res.status(200).json(response);
   } catch (e) {
     res.status(500).json({
       success: false,
@@ -423,15 +466,32 @@ const getHospitalCities = async (req, res) => {
     if (!state) {
       return res.status(400).json({ message: "State required" });
     }
+    const cacheKey = `hospital:cities:${state.toLowerCase()}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+      console.log("✅ Cache HIT - Cities");
+      return res.status(200).json(JSON.parse(cachedData));
+    }
+    console.log("❌ Cache MISS - Cities");
 
     const cities = await HospitalModel.distinct("city", {
       state: { $regex: `^${state}$`, $options: "i" }
     });
 
-    res.status(200).json({
+    const response = {
       success: true,
       data: cities
-    });
+    };
+
+    await redisClient.set(
+      cacheKey,
+      JSON.stringify(response),
+      "EX",
+      300
+    );
+
+
+    res.status(200).json(response);
   } catch (e) {
     res.status(500).json({
       success: false,
