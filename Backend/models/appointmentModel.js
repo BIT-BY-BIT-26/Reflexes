@@ -67,7 +67,7 @@ const appointmentSchema = new mongoose.Schema({
         "Emergency",
         "Other",
       ],
-      required: true,
+      //required: true,
     },
 
     description: {
