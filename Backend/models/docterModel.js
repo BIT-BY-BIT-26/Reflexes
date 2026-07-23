@@ -30,10 +30,10 @@ const doctorSchema = new mongoose.Schema({
     required: true
   },
 
-  opd_timing:{
-    from: {type:String},
-    to:{type:String}
-  },
+  // opd_timing:{
+  //   from: {type:String},
+  //   to:{type:String}
+  // },
 
   experience:{
     type: Number,
@@ -49,10 +49,33 @@ const doctorSchema = new mongoose.Schema({
     default:false
   },
 
-  availableDays:{
-    type:[String],
-    enum:["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
-  },
+  opdSchedule: [
+    {
+      day: {
+        type: String,
+        enum: [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+          "Sunday"
+        ]
+      },
+      from: String,
+      to: String,
+      isAvailable: {
+        type: Boolean,
+        default: true
+      }
+    }
+  ],
+
+  // availableDays:{
+  //   type:[String],
+  //   enum:["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
+  // },
 
   onlineAvailability:{
     from:{type:String},

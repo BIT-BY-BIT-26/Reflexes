@@ -55,6 +55,37 @@ const addDoctor = async (req, res) => {
 }
 
 
+const updateDoctorOpdSchedule = async (req, res) => {
+  try {
+    const { doctorId } = req.params;
+    const { opdSchedule } = req.body;
+
+    const doctor = await docterModel.findById(doctorId);
+
+    if (!doctor) {
+      return res.status(404).json({
+        success: false,
+        message: "Doctor not found",
+      });
+    }
+
+    doctor.opdSchedule = opdSchedule;
+    await doctor.save();
+
+    res.json({
+      success: true,
+      message: "OPD schedule updated successfully",
+      doctor,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
 module.exports = {
-    addDoctor
+    addDoctor,
+    updateDoctorOpdSchedule
 }

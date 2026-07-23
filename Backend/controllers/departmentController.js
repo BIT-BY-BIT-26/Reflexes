@@ -203,6 +203,7 @@ exports.getDepartmentsByHospital = async (req, res) => {
       departments,
     });
   } catch (err) {
+    console.log(err)
     res.status(500).json({
       success: false,
       message: err.message,
