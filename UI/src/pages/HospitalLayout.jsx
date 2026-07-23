@@ -3,7 +3,7 @@ import Navbar from "../components/Navbar";
 import Sidebar from "../components/Hospitals/Sidebar";
 const HospitalLayout = () => {
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
       {/* Sidebar - fixed, stays on top */}
       <Sidebar />
 

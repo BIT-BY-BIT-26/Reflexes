@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { addDoctor } from "../../api/backend";
+import { toast } from "react-toastify";
 
 const AddDoctor = () => {
+  console.log("enterred");
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -25,11 +27,16 @@ const AddDoctor = () => {
     try {
       const res = await addDoctor(formData);
       if (res.data.success) {
+        toast.success(res.data.message || "Doctor created successfully"
+        );
       setFormData({ name: "", email: "", phone_number: "" });
       navigate("/hospital-dashboard/doctors");
     }
     } catch (error) {
       console.log(error);
+      toast.error(
+        error.response?.data?.message || error.message || "Soemthing went wrong"
+      )
     }
   };
 
