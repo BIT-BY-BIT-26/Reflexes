@@ -9,6 +9,7 @@ const docterModel = require("../models/docterModel");
 const HospitalModel = require("../models/HospitalModel");
 const Appointment = require("../models/appointmentModel");
 const patientModel = require("../models/patientModel");
+const { redisClient } = require("../config/redisClient");
 /* ================= GET DOCTORS ================= */
 
 const getDoctorsByDepartment = async (req, res) => {
