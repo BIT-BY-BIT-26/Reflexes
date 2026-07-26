@@ -6,7 +6,7 @@ const { getUtcDayRange } = require("../utils/utcday");
 exports.createAppointment = async (req, res) => {
   const io = req.app.get("io");
   try {
-    const { doctor, date, appointmentType } = req.body;
+    const { doctor, date, appointmentType,reason,description} = req.body;
 
     const patient = await patientModel.findOne({ userId: req.user.id });
 
@@ -21,6 +21,61 @@ exports.createAppointment = async (req, res) => {
     }
 
     const { start, end } = getUtcDayRange(date);
+    const appointmentDate = new Date(date);
+
+    if (isNaN(appointmentDate.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid appointment date"
+      });
+    }
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const selectedDate = new Date(appointmentDate);
+    selectedDate.setHours(0,0,0,0);
+    if(selectedDate < today){
+      return res.status(400).json({
+          success:false,
+          message:"Past dates cannot be booked."
+      });
+    }
+
+    const maxDate = new Date(today);
+    maxDate.setDate(maxDate.getDate()+30);
+    if(selectedDate > maxDate){
+      return res.status(400).json({
+          success:false,
+          message:"Appointments can only be booked up to 30 days in advance."
+      });
+    }
+
+    const dayName = appointmentDate.toLocaleDateString("en-US",{
+      weekday:"long",
+      timeZone:"Asia/Kolkata"
+    });
+    const schedule = doctorData.opdSchedule.find(
+      s=>s.day===dayName && s.isAvailable
+    );
+    if(!schedule){
+      return res.status(400).json({
+          success:false,
+          message:"Doctor is not available on selected day."
+      });
+    }
+
+    if(selectedDate.getTime()===today.getTime()){
+      const [hour,minute]=schedule.from.split(":").map(Number);
+      const bookingClose=new Date();
+      bookingClose.setHours(hour,minute,0,0);
+      bookingClose.setMinutes(bookingClose.getMinutes()-30);
+      if(new Date()>bookingClose){
+          return res.status(400).json({
+            success:false,
+            message:"Booking is closed for today's OPD."
+          });
+      }
+    }
 
     // const appointmentDate = new Date(date);
     // appointmentDate.setHours(0, 0, 0, 0);
@@ -45,8 +100,10 @@ exports.createAppointment = async (req, res) => {
       doctor: doctorData._id,
       hospital: doctorData.hospital,
       department: doctorData.department,
-      date: new Date(date), // exact time preserved,
+      date:appointmentDate, // exact time preserved,
       appointmentType:appointmentType,
+      reason,
+      description,
       status: "PENDING"
     });
     // await patientModel.findByIdAndUpdate(
@@ -60,8 +117,9 @@ exports.createAppointment = async (req, res) => {
     //     }
     //   }
     // )
-    const onlineDoctors = req.app.get("onlineDoctors");
-    const doctorSocket = onlineDoctors.get(doctorData._id.toString());
+
+    // const onlineDoctors = req.app.get("onlineDoctors");
+    // const doctorSocket = onlineDoctors.get(doctorData._id.toString());
     const populatedAppointment = await appointmentModel.findById(appointment._id)
     .populate({
       path:"patient",
@@ -70,15 +128,15 @@ exports.createAppointment = async (req, res) => {
         select:"name email gender"
       }
     });
-    if(doctorSocket){
-      io.to(doctorSocket).emit("newAppointment",{
-        patientName:patient.name,
-        date,
-        // appointmentId:appointment._id
-         appointment: populatedAppointment,
-         appointmentType:appointment.appointmentType
-      })
-    }
+    // if(doctorSocket){
+    //   io.to(doctorSocket).emit("newAppointment",{
+    //     //patientName:patient.name,
+    //     date,
+    //     // appointmentId:appointment._id
+    //      appointment: populatedAppointment,
+    //      //appointmentType:appointment.appointmentType
+    //   })
+    // }
 
     return res.status(201).json({
       success: true,
