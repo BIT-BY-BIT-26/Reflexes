@@ -40,7 +40,7 @@ export default function AllDoctors() {
             <th className="p-4">Status</th>
           </tr>
         </thead>
-
+        
         <tbody>
             {doctors.map((doc, i) => (
                 <motion.tr
