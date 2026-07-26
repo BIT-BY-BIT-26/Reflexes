@@ -35,7 +35,7 @@ class AppointmentModel {
       appointmentType:
           json['appointmentType'] ?? 'offline', // 👈 VERY IMPORTANT
       status: json['status'] ?? 'PENDING',
-      date: DateTime.parse(json['date']),
+      date: DateTime.parse(json['date']), // 👈 convert to local time
       token: json['token'],
     );
   }
