@@ -18,9 +18,6 @@ export default function AccessFeatures({refreshDoctorStatus,onClose}) {
             setLoading(false);
         }
     };
-
-   
-
   return (
    <>
     <div className="flex flex-col gap-10 items-center justify-center">

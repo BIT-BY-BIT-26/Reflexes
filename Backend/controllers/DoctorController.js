@@ -9,6 +9,7 @@ const docterModel = require("../models/docterModel");
 const HospitalModel = require("../models/HospitalModel");
 const Appointment = require("../models/appointmentModel");
 const patientModel = require("../models/patientModel");
+const { redisClient } = require("../config/redisClient");
 /* ================= GET DOCTORS ================= */
 
 const getDoctorsByDepartment = async (req, res) => {
@@ -176,7 +177,8 @@ const submitProfile = async (req, res) => {
     if (existingDoctor) {
       return res.status(400).json({
         success: false,
-        message: "Doctor profile already exists"
+        message: "Doctor profile already exists",
+        existingDoctor
       });
     }
 
@@ -569,6 +571,20 @@ const getDoctorDashboard = async (req, res) => {
       });
     }
 
+    // Redis cache key
+    const cacheKey = `doctor:dashboard:${doctor._id}`;
+
+    // 1. Check Redis first
+    const cachedDashboard = await redisClient.get(cacheKey);
+
+    if (cachedDashboard) {
+      return res.status(200).json({
+        success: true,
+        dashboard: JSON.parse(cachedDashboard),
+        source: "redis",
+      });
+    }
+
     // Today's date range
     const start = new Date();
     start.setHours(0, 0, 0, 0);
@@ -576,7 +592,7 @@ const getDoctorDashboard = async (req, res) => {
     const end = new Date();
     end.setHours(23, 59, 59, 999);
 
-    // Run all queries in parallel
+    // 2. Run all queries in parallel
     const [
       totalAppointments,
       completedAppointments,
@@ -674,21 +690,35 @@ const getDoctorDashboard = async (req, res) => {
       ]),
     ]);
 
+    // 3. Build dashboard object
+    const dashboard = {
+      totalPatients: uniquePatients.length,
+      todayNewPatients:
+        todayNewPatients.length > 0 ? todayNewPatients[0].count : 0,
+
+      totalAppointments,
+      completedAppointments,
+      confirmedAppointments,
+      pendingAppointments,
+
+      todayCompletedAppointments,
+    };
+
+    // 4. Save in Redis for 60 seconds
+    await redisClient.set(
+      cacheKey,
+      JSON.stringify(dashboard),
+      "EX",
+      60
+    );
+
+    // 5. Return response
     return res.status(200).json({
       success: true,
-      dashboard: {
-        totalPatients: uniquePatients.length,
-        todayNewPatients:
-          todayNewPatients.length > 0 ? todayNewPatients[0].count : 0,
-
-        totalAppointments,
-        completedAppointments,
-        confirmedAppointments,
-        pendingAppointments,
-
-        todayCompletedAppointments,
-      },
+      dashboard,
+      source: "mongodb",
     });
+
   } catch (error) {
     console.error("Dashboard Error:", error);
 
@@ -699,8 +729,6 @@ const getDoctorDashboard = async (req, res) => {
     });
   }
 };
-
-
 
 const toggleDoctorOnline = async (req, res) => {
   try {

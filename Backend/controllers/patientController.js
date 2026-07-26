@@ -291,7 +291,7 @@ const getPatientProfile = async(req,res)=>{
       id:patient._id,
       name:patient.userId.name,
       email:patient.userId.email,
-      email:patient.userId.gender,
+      gender:patient.gender,
       patient
     })
   }catch(e){
