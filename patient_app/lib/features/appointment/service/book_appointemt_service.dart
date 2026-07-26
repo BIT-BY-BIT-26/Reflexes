@@ -7,40 +7,50 @@ class AppointmentService {
 
   static Future<Map<String, dynamic>> createAppointment({
     required String doctorId,
-    required String date,
+    required DateTime date,
     required String token,
     required String appointmentType,
-
+    String? reason,
+    String? description,
   }) async {
     try {
+      final body = <String, dynamic>{
+        "doctor": doctorId,
+        "date": date.toIso8601String(),
+        "appointmentType": appointmentType,
+      };
+      if (reason != null && reason.trim().isNotEmpty) {
+        body['reason'] = reason.trim();
+      }
+      if (description != null && description.trim().isNotEmpty) {
+        body['description'] = description.trim();
+      }
+
       final res = await http.post(
         Uri.parse("$baseUrl/appointments"),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token",
         },
-        body: jsonEncode({
-          "doctor": doctorId,
-          "date": date,
-          "appointmentType": appointmentType,
-        }),
+        body: jsonEncode(body),
       );
 
-      print("STATUS CODE: ${res.statusCode}");
-      print("BODY: ${res.body}");
+      final decoded = res.body.isEmpty
+          ? <String, dynamic>{}
+          : jsonDecode(res.body) as Map<String, dynamic>;
 
       if (res.statusCode == 200 || res.statusCode == 201) {
-        return jsonDecode(res.body);
-      } else {
-        return {
-          "success": false,
-          "message": jsonDecode(res.body)["message"] ?? "Booking failed"
-        };
+        return decoded;
       }
+
+      return {
+        "success": false,
+        "message": decoded["message"] ?? "Booking failed",
+      };
     } catch (e) {
       return {
         "success": false,
-        "message": "Network error"
+        "message": "Unable to connect to the server. Please try again."
       };
     }
   }

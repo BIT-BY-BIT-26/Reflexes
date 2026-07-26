@@ -309,7 +309,7 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
         context: context,
         initialDate: DateTime.now(),
         firstDate: DateTime.now(),
-        lastDate: DateTime.now().add(const Duration(days: 365)),
+        lastDate: DateTime.now().add(const Duration(days: 30)),
       );
       if (pickedDate == null) return;
 
@@ -329,7 +329,7 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
 
       final res = await AppointmentService.createAppointment(
         doctorId: doctorId,
-        date: appointmentDate.toIso8601String(),
+        date: appointmentDate,
         token: token,
         appointmentType: appointmentType
       );
@@ -337,12 +337,18 @@ class _DoctorListScreenState extends State<DoctorListScreen> {
       if (!context.mounted) return;
 
       // ✅ Snackbar
+      final isSuccess = res['success'] == true;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(res['message'] ?? "Appointment booked"),
-          backgroundColor: Colors.green,
+          content: Text(res['message'] ?? (isSuccess
+              ? "Appointment booked successfully"
+              : "Unable to book appointment")),
+          backgroundColor: isSuccess ? Colors.green : Colors.red,
         ),
       );
+
+      if (!isSuccess) return;
 
       // ✅ REFRESH MY APPOINTMENTS
       await context.read<AppointmentProvider>().fetchMyAppointments(token);
