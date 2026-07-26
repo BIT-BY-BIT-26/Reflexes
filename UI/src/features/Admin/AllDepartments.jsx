@@ -10,7 +10,7 @@ const AllDepartments = () => {
     const fetchData = async () => {
       try {
         const res = await DepartmentsDoctorsCount();
-        setDepartments(res.data.departments);
+        setDepartments(res.data.department);
       } catch (err) {
         console.log(err);
       }

@@ -1,15 +1,38 @@
-import React, { useState } from "react";
-import { addDepartment } from "../../api/backend";
+import React, { useEffect, useState } from "react";
+import { addDepartment, getDepartmentList } from "../../api/backend";
 import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const AddDepartment = () => {
+    console.log("AddDepartment Rendered");
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     name: "",
     description: "",
   });
+
+  const [departmentOptions, setDepartmentOptions] = useState([]);
+  const [loadingList, setLoadingList] = useState(true);
+
+useEffect(() => {
+  const fetchDepartments = async () => {
+    try {
+      const res = await getDepartmentList();
+      setDepartmentOptions(res.data.departments);
+      console.log(res.data);
+      console.log(departmentOptions);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoadingList(false);
+    }
+  };
+
+  fetchDepartments();
+}, []);
+
 
   const handleChange = (e) => {
     setFormData({
@@ -22,13 +45,19 @@ const AddDepartment = () => {
     e.preventDefault();
 
     try {
-      await addDepartment(formData);
-      setFormData({ name: "", description: "" });
-
-      // 🔥 navigate after success
-      navigate("/hospital-dashboard");
+      const res =await addDepartment(formData);
+      console.log("Response:",res);
+      if(res.data.success){
+        toast.success(res.data.message || "Department created successfully");
+        setFormData({ name: "", description: "" });
+        // 🔥 navigate after success
+        navigate("/hospital-dashboard");
+      }
     } catch (error) {
       console.log(error);
+      toast.error(
+        error.response?.data?.message || error.message || "Something went wrong"
+      );
     }
   };
 
@@ -60,13 +89,20 @@ const AddDepartment = () => {
           {/* Name */}
           <div>
             <label className="text-sm text-slate-300">Department Name</label>
-            <input
+            <select
               name="name"
               value={formData.name}
               onChange={handleChange}
               className="w-full mt-1 px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 focus:ring-2 focus:ring-blue-500 outline-none"
               required
-            />
+            >
+              <option value="" disabled>{loadingList?"Loading departments...":"Select department"}</option>
+              {departmentOptions.map((dept) => (
+                <option key={dept} value={dept}>
+                  {dept}
+                </option>
+              ))}
+            </select >
           </div>
 
           {/* Description */}

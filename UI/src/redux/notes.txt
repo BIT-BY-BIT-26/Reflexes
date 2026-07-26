@@ -1,0 +1,47 @@
+App Starts
+      │
+      ▼
+configureStore()
+      │
+      ▼
+themeReducer
+      │
+      ▼
+getInitialTheme()
+      │
+      ├───────────────┐
+      │               │
+localStorage?        No
+      │               │
+      ▼               ▼
+return saved    Check System Theme
+      │               │
+      └───────┬───────┘
+              ▼
+Initial State
+{
+   mode:"light"
+}
+              │
+              ▼
+User clicks Theme Button
+              │
+              ▼
+dispatch(toggleTheme())
+              │
+              ▼
+Reducer runs
+              │
+              ▼
+mode changes
+light → dark
+or
+dark → light
+              │
+              ▼
+Save to localStorage
+              │
+              ▼
+React components using
+useSelector(state => state.theme.mode)
+automatically re-render with the new theme.

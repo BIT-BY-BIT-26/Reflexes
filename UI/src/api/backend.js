@@ -186,6 +186,11 @@ export const getStats = () =>
 export const DepartmentsDoctorsCount = () =>
   api.get("/departments/doctor-count");
 
+
+export const getDepartmentList = ()=>
+  api.get("/departments/list");
+
+
 export const addDepartment = (data) =>
   api.post("/departments", data);
 
