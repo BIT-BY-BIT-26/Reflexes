@@ -74,74 +74,6 @@
 //   })
 // } 
 
-// export const getAllDoctors = async()=>{
-//   const token = localStorage.getItem("token");
-//   return axios.get(`${API}/doctors/get-doctors`,{
-//     headers:{
-//       Authorization:`Bearer ${token}`,
-//     }
-//   })
-// }
-
-// export const updateHospitalProfile = async (data) => {
-//   const token = localStorage.getItem("token");
-
-//   return axios.patch(
-//     `${API}/profile`,
-//     data,
-//     {
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//         "Content-Type": "multipart/form-data",
-//       },
-//     }
-//   );
-// };
-
-// //----------------Doctor-------------------
-
-// export const getDoctorDashboard = async()=>{
-//   const token = localStorage.getItem("token");
-//   return axios.get(`${API}/doctors/all-data`,{
-//     headers:{
-//       Authorization:`Bearer ${token}`
-//     }
-//   })
-// }
-
-
-// export const getAllDepartments = async()=>{
-//   const token = localStorage.getItem("token");
-//   return axios.get(`${API}/departments`,{
-//     headers:{
-//       Authorization:`Bearer ${token}`,
-//     }
-//   })
-// }
-
-// export const profileCompleted = async(data)=>{
-//   const token = localStorage.getItem("token");
-//   return axios.post(`${API}/departments`,data,{
-//     headers:{
-//       Authorization:`Bearer ${token}`,
-//     }
-//   })
-// }
-
-// export const getDoctorStatus = async()=>{
-//   const token = localStorage.getItem("token");
-//   return axios.get(`${API}/doctors/profile-status`,{headers:{
-//     Authorization:`Bearer ${token}`
-//   }})
-// }
-
-// export const submitProfile = async(data)=>{
-//   const token = localStorage.getItem("token");
-//   return axios.post(`${API}/doctors/submit-profile`,data,{
-//     headers: {Authorization:`Bearer ${token}`}
-//   })
-// }
-
 
 
 import api from "./axiosInstance";
@@ -231,3 +163,21 @@ export const getConfirmedAppointments = ()=>
       appointmentType:"offline"
     }
   })
+
+export const startOPD = ()=>{
+  return api.patch("/doctors/toggle-opd");
+}
+export const startConsultation = ()=>{
+  return api.patch("/consultation/start-consultation/:id");
+}
+export const stopConsultation = ()=>{
+  return api.patch("/consultation/stop-consultation/:id");
+}
+export const resumeConsultation = ()=>{
+  return api.patch("/consultation/resume-consultation/:id");
+}
+
+export const completeAppointment = (id)=>{
+  return api.patch(`/appointments/${id}/complete`);
+}
+

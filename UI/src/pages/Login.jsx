@@ -14,8 +14,6 @@ import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { loginSuccess } from "../redux/slices/authSlice";
 
-
-
 const Login = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -42,6 +40,11 @@ const handleSubmit = async (e) => {
     const res = await loginUser(formData);
     const data = res.data;
 
+    console.log("FULL RESPONSE:", res);
+    console.log("RES.DATA:", res.data);
+    console.log("USER FROM RESPONSE:", res.data.user);
+    console.log("BEFORE DISPATCH:", data.user);
+
     dispatch(
       loginSuccess({
         token: data.token,
@@ -49,6 +52,7 @@ const handleSubmit = async (e) => {
         user: data.user,
       })
     );
+    console.log("DATA USER:", data.user);
 
     toast.success("Login Successful 🎉");
 

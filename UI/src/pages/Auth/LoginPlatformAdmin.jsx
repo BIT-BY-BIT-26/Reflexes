@@ -14,6 +14,7 @@ const LoginPlatformAdmin = () => {
     return <Navigate to="/platform-dashboard" replace />;
   }
 
+  
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",

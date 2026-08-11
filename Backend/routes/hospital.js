@@ -27,6 +27,8 @@ route.get('/profile', auth, getHospitalProfile)
 route.get("/hospitals/profile/:id", getHospitalById);
 route.get('/statistics',auth,getStats);
 
+
+//done
 route.patch("/opd-schedule/:doctorId",auth,authorize(ROLE.admin),updateDoctorOpdSchedule);
 
  module.exports=route;
