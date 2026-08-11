@@ -85,6 +85,7 @@ const updateDoctorOpdSchedule = async (req, res) => {
   }
 };
 
+//done
 module.exports = {
     addDoctor,
     updateDoctorOpdSchedule

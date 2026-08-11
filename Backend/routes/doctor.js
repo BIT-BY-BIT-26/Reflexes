@@ -2,7 +2,7 @@ const express = require("express");
 const auth = require("../middleware/auth");
 const authorize = require("../middleware/authorize");
 const { ROLE } = require("../config/role");
-const { getDoctorByHospital, submitProfile, getDoctorsByDepartment ,getMyProfile, getCompletedAppointments, updateProfile, toggleDoctorOnline, toggleOpd, uploadDoctorPhoto, getProfileStatus,getUniquePatients, getDoctorDashboard, startConsultation, stopConsultation, pauseConsultation, resumeConsultation, callNext, skipPatient } = require("../controllers/DoctorController");
+const { getDoctorByHospital, submitProfile, getDoctorsByDepartment ,getMyProfile, getCompletedAppointments, updateProfile, toggleOpd, uploadDoctorPhoto, getProfileStatus,getUniquePatients, getDoctorDashboard, startConsultation, stopConsultation, pauseConsultation, resumeConsultation, callNext, skipPatient } = require("../controllers/DoctorController");
 
 const { addDoctor  } = require("../controllers/adminController");
 const { upload } = require("../middleware/uploadCloud");
@@ -66,7 +66,6 @@ doctorRouter.get("/me", auth, getMyProfile);
 doctorRouter.get("/profile-status", auth, getProfileStatus);
 doctorRouter.post("/submit-profile",auth,submitProfile);
 doctorRouter.patch("/update-profile", auth, updateProfile);
-doctorRouter.patch("/toggle-online", auth, toggleDoctorOnline);
 doctorRouter.patch("/toggle-opd", auth, toggleOpd);
 doctorRouter.patch("/upload-photo",auth, upload.single("photo"),uploadDoctorPhoto);
 // doctorRouter.get("/all-completed",auth,getTotalCompletedAppointments);

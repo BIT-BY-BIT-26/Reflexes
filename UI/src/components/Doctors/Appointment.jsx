@@ -1,6 +1,9 @@
-import React, { useEffect, useState } from 'react'
-import { confirmAppointment, todaysAppointment } from '../../api/backend'
+
+
+import React from 'react'
 import { Users } from 'lucide-react'
+import { useTodaysAppointments } from '../../hooks/useTodaysAppointments'
+import { useConfirmAppointment } from '../../hooks/useConfirmAppointment'
 
 const statusStyles = {
   PENDING: 'bg-amber-50 text-amber-700 border-amber-200',
@@ -9,48 +12,32 @@ const statusStyles = {
 }
 
 const Appointment = () => {
-  const [doctor, setDoctor] = useState(null)
-  const [patients, setPatients] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [actionId, setActionId] = useState(null) // appointmentId currently being confirmed/cancelled
+  const { data, isLoading, isError, error, refetch } = useTodaysAppointments()
+  const confirmMutation = useConfirmAppointment()
 
-  const loadAppointments = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const response = await todaysAppointment()
-      console.log(response.data.patients)
-      setDoctor(response.data.doctor)
-      setPatients(response.data.patients || [])
-    } catch (err) {
-      console.error(err)
-      setError('Could not load today\'s appointments. Please try again.')
-    } finally {
-      setLoading(false)
-    }
+  const doctor = data?.doctor
+  const patients = data?.patients ?? []
+
+
+  if (isError) {
+    // 🐛 DEBUG: full error object, including server response if axios
+    console.error('[Appointment] fetch error:', error)
+    console.error('[Appointment] error.response?.data:', error?.response?.data)
   }
 
-  const handleConfirm = async(appointmentId) =>{
-    try{
-      console.log("Appointment ID:", appointmentId);
-      setActionId(appointmentId);
-      await confirmAppointment(appointmentId);
-      setPatients((prevPatients)=>
-        prevPatients.map((patient)=>
-          patient.appointmentId === appointmentId ? {...patient,status:"CONFIRMED"}:patient
-        )  
-      )
-    }catch(err){
-console.log(err.response?.data);
-    }finally{
-      setActionId(null);
+  const handleConfirm = (appointmentId) => {
+    if (!appointmentId) {
+      console.warn('[Appointment] handleConfirm called with falsy appointmentId!')
     }
+    confirmMutation.mutate(appointmentId, {
+      onError: (err) => {
+        console.error('[Appointment] confirm mutation failed:', err?.response?.data || err)
+      },
+      onSuccess: (res) => {
+        console.log('[Appointment] confirm mutation success:', res)
+      },
+    })
   }
-
-  useEffect(() => {
-    loadAppointments()
-  }, [])
 
   return (
     <div className="mx-auto p-6">
@@ -60,29 +47,29 @@ console.log(err.response?.data);
           <h1 className="text-6xl font-bold text-blue-300">Today's Appointments</h1>
           {doctor && (
             <p className="text-2xl text-slate-300 mt-7">
-              {doctor.department?.name?.charAt(0).toUpperCase() + doctor.department?.name?.slice(1)} ·{' '}
-              {doctor.hospital?.name}
+              {doctor.department?.name
+                ? doctor.department.name.charAt(0).toUpperCase() + doctor.department.name.slice(1)
+                : '(no department)'}
+              {' · '}
+              {doctor.hospital?.name || '(no hospital)'}
             </p>
           )}
         </div>
-        {!loading && !error && (
+        {!isLoading && !isError && (
           <div className="inline-flex items-center gap-4 rounded-2xl border border-violet-500/20 bg-[#111827] px-6 py-4 shadow-lg">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-500/15">
               <Users className="h-6 w-6 text-violet-400" />
             </div>
-
             <div>
               <p className="text-sm text-gray-400">Today's Patients</p>
-              <h2 className="text-3xl font-bold text-white">
-                {patients.length}
-              </h2>
+              <h2 className="text-3xl font-bold text-white">{patients.length}</h2>
             </div>
           </div>
         )}
       </div>
 
       {/* Loading state */}
-      {loading && (
+      {isLoading && (
         <div className="space-y-3">
           {[...Array(2)].map((_, i) => (
             <div key={i} className="h-20 rounded-xl bg-slate-100 animate-pulse" />
@@ -91,11 +78,19 @@ console.log(err.response?.data);
       )}
 
       {/* Error state */}
-      {!loading && error && (
+      {!isLoading && isError && (
         <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 flex items-center justify-between">
-          <p className="text-sm text-rose-700">{error}</p>
+          <p className="text-sm text-rose-700">
+            Could not load today's appointments. Please try again.
+            {/* 🐛 DEBUG: show raw error message on screen too */}
+            {error?.message && (
+              <span className="block text-xs text-rose-400 mt-1">
+                ({error.message})
+              </span>
+            )}
+          </p>
           <button
-            onClick={loadAppointments}
+            onClick={() => refetch()}
             className="text-sm font-medium text-rose-700 underline hover:text-rose-800"
           >
             Retry
@@ -104,17 +99,19 @@ console.log(err.response?.data);
       )}
 
       {/* Empty state */}
-      {!loading && !error && patients.length === 0 && (
+      {!isLoading && !isError && patients.length === 0 && (
         <div className="rounded-xl border border-slate-200 bg-slate-50 p-8 text-center">
           <p className="text-slate-500">No appointments booked for today.</p>
         </div>
       )}
 
       {/* Appointment list */}
-      {!loading && !error && patients.length > 0 && (
+      {!isLoading && !isError && patients.length > 0 && (
         <ul className="space-y-3">
           {patients.map((p) => {
-            const isBusy = actionId === p.appointmentId
+            const isBusy =
+              confirmMutation.isPending &&
+              confirmMutation.variables === p.appointmentId
             const isFinal = p.status === 'CONFIRMED' || p.status === 'CANCELLED'
 
             return (
@@ -127,7 +124,6 @@ console.log(err.response?.data);
                     <span className="text-[15px] uppercase tracking-wide text-slate-300">Token</span>
                     <span className="text-base font-semibold leading-none">{p.token}</span>
                   </div>
-
                   <div className="min-w-0">
                     <p className="text-xl text-white truncate">{p.patient?.userId?.name}</p>
                     <p className="text-md text-slate-400 truncate">{p.patient?.userId?.email}</p>
@@ -136,7 +132,7 @@ console.log(err.response?.data);
 
                 <div className="flex items-center gap-8 shrink-0">
                   <span
-                    className={`text-md font-medium px-4.5 py-2 rounded-full border ${
+                    className={`text-md font-medium px-4 py-2 rounded-full border ${
                       statusStyles[p.status] || 'bg-slate-50 text-slate-600 border-slate-200'
                     }`}
                   >
@@ -146,7 +142,7 @@ console.log(err.response?.data);
                   {!isFinal && (
                     <>
                       <button
-                      onClick={() => handleConfirm(p.appointmentId)}
+                        onClick={() => handleConfirm(p.appointmentId)}
                         disabled={isBusy}
                         className="text-md font-medium px-6 py-3 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
                       >

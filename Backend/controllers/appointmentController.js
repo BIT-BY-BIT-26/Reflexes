@@ -78,10 +78,6 @@ exports.createAppointment = async (req, res) => {
           });
       }
     }
-
-    // const appointmentDate = new Date(date);
-    // appointmentDate.setHours(0, 0, 0, 0);
-
     const existingAppointment = await appointmentModel.findOne({
       patient: patient._id,
       doctor: doctorData._id,
@@ -108,20 +104,24 @@ exports.createAppointment = async (req, res) => {
       description,
       status: "PENDING"
     });
-    // await patientModel.findByIdAndUpdate(
-    //   patient._id,
-    //   {
-    //     $push:{
-    //       medicalHistory:{
-    //         type:"APPOINTMENT",
-    //         doctor:doctorData._id
-    //       }
-    //     }
-    //   }
-    // )
 
-    // const onlineDoctors = req.app.get("onlineDoctors");
-    // const doctorSocket = onlineDoctors.get(doctorData._id.toString());
+    const room = `doctor_${doctorData._id.toString()}`;
+
+    console.log("📢 Sending appointment notification");
+    console.log("Doctor ID:", doctorData._id.toString());
+    console.log("Room:", room);
+
+    io.to(`doctor_${doctorData._id}`).emit("new-appointment",{
+      message:"New appointment received",
+      appointmentId:appointment._id,
+      patientId:patient._id,
+      doctorId:doctorData._id,
+      appointmentType,
+      date:appointmentDate,
+      reason
+    })
+
+
     const populatedAppointment = await appointmentModel.findById(appointment._id)
     .populate({
       path:"patient",
@@ -130,16 +130,6 @@ exports.createAppointment = async (req, res) => {
         select:"name email gender"
       }
     });
-    // if(doctorSocket){
-    //   io.to(doctorSocket).emit("newAppointment",{
-    //     //patientName:patient.name,
-    //     date,
-    //     // appointmentId:appointment._id
-    //      appointment: populatedAppointment,
-    //      //appointmentType:appointment.appointmentType
-    //   })
-    // }
-
     return res.status(201).json({
       success: true,
       message: "Appointment booked successfully",
