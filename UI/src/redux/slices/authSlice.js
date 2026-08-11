@@ -3,7 +3,7 @@ import { createSlice } from '@reduxjs/toolkit'
 const initialState = {
   token: localStorage.getItem('token') || null,
   role: localStorage.getItem('role') || null,
-  user: null,
+  user:JSON.parse(localStorage.getItem('user')) || null,
   isAuthenticated: !!localStorage.getItem('token'),
 }
 
@@ -17,9 +17,9 @@ const authSlice = createSlice({
       state.role = role
       state.user = user || null
       state.isAuthenticated = true
-
       localStorage.setItem('token', token)
       localStorage.setItem('role', role)
+      localStorage.setItem('user', JSON.stringify(user));
     },
     logout: (state) => {
       state.token = null

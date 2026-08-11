@@ -1,22 +1,49 @@
-import { useEffect, useState } from "react";
-import { getAllDoctors } from "../../api/backend";
+import { useNavigate } from "react-router-dom";
+import { useAllDoctors } from "../../hooks/UseAllDcotors";
+
 export default function AllDoctor() {
-  const [doctors, setDoctors] = useState([]);
-  const [hospital, setHospital] = useState(null);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchDoctors();
-  }, []);
+  //   useEffect(() => {
+//     fetchDoctors();
+//   }, []);
 
-  const fetchDoctors = async () => {
-    try {
-      const res = await getAllDoctors();
-      setDoctors(res.data.doctors);
-      setHospital(res.data.hospital);
-    } catch (err) {
-      console.log(err);
-    }
-  };
+//   const fetchDoctors = async () => {
+//     try {
+//       const res = await getAllDoctors();
+//       setDoctors(res.data.doctors);
+//       setHospital(res.data.hospital);
+//     } catch (err) {
+//       console.log(err);
+//     }
+//   };
+
+
+  // Cached under queryKeys.allDoctors. Leaving this page and coming back
+  // reads from cache instantly - isLoading is only true the first time.
+  const { data, isLoading, isError, refetch } = useAllDoctors();
+
+  const doctors = data?.doctors ?? [];
+  const hospital = data?.hospital;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-black via-slate-950 to-blue-950 p-6 text-white">
+        Loading...
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-black via-slate-950 to-blue-950 p-6 text-white flex items-center gap-3">
+        <span>Could not load doctors.</span>
+        <button onClick={() => refetch()} className="underline text-blue-400">
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-slate-950 to-blue-950 p-6">
@@ -61,6 +88,12 @@ export default function AllDoctor() {
                 <p className="text-blue-300 text-lg">
                   {doc.department?.name}
                 </p>
+              </div>
+
+              <div className="mt-5">
+                <button onClick={() => navigate(`/hospital-dashboard/doctor/opd-schedule/${doc._id}`)} className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold duration-200 shadow-lg hover:shadow-blue-500/30">
+                  Schedule OPD
+                </button>
               </div>
 
               {/* STATUS */}

@@ -15,16 +15,24 @@ import { ROLE } from "../constants/Role";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleTheme } from "../redux/slices/themeSlice";
 import { logout } from "../redux/slices/authSlice";
+import { markAllRead } from "../redux/slices/notificationSlice";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [logo,setLogo] = useState("");
   const [profileOpen,setProfileOpen] = useState(false);
+  const [notificationOpen, setNotificationOpen] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const mode = useSelector((state) => state.theme.mode);
   const role = useSelector((state) => state.auth.role);
-  const dispatch = useDispatch();
+  const notifications = useSelector(
+    (state)=> state.notification.notifications
+  );
+  const unreadCount = useSelector(
+    (state)=> state.notification.unreadCount
+  );
 useEffect(() => {
   const getLogo = async () => {
     try {
@@ -44,6 +52,9 @@ useEffect(() => {
     navigate("/login");
   };
 
+  const handleNotificationClick = () => {
+    navigate("/doctor-dashboard/notifications");
+  };
   return (
     <header className="relative z-30 sticky top-0  w-full bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white">
       <div className="flex items-center justify-between px-4 md:px-6 py-7">
@@ -52,7 +63,6 @@ useEffect(() => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => {
-                console.log("clicked me")
                 setOpen(!open)
             }}
             className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition"
@@ -102,9 +112,17 @@ useEffect(() => {
           </button>
 
           {/* Notification */}
-          <button className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition">
+         <button
+            onClick={handleNotificationClick}
+            className="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition"
+          >
             <Bell size={24} />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
           </button>
 
           {/* Settings */}

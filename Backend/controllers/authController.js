@@ -4,6 +4,7 @@ const patientModel = require('../models/patientModel.js');
 const userModel = require('../models/userModel');
 const { ROLE } = require('../config/role.js');
 const PharmacyModel = require('../models/PharmacyModel.js');
+const docterModel = require('../models/docterModel.js');
 
 const loginUser = async (req, res) => {
   try {
@@ -46,6 +47,12 @@ const loginUser = async (req, res) => {
       pharmacyId = pharmacy?._id;
     }
 
+    let doctorId = null;
+    if(user.role===ROLE.doctor){
+      const doctor = await docterModel.findOne({userId:user._id});
+      doctorId = doctor?._id;
+    }
+
 
     // 4️⃣ Generate token
     const token = jwt.sign(
@@ -69,6 +76,7 @@ const loginUser = async (req, res) => {
         id: user._id,
         name: user.name,
         patientId,
+        doctorId,
         email: user.email
       },
       hospitalId: user.hospitalId

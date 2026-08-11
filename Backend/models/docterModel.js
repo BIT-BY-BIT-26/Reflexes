@@ -9,10 +9,9 @@ const doctorSchema = new mongoose.Schema({
     unique:true,
   },
   profile_photo: {
-  type: String,
-  default: ""
-},
-
+    type: String,
+    default: ""
+  },
   position:{
     type: String,
     required:true,
@@ -23,17 +22,16 @@ const doctorSchema = new mongoose.Schema({
     ref: "Hospital",
     required: true
   },
-
   department: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Department",
     required: true
   },
 
-  // opd_timing:{
-  //   from: {type:String},
-  //   to:{type:String}
-  // },
+  opd_timing:{
+    from: {type:String},
+    to:{type:String}
+  },
 
   experience:{
     type: Number,
@@ -72,11 +70,6 @@ const doctorSchema = new mongoose.Schema({
     }
   ],
 
-  // availableDays:{
-  //   type:[String],
-  //   enum:["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
-  // },
-
   onlineAvailability:{
     from:{type:String},
     to:{type:String}
@@ -89,11 +82,6 @@ const doctorSchema = new mongoose.Schema({
   },
 
   // ⭐ NEW FIELDS
-
-  isOnline:{
-    type:Boolean,
-    default:false
-  },
 
   opdStarted:{
     type:Boolean,
