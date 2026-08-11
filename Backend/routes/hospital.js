@@ -3,6 +3,9 @@ const { getRouteToHospital } = require('../controllers/locationController.js');
 const { getHospitalStates, getHospitalCities, getHospitals, registerHospital, updateHospitalProfile, getHospitalProfile, getStats, getHospitalById } = require('../controllers/hospitalController.js');
 const { hospitalUpload } = require('../middleware/uploadCloud.js');
 const auth = require('../middleware/auth.js');
+const { updateDoctorOpdSchedule } = require('../controllers/adminController.js');
+const authorize = require('../middleware/authorize.js');
+const { ROLE } = require('../config/role.js');
 
 const route = express.Router();
 route.get('/test', (req, res) => {
@@ -25,5 +28,7 @@ route.get("/hospitals/profile/:id", getHospitalById);
 route.get('/statistics',auth,getStats);
 
 
+//done
+route.patch("/opd-schedule/:doctorId",auth,authorize(ROLE.admin),updateDoctorOpdSchedule);
 
  module.exports=route;

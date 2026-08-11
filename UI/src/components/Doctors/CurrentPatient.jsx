@@ -6,8 +6,11 @@ import {
   CheckCircle2,
   Eye,
 } from "lucide-react";
+import { completeAppointment } from "../../api/backend";
+import { useState } from "react";
 
-const CurrentPatient = ({ appointment }) => {
+const CurrentPatient = ({ appointment,onComplete}) => {
+  const [loading, setLoading] = useState(false);
   if (!appointment) {
     return (
       <div className="rounded-3xl border border-slate-700 bg-slate-900 p-8 text-center text-gray-400">
@@ -17,6 +20,18 @@ const CurrentPatient = ({ appointment }) => {
   }
 
   const patient = appointment.patient.userId;
+
+  const handleComplete = async()=>{
+    try{
+      setLoading(true);
+      await completeAppointment(appointment._id);
+      onComplete?.(appointment._id);
+    }catch(error){
+      console.log(error);
+    }finally{
+      setLoading(false);
+    }
+  }
 
   return (
     <div className="relative overflow-hidden rounded-3xl border border-emerald-500/30 bg-slate-900 shadow-2xl">
@@ -108,7 +123,7 @@ const CurrentPatient = ({ appointment }) => {
         {/* Buttons */}
 
         <div className="mt-8 grid grid-cols-2 gap-4">
-          <button className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 font-semibold text-white transition hover:bg-emerald-700">
+          <button onClick={handleComplete} disabled={loading} className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 font-semibold text-white transition hover:bg-emerald-700">
 
             <CheckCircle2 size={18} />
 

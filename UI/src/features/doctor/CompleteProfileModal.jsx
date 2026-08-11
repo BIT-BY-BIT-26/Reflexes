@@ -2,94 +2,126 @@ import { useEffect, useState } from "react";
 import { TbBadgeFilled } from "react-icons/tb";
 import { getAllDepartments, submitProfile } from "../../api/backend";
 
-export default function CompleteProfileModal({onClose,refreshDoctorStatus}) {
-    const [departments,setDepartments] = useState([]);
-    useEffect(()=>{
-        fetchDepartments();
-    },[]);
-    const fetchDepartments = async()=>{
-        try{
-            const res = await getAllDepartments();
-            setDepartments(res.data.departments);
-        }catch(error){
-            console.log(error);
-        }
+export default function CompleteProfileModal({
+  onClose,
+  refreshDoctorStatus,
+}) {
+  const [departments, setDepartments] = useState([]);
+
+  const [formData, setFormData] = useState({
+    position: "",
+    department: "",
+    experience: "",
+    registrationNumber: "",
+    consultationFee: "",
+    specialisations: "",
+    languages: "",
+
+    onlineAvailability: {
+      monday: false,
+      tuesday: false,
+      wednesday: false,
+      thursday: false,
+      friday: false,
+      saturday: false,
+      sunday: false,
+    },
+  });
+
+  const days = [
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+  ];
+
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
+
+  const fetchDepartments = async () => {
+    try {
+      const res = await getAllDepartments();
+      setDepartments(res.data.departments);
+    } catch (error) {
+      console.log(error);
     }
-    const [formData,setFormData] =useState({
-        position: "",
-        department: "",
+  };
 
-        experience: "",
-        registrationNumber: "",
-        consultationFee: "",
+  const handleChange = (e) => {
+    const { name, value } = e.target;
 
-        opdFrom: "",
-        opdTo: "",
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
-        specialisations: "",
-        languages: "",
+  const toggleDay = (day) => {
+    setFormData((prev) => ({
+      ...prev,
+      onlineAvailability: {
+        ...prev.onlineAvailability,
+        [day]: !prev.onlineAvailability[day],
+      },
+    }));
+  };
 
-        availableDays: [],
-    });
-    const handleChange = (e)=>{
-        const {name,value} = e.target;
-        setFormData((prev)=>({
-            ...prev,
-            [name]:value,
-        }))
-    }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-    const handleSubmit = async(e)=>{
-        e.preventDefault();
-        const payload = {
-            position:formData.position,
-            department:formData.department,
-            experience : Number(formData.experience),
-            opd_timing:{
-                from:formData.opdFrom,
-                to:formData.opdTo,
-            },
-            specialisations: formData.specialisations
-            .split(",")
-            .map(item => item.trim())
-            .filter(Boolean),
-            languages:formData.languages.split(",").map((lang)=>lang.trim()),
-            registrationNumber:formData.registrationNumber,
-            consultationFee:Number(formData.consultationFee),
-            availableDays:formData.availableDays,
-        }
-        try{
-            const res = await submitProfile(payload);
-            await refreshDoctorStatus();
-            onClose();
-        }catch(error){
-            console.log(error);
-        }
-    }
+    const payload = {
+      position: formData.position,
+      department: formData.department,
+      experience: Number(formData.experience),
 
+      specialisations: formData.specialisations
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean),
 
-    const toggleDay = (day)=>{
-        setFormData((prev)=>({
-            ...prev,
-            availableDays:prev.availableDays.includes(day)
-            ?prev.availableDays.filter((d)=>d!==day):[...prev.availableDays,day],
-        }));
+      onlineAvailability: formData.onlineAvailability,
+
+      registrationNumber: formData.registrationNumber,
+
+      consultationFee: Number(formData.consultationFee),
+
+      languages: formData.languages
+        .split(",")
+        .map((lang) => lang.trim())
+        .filter(Boolean),
     };
+
+    console.log("PROFILE PAYLOAD:", payload);
+
+    try {
+      await submitProfile(payload);
+      await refreshDoctorStatus();
+      onClose();
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
 
       {/* Modal */}
-      <div className="relative w-full max-w-4xl mx-4 bg-slate-950 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden">
+      <div className="relative w-full max-w-4xl mx-4 bg-slate-950 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
+
+        {/* Close */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-slate-400 hover:text-white"
         >
           ✕
         </button>
+
         {/* Header */}
         <div className="border-b border-slate-800 p-8">
           <div className="flex items-center gap-4">
@@ -112,131 +144,137 @@ export default function CompleteProfileModal({onClose,refreshDoctorStatus}) {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-8">
-
+        <form
+          onSubmit={handleSubmit}
+          className="p-8"
+        >
           <div className="grid md:grid-cols-2 gap-5">
 
             {/* Position */}
             <InputField
-            name="position"
-            value={formData.position}
-            onChange={handleChange}
+              name="position"
+              value={formData.position}
+              onChange={handleChange}
               label="Position"
-              placeholder="Senior Consultant"
+              placeholder="Junior Consultant"
             />
 
+            {/* Department */}
             <div>
-                <label htmlFor="" className="block text-sm text-slate-400 mb-2">
-                    Department
-                </label>
-                <select name="department" value={formData.department || ""} onChange={handleChange} className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white" id="">
-                    <option value="">Select Department</option>
-                    {departments.map((dept)=>(
-                        <option key={dept._id} value={dept._id}>
-                            {dept.name}
-                        </option>
-                    ))}
-                </select>
+              <label className="block text-sm text-slate-400 mb-2">
+                Department
+              </label>
+
+              <select
+                name="department"
+                value={formData.department}
+                onChange={handleChange}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-white"
+              >
+                <option value="">
+                  Select Department
+                </option>
+
+                {departments.map((dept) => (
+                  <option
+                    key={dept._id}
+                    value={dept._id}
+                  >
+                    {dept.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Experience */}
             <InputField
-            name="experience"
-            onChange={handleChange}
-            value={formData.experience}
+              name="experience"
+              value={formData.experience}
+              onChange={handleChange}
               label="Experience (Years)"
               type="number"
-              placeholder="10"
+              placeholder="5"
             />
 
             {/* Registration */}
             <InputField
-            name="registrationNumber"
-            onChange={handleChange}
-            value={formData.registrationNumber}
+              name="registrationNumber"
+              value={formData.registrationNumber}
+              onChange={handleChange}
               label="Registration Number"
-              placeholder="NMC123456"
+              placeholder="MED-1256"
             />
 
-            {/* Fee */}
+            {/* Consultation Fee */}
             <InputField
-            name="consultationFee"
-            value={formData.consultationFee}
-            onChange={handleChange}
+              name="consultationFee"
+              value={formData.consultationFee}
+              onChange={handleChange}
               label="Consultation Fee"
               type="number"
-              placeholder="500"
-            />
-
-            {/* OPD Timing */}
-            <InputField
-            name="opdFrom"
-            value={formData.opdFrom}
-            onChange={handleChange}
-              label="OPD From"
-              type="time"
-            />
-
-            <InputField
-            name="opdTo"
-            value={formData.opdTo}
-            onChange={handleChange}
-              label="OPD To"
-              type="time"
+              placeholder="800"
             />
 
             {/* Specialisations */}
-            <div className="md:col-span-2">
-              <InputField
-                value={formData.specialisations}
-                onChange={handleChange}
-                name="specialisations"
-                label="Specialisations"
-                placeholder="Cardiology, Neurology"
-              />
-            </div>
+            <InputField
+              name="specialisations"
+              value={formData.specialisations}
+              onChange={handleChange}
+              label="Specialisations"
+              placeholder="Cardiology, Interventional Cardiology"
+            />
 
             {/* Languages */}
-            <div className="md:col-span-2">
-              <InputField
-                name="languages"
-                value={formData.languages}
-                onChange={handleChange}
-                label="Languages"
-                placeholder="Hindi, English"
-              />
-            </div>
+            <InputField
+              name="languages"
+              value={formData.languages}
+              onChange={handleChange}
+              label="Languages"
+              placeholder="English, Hindi"
+            />
 
-            {/* Available Days */}
+            {/* Online Availability */}
             <div className="md:col-span-2">
-              <label className="block text-sm text-slate-400 mb-2">
-                Available Days
+              <label className="block text-sm text-slate-400 mb-3">
+                Online Consultation Availability
               </label>
 
-              <div className="flex flex-wrap gap-3">
-                {[
-                  "Monday",
-                  "Tuesday",
-                  "Wednesday",
-                  "Thursday",
-                  "Friday",
-                  "Saturday",
-                  "Sunday",
-                ].map((day) => (
-                  <button
-                  onClick={()=>toggleDay(day)}
-                    key={day}
-                    type="button"
-                    className={`px-4 py-2 rounded-xl border transition ${
-                        formData.availableDays.includes(day)
-                        ? "border-blue-500 text-blue-400"
-                        : "border-slate-700 text-slate-300"
-                    }`}
-                  >
-                    {day}
-                  </button>
-                ))}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {days.map((day) => {
+                  const active =
+                    formData.onlineAvailability[day];
+
+                  return (
+                    <button
+                      key={day}
+                      type="button"
+                      onClick={() => toggleDay(day)}
+                      className={`px-4 py-3 rounded-xl border capitalize transition ${
+                        active
+                          ? "border-blue-500 bg-blue-500/10 text-blue-400"
+                          : "border-slate-700 bg-slate-900 text-slate-400"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span>{day}</span>
+
+                        <span
+                          className={`w-4 h-4 rounded-full ${
+                            active
+                              ? "bg-blue-500"
+                              : "bg-slate-700"
+                          }`}
+                        />
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
+
+              <p className="text-xs text-slate-500 mt-2">
+                Select the days on which you accept online
+                consultations.
+              </p>
             </div>
           </div>
 
@@ -249,7 +287,6 @@ export default function CompleteProfileModal({onClose,refreshDoctorStatus}) {
               Complete Profile
             </button>
           </div>
-
         </form>
       </div>
     </div>

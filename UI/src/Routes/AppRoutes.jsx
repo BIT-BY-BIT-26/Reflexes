@@ -20,6 +20,8 @@ import HospitalLayout from '../pages/HospitalLayout'
 import AddDoctor from '../features/Admin/AddDoctor'
 import AllDoctor from '../features/Admin/AllDoctor'
 import Appointment from '../components/Doctors/Appointment'
+import OpdSchedule from '../features/Admin/OpdSchedule'
+import NotificationSection from '../features/doctor/NotificationSection'
 
 const AppRoutes = () => {
   return (
@@ -58,7 +60,7 @@ const AppRoutes = () => {
           <Route path='departments/add' element={<AddDepartment />}/>
           <Route path='doctors/add' element={<AddDoctor />}/>
           <Route path='doctors' element={<AllDoctor />}/>
-          
+          <Route path='doctor/opd-schedule/:doctorId' element={<OpdSchedule />}/>
         </Route>
 
 
@@ -67,7 +69,7 @@ const AppRoutes = () => {
         </ProtectedRoutes>}>
           <Route index element={<DoctorDashboard />} />
           <Route path='appointments' element={<Appointment />} />
-          
+          <Route path='notifications' element={<NotificationSection />}/>
         </Route>
 
         <Route path='/hospital-dashboard/profile' 

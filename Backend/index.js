@@ -1,55 +1,3 @@
-// const express = require("express");
-// const { mongoose } = require("mongoose");
-// const app = express();
-// const cors = require("cors");
-// const dotenv = require("dotenv");
-// const patientRoute = require("./routes/patientRoute");
-// const authRoute = require("./routes/authRoute");
-// const pharmacyRouter = require("./routes/pharmacy");
-// app.use(cors());
-// const hospitalRoutes = require("./routes/hospital");
-// const departmentRouter = require("./routes/departmentRoute");
-// const doctorRouter = require("./routes/doctor");
-
-// dotenv.config();
-// app.use(cors({
-//   origin: true,
-//   credentials: true
-// }));
-
-// app.use(express.json());
-
-// // MongoDB
-// mongoose
-//   .connect(process.env.MONGO_URI)
-//   .then(async () => {
-//     console.log("✅ MongoDB connected successfully");
-
-//   })
-//   .catch((err) => console.log("❌ MongoDB connection error", err));
-
-// app.use(express.json()); 
-
-// app.get('/',(req , res)=>{
-//     res.json("hi there");
-// });
-
-// const PORT = 3000;
-
-// app.use("/api/auth", authRoute);
-// app.use("/api/patients", patientRoute);
-// app.use("/api",appointmentRouter);
-// app.use("/api/reports",reportsRoute);
-// // app.use("/api/consulation",consultationRouter);
-// app.use("/api/pharmacy",pharmacyRouter);
-// app.use("/api/departments",departmentRouter );
-// app.use("/api/doctors",doctorRouter);
-// app.use("/api",hospitalRoutes)
-
-// app.listen(PORT,()=>{
-//     console.log(`Listening to port ${PORT}`);
-// })
-
 const express = require("express");
 const mongoose = require("mongoose");
 const http = require("http");
@@ -79,11 +27,6 @@ const redisClient = require("./config/redisClient.js");
 const app = express();
 app.use(express.json());
 app.use(cors());
-
-
-
-
-// MongoDB
 mongoose
   .connect(process.env.MONGO_URI)
   .then(async () => {
@@ -103,32 +46,15 @@ const io = new Server(server, {
     origin: "*"
   }
 });
+
+const onlineDoctors = new Map();
+const onlinePatients = new Map();
+
 app.set("io", io);
 app.set("redis", redisClient);
 
-io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
-  socket.on("joinDoctorRoom", (doctorId) => {
-    socket.join(`doctor_${doctorId}`);
-    console.log(
-      `Socket ${socket.id} joined doctor_${doctorId}`
-    );
-  });
-  socket.on("disconnect", () => {
-    console.log("User disconnected");
-  });
-});
+socketHandler(io, onlineDoctors, onlinePatients);
 
-
-// const onlineDoctors = new Map();
-// const onlinePatients = new Map();
-// app.set("onlineDoctors", onlineDoctors);
-// app.set("onlinePatients", onlinePatients);
-// app.set("io", io);
-// socketHandler(io,onlineDoctors,onlinePatients);
-
-
-// Routes
 app.use("/api", hospitalRoutes);
 app.use("/api/auth", authRoute);
 app.use("/api/platform", platformOwnerRoute);
@@ -140,10 +66,7 @@ app.use("/api",appointmentRouter);
 app.use("/api/reports",reportsRoute);
 app.use("/api/pharmacy",inventoryRouter);
 app.use("/api",reviewRouter);
-// app.use("/api/consulation",consultationRouter);
-
-
-// Listen
+app.use("/api/consultation", consultationRouter);
 server.listen(process.env.PORT, () => {
   console.log(`Listening to port ${process.env.PORT}`);
 });

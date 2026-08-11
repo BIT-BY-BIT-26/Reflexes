@@ -1,23 +1,29 @@
 import React, { useEffect, useState } from 'react'
 import { DepartmentsDoctorsCount } from '../../api/backend';
+import { allDepartments } from '../../hooks/UseAllDepartment';
 
 const AllDepartments = () => {
 
 
-     const [departments, setDepartments] = useState([]);
+    //  const [departments, setDepartments] = useState([]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await DepartmentsDoctorsCount();
-        setDepartments(res.data.department);
-      } catch (err) {
-        console.log(err);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       const res = await DepartmentsDoctorsCount();
+  //       setDepartments(res.data.department);
+  //     } catch (err) {
+  //       console.log(err);
+  //     }
+  //   };
 
-    fetchData();
-  }, []);
+  //   fetchData();
+  // }, []);
+
+
+  const {data, isLoading, refetch,isError } = allDepartments();
+  const departments = data?.departments ?? [];
+
    return (
     <div className="min-h-screen bg-gradient-to-br from-black via-slate-950 to-blue-950 p-10">
       

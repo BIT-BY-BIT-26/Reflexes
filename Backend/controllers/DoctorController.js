@@ -10,6 +10,7 @@ const HospitalModel = require("../models/HospitalModel");
 const Appointment = require("../models/appointmentModel");
 const patientModel = require("../models/patientModel");
 const { redisClient } = require("../config/redisClient");
+const departmentModel = require("../models/departmentModel");
 /* ================= GET DOCTORS ================= */
 
 const getDoctorsByDepartment = async (req, res) => {
@@ -138,7 +139,7 @@ const getProfileStatus = async (req, res) => {
   });
 };
 
-
+//done
 const submitProfile = async (req, res) => {
   try {
     const hospitalId = req.user.hospitalId;
@@ -182,18 +183,43 @@ const submitProfile = async (req, res) => {
       });
     }
 
+    const departmentExists = await departmentModel.findOne({
+        _id: department,
+        hospital: hospitalId
+      });
+
+      if (!departmentExists) {
+        return res.status(404).json({
+          success: false,
+          message: "Department not found in this hospital"
+        });
+      }
+
+    if (registrationNumber) {
+      const existingRegistration = await docterModel.findOne({
+        registrationNumber
+      });
+
+      if (existingRegistration) {
+        return res.status(400).json({
+          success: false,
+          message: "Registration number already exists"
+        });
+      }
+    }
+
     const doctor = new docterModel({
       userId,
       hospital: hospitalId,
       position,
-      profile_photo,
+      profile_photo:profile_photo || "",
       department,
-      experience,
-      specialisations,
-      onlineAvailabitity,
+      experience:experience || 0,
+      specialisations : specialisations || [],
+      onlineAvailabitity : onlineAvailabitity || {},
       registrationNumber,
-      consultationFee,
-      languages,
+      consultationFee:consultationFee || 0,
+      languages:languages || [],
       profileCompleted: true
     });
 
@@ -331,189 +357,6 @@ const getCompletedAppointments = async (req, res) => {
     });
   }
 };
-
-
-// const getTotalCompletedAppointments = async (req, res) => {
-//   try {
-//     const doctor = await docterModel.findOne({
-//       userId: req.user.id,
-//     });
-
-//     if (!doctor) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Doctor not found",
-//       });
-//     }
-
-//     const totalCompleted = await Appointment.countDocuments({
-//       doctor: doctor._id,
-//       status: "COMPLETED",
-//     });
-
-//     res.status(200).json({
-//       success: true,
-//       totalCompleted,
-//     });
-
-//   } catch (error) {
-//     res.status(500).json({
-//       success: false,
-//       message: "Failed to fetch total completed consultations",
-//     });
-//   }
-// };
-
-
-// const getTodayCompletedConsultations = async (req, res) => {
-//   try {
-//     const doctor = await docterModel.findOne({
-//       userId: req.user.id,
-//     });
-
-//     if (!doctor) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Doctor not found",
-//       });
-//     }
-
-//     const start = new Date();
-//     start.setHours(0, 0, 0, 0);
-
-//     const end = new Date();
-//     end.setHours(23, 59, 59, 999);
-
-//     const todayCompleted = await Appointment.countDocuments({
-//       doctor: doctor._id,
-//       status: "COMPLETED",
-//       date: {
-//         $gte: start,
-//         $lte: end,
-//       },
-//     });
-
-//     res.status(200).json({
-//       success: true,
-//       todayCompleted,
-//     });
-
-//   } catch (error) {
-//     res.status(500).json({
-//       success: false,
-//       message: "Failed to fetch today's completed consultations",
-//     });
-//   }
-// };
-
-
-// const getTodayNewPatients = async (req, res) => {
-//   try {
-//     const doctor = await docterModel.findOne({
-//       userId: req.user.id,
-//     });
-
-//     if (!doctor) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Doctor not found",
-//       });
-//     }
-
-//     const start = new Date();
-//     start.setHours(0, 0, 0, 0);
-
-//     const end = new Date();
-//     end.setHours(23, 59, 59, 999);
-
-//     const newPatients = await Appointment.aggregate([
-//       {
-//         $match: {
-//           doctor: doctor._id,
-//           status: {
-//             $in: ["PENDING", "CONFIRMED", "COMPLETED"]
-//           }
-//         }
-//       },
-
-//       // Patient-wise earliest appointment
-//       {
-//         $sort: {
-//           date: 1,
-//         },
-//       },
-
-//       {
-//         $group: {
-//           _id: "$patient",
-//           firstVisit: {
-//             $first: "$date",
-//           },
-//         },
-//       },
-
-//       {
-//         $match: {
-//           firstVisit: {
-//             $gte: start,
-//             $lte: end,
-//           },
-//         },
-//       },
-
-//       {
-//         $count: "todayNewPatients",
-//       },
-//     ]);
-
-//     res.json({
-//       success: true,
-//       todayNewPatients:
-//         newPatients.length > 0
-//           ? newPatients[0].todayNewPatients
-//           : 0,
-//     });
-
-//   } catch (err) {
-//     res.status(500).json({
-//       success: false,
-//       message: err.message,
-//     });
-//   }
-// };
-
-
-// const getTotalUniquePatientsCounts = async (req, res) => {
-//   try {
-//     const doctor = await docterModel.findOne({
-//       userId: req.user.id,
-//     });
-
-//     if (!doctor) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Doctor not found",
-//       });
-//     }
-
-//     const uniquePatients = await Appointment.distinct("patient", {
-//       doctor: doctor._id,
-//       status: "COMPLETED",
-//     });
-
-//     return res.status(200).json({
-//       success: true,
-//       totalUniquePatients: uniquePatients.length,
-//     });
-
-//   } catch (error) {
-//     return res.status(500).json({
-//       success: false,
-//       message: "Failed to fetch unique patients",
-//     });
-//   }
-// };
-
 
 const getUniquePatients = async (req, res) => {
   try {
@@ -730,40 +573,6 @@ const getDoctorDashboard = async (req, res) => {
   }
 };
 
-const toggleDoctorOnline = async (req, res) => {
-  try {
-    const doctor = await docterModel.findOne({
-      userId: req.user.id
-    });
-
-    if (!doctor) {
-      return res.status(404).json({
-        success: false,
-        message: "Doctor not found"
-      });
-    }
-    doctor.isOnline = !doctor.isOnline;
-    doctor.lastSeen = new Date();
-    // If doctor goes offline → OPD auto stop
-    if (!doctor.isOnline) {
-      doctor.opdStarted = false;
-    }
-
-    await doctor.save();
-
-    res.json({
-      success: true,
-      isOnline: doctor.isOnline
-    });
-
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
-};
-
 const toggleOpd = async (req, res) => {
   try {
     const doctor = await docterModel.findOne({
@@ -776,14 +585,7 @@ const toggleOpd = async (req, res) => {
         message: "Doctor not found"
       });
     }
-
-    if (!doctor.isOnline) {
-      return res.status(400).json({
-        success: false,
-        message: "Doctor must be online to start OPD"
-      });
-    }
-
+    
     doctor.opdStarted = !doctor.opdStarted;
     await doctor.save();
 
@@ -1266,5 +1068,5 @@ const callNext = async (req, res) => {
 };
 
 
-//module.exports={toggleOpd,resumeConsultation,pauseConsultation,callNext,skipPatient,startConsultation,stopConsultation,toggleDoctorOnline,getProfileStatus,submitProfile, getDoctorByHospital, searchPatient,getDoctorsByDepartment,getMyProfile,getCompletedAppointments,updateProfile,uploadDoctorPhoto};
-module.exports={getDoctorDashboard,getUniquePatients,toggleOpd,toggleDoctorOnline,getProfileStatus,submitProfile,getDoctorById, getDoctorByHospital, searchPatient,getDoctorsByDepartment,getMyProfile,getCompletedAppointments,updateProfile,uploadDoctorPhoto,callNext,skipPatient,pauseConsultation,resumeConsultation,stopConsultation,startConsultation};
+//module.exports={toggleOpd,resumeConsultation,pauseConsultation,callNext,skipPatient,startConsultation,stopConsultation,getProfileStatus,submitProfile, getDoctorByHospital, searchPatient,getDoctorsByDepartment,getMyProfile,getCompletedAppointments,updateProfile,uploadDoctorPhoto};
+module.exports={getDoctorDashboard,getUniquePatients,toggleOpd,getProfileStatus,submitProfile,getDoctorById, getDoctorByHospital, searchPatient,getDoctorsByDepartment,getMyProfile,getCompletedAppointments,updateProfile,uploadDoctorPhoto,callNext,skipPatient,pauseConsultation,resumeConsultation,stopConsultation,startConsultation};

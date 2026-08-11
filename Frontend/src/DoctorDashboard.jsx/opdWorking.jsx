@@ -10,7 +10,6 @@ const OpdWorkingArea = () => {
 
   const { opdStarted } = useSelector(state => state.doctor);
   const { stats = {}, todayAppointments = [] } = useSelector(state => state.appointment);
-
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
