@@ -1,4 +1,5 @@
 const { default: mongoose } = require("mongoose");
+const { ROLE } = require("../config/role");
 
 const reportSchema = mongoose.Schema({
     patient:{
@@ -31,8 +32,8 @@ const reportSchema = mongoose.Schema({
 
     uploadedBy:{
         type:String,
-        enum:["Doctor","Patient"],
-        default:"Patient"
+        enum:[ROLE.admin,ROLE.patient],
+        default:ROLE.admin
     },
     sharedWithDoctors:[
         {
