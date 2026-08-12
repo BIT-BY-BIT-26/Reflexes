@@ -100,6 +100,99 @@ const createPrescription = async (req, res) => {
 };
 
 
+const updatePrescription = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const doctor = await docterModel.findOne({ userId });
+
+    if (!doctor) {
+      return res.status(404).json({
+        success: false,
+        message: "Doctor profile not found"
+      });
+    }
+
+    const prescriptionId = req.params.prescriptionId;
+
+    const prescription = await prescriptionModel.findById(prescriptionId);
+
+    if (!prescription) {
+      return res.status(404).json({
+        success: false,
+        message: "Prescription not found"
+      });
+    }
+
+    if (prescription.doctorId.toString() !== doctor._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized"
+      });
+    }
+
+    const {
+      complaints,
+      diagnosis,
+      medicines,
+      tests,
+      advice,
+      followUpDate
+    } = req.body;
+
+    const complaintsData = complaints
+      ? JSON.parse(complaints)
+      : prescription.complaints;
+
+    const diagnosisData = diagnosis
+      ? JSON.parse(diagnosis)
+      : prescription.diagnosis;
+
+    const medicinesData = medicines
+      ? JSON.parse(medicines)
+      : prescription.medicines;
+
+    const testsData = tests
+      ? JSON.parse(tests)
+      : prescription.tests;
+
+    const newAttachments =
+      req.files?.map(file => file.path) || [];
+
+    prescription.complaints = complaintsData;
+    prescription.diagnosis = diagnosisData;
+    prescription.medicines = medicinesData;
+    prescription.tests = testsData;
+    prescription.advice =
+      advice !== undefined ? advice : prescription.advice;
+    prescription.followUpDate =
+      followUpDate !== undefined
+        ? followUpDate
+        : prescription.followUpDate;
+
+    if (newAttachments.length > 0) {
+      prescription.attachments.push(...newAttachments);
+    }
+
+    await prescription.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Prescription updated successfully",
+      prescription
+    });
+
+  } catch (error) {
+    console.error("Update Prescription Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: `Failed to update prescription ${error.message}`
+    });
+  }
+};
+
+
 const getPatientPrescriptionsForDoctor = async (req, res) => {
   try {
       const { patientId } = req.params;
@@ -201,4 +294,4 @@ const getPrescriptionByAppointment = async (req, res) => {
   }
 };
 
-module.exports={createPrescription,getPrescriptionById,getPatientPrescriptionsForDoctor,getPrescriptionByAppointment};
+module.exports={createPrescription,updatePrescription,getPrescriptionById,getPatientPrescriptionsForDoctor,getPrescriptionByAppointment};
