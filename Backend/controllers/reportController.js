@@ -1,4 +1,5 @@
 const patientModel = require("../models/patientModel");
+const prescriptionModel = require("../models/prescriptionModel");
 const reportModel = require("../models/reportModel");
 
 
@@ -9,9 +10,7 @@ exports.uploadReport = async(req,res)=>{
         const mime = req.file.mimetype;
 
         let fileType =  mime.includes("pdf") ? "pdf" : "image";
-        // if (mime.includes("pdf")) {
-        //     fileType = "pdf";
-        // }
+        
         const report = await reportModel.create({
             patient:patient._id,
             title: title,
@@ -30,21 +29,121 @@ exports.uploadReport = async(req,res)=>{
     }
 }
 
-
-exports.shareReport = async(req,res)=>{
-    const {doctorId} = req.body;
+exports.shareReports = async (req, res) => {
+  try {
     const patientId = req.user.id;
-    const patient =await patientModel.findOne({userId:patientId});
-    const report = await reportModel.findOne({
-        _id:req.params.reportId,
-        patient:patient._id
-    });
-    if(!report){
-        return res.status(404).json({message:"Report not found"});
-    }
-    report.sharedWithDoctors.addToSet(doctorId);
-    report.isPrivate = false;
-    await report.save();
+    const { doctorId, reportIds } = req.body;
 
-    res.json({message:"Report shared successfully with doctor"});
-}
+    const patient = await patientModel.findOne({
+      userId: patientId
+    });
+
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: "Patient not found"
+      });
+    }
+
+    if (!doctorId) {
+      return res.status(400).json({
+        success: false,
+        message: "Doctor ID required"
+      });
+    }
+
+    if (!reportIds || reportIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Select at least one report"
+      });
+    }
+
+    const result = await reportModel.updateMany(
+      {
+        _id: { $in: reportIds },
+        patient: patient._id
+      },
+      {
+        $addToSet: {
+          sharedWithDoctors: doctorId
+        },
+        $set: {
+          isPrivate: false
+        }
+      }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Reports shared successfully",
+      sharedCount: result.modifiedCount
+    });
+
+  } catch (error) {
+    console.error("Share Reports Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: `Failed to share reports ${error.message}`
+    });
+  }
+};
+
+
+
+exports.sharePrescriptions = async (req, res) => {
+  try {
+    const patient = await patientModel.findOne({
+      userId: req.user.id
+    });
+
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: "Patient not found"
+      });
+    }
+
+    const { doctorId, prescriptionIds } = req.body;
+
+    if (!doctorId) {
+      return res.status(400).json({
+        success: false,
+        message: "Doctor ID required"
+      });
+    }
+
+    if (!prescriptionIds || prescriptionIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Select prescriptions"
+      });
+    }
+
+    await prescriptionModel.updateMany(
+      {
+        _id: { $in: prescriptionIds },
+        patientId: patient._id
+      },
+      {
+        $addToSet: {
+          sharedWithDoctors: doctorId
+        }
+      }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Prescriptions shared successfully"
+    });
+
+  } catch (error) {
+    console.log("SHARE PRESCRIPTION ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};

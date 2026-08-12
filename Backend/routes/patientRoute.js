@@ -15,5 +15,4 @@ patientRoute.get('/get-appointments/:patientId',auth,getPatientAppointments);
 patientRoute.get('/get-my-reports',auth,authorize(ROLE.patient), getMyReports);
 patientRoute.get('/get-reports/:patientId',auth, getPatientReportForDoctor);
 patientRoute.get("/active-queue-status",auth,getActiveQueueStatus);
-
 module.exports=patientRoute;
