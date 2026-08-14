@@ -55,6 +55,9 @@ const handleSubmit = async (e) => {
     console.log("DATA USER:", data.user);
 
     toast.success("Login Successful 🎉");
+    console.log("ROLE FROM API:", data.role);
+    console.log("EXPECTED ROLE:", ROLE.pharmacy);
+    console.log("ROLE MATCH:", data.role === ROLE.pharmacy);
 
     switch (data.role) {
       case ROLE.hospital_admin:
@@ -218,7 +221,11 @@ const handleSubmit = async (e) => {
 
               <p className="text-center text-gray-500 text-sm mt-6">
                 Don't have an account?{" "}
-                <span className="text-blue-600 font-medium cursor-pointer">
+                  {/* <Link
+                    to="/signup"
+                    className="text-blue-600 font-medium cursor-pointer"
+                  ></Link> */}
+                <span onClick={()=>navigate('/signup')} className="text-blue-600 font-medium cursor-pointer">
                   Sign Up
                 </span>
               </p>

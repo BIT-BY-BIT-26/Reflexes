@@ -2,48 +2,41 @@ const mongoose = require("mongoose");
 
 const pharmacySchema = new mongoose.Schema(
   {
-    userId:{
-      type:mongoose.Schema.Types.ObjectId,
-      ref:"User",
-      unique:true,
-      sparse:true
-    },  
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      unique: true,
+      required: true
+    },
+
     shopName: {
       type: String,
       required: true,
-      trim: true,
+      trim: true
     },
 
     ownerName: {
       type: String,
       required: true,
+      trim: true
     },
-
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
-    },
-
     phone: {
       type: String,
       required: true,
-    },
-
-    password: {
-      type: String,
-      required: true,
+      trim: true
     },
 
     licenseNumber: {
       type: String,
       required: true,
+      unique: true,
+      trim: true
     },
 
     address: {
       type: String,
       required: true,
+      trim: true
     },
 
     city: String,
@@ -53,22 +46,25 @@ const pharmacySchema = new mongoose.Schema(
     location: {
       type: {
         type: String,
-        enum:['Point'],
-        default: "Point",
+        enum: ["Point"],
+        default: "Point"
       },
-      coordinates:{
-        type:[Number],
-      } , // [longitude, latitude]
-      
+
+      coordinates: {
+        type: [Number],
+        required: true
+      }
     },
 
-    isVerified: {
-      type: Boolean,
-      default: false, // admin approval
+    approvalStatus: {
+      type: String,
+      enum: ["PENDING", "APPROVED", "REJECTED"],
+      default: "PENDING"
     },
+
     isActive: {
       type: Boolean,
-      default: true,
+      default: false
     }
   },
   { timestamps: true }
