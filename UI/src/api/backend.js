@@ -181,3 +181,6 @@ export const completeAppointment = (id)=>{
   return api.patch(`/appointments/${id}/complete`);
 }
 
+export const addMedicine = (data) => {
+  return api.post(`/pharmacy/add-medicine`, data);
+};
