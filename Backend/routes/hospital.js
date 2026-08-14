@@ -1,6 +1,6 @@
 const express = require('express');
 const { getRouteToHospital } = require('../controllers/locationController.js');
-const { getHospitalStates, getHospitalCities, getHospitals, registerHospital, updateHospitalProfile, getHospitalProfile, getStats, getHospitalById } = require('../controllers/hospitalController.js');
+const { getHospitalStates, getHospitalCities, getHospitals, registerHospital, updateHospitalProfile, getHospitalProfile, getStats, getHospitalById, getAllPharmacies, updatePharmacyStatus, togglePharmacyActive } = require('../controllers/hospitalController.js');
 const { hospitalUpload, upload } = require('../middleware/uploadCloud.js');
 const auth = require('../middleware/auth.js');
 const { updateDoctorOpdSchedule, uploadReportForPatient } = require('../controllers/adminController.js');
@@ -22,7 +22,7 @@ route.patch('/profile',auth, hospitalUpload.fields([{name:"logo",maxCount:1},
     {name:"coverImage",maxCount:1},
     {name:"galleryImages",maxCount:10}
 ]),updateHospitalProfile)
-
+route.get("/pharmacies",auth, getAllPharmacies);
 route.get('/profile', auth, getHospitalProfile)
 route.get("/hospitals/profile/:id", getHospitalById);
 route.get('/statistics',auth,getStats);
@@ -31,5 +31,8 @@ route.get('/statistics',auth,getStats);
 //done
 route.patch("/opd-schedule/:doctorId",auth,authorize(ROLE.admin),updateDoctorOpdSchedule);
 route.post("/upload-report",auth, authorize(ROLE.admin),upload.single("file"), uploadReportForPatient);
-
- module.exports=route;
+route.patch("/approve-pharmacy/:pharmacyId",auth, authorize(ROLE.admin),updatePharmacyStatus);
+route.patch(
+  "/pharmacies/:pharmacyId/toggle-active",auth,authorize(ROLE.admin),togglePharmacyActive
+);
+module.exports=route;

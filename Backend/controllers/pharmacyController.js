@@ -2,6 +2,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const PharmacyModel = require("../models/PharmacyModel");
+const MedicineModel = require("../models/Medicine");
 const userModel = require("../models/userModel");
 const { ROLE } = require("../config/role");
 
@@ -9,8 +10,6 @@ const { ROLE } = require("../config/role");
 // ✅ REGISTER PHARMACY
 exports.registerPharmacy = async (req, res) => {
   try {
-    console.log(req.body);
-
     const {
       shopName,
       ownerName,
@@ -23,29 +22,35 @@ exports.registerPharmacy = async (req, res) => {
       state,
       pincode,
       lat,
-      lng,
+      lng
     } = req.body;
 
     const existingUser = await userModel.findOne({ email });
-    if (existingUser) return res.status(400).json({ msg: "Email already registered" });
 
-    // hash password
+    if (existingUser) {
+      return res.status(400).json({
+        msg: "Email already registered"
+      });
+    }
+
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create login account
     const user = await userModel.create({
-    name: ownerName, 
-    email,
-    password: hashedPassword,
-    role: ROLE.pharmacy,
-    isActive: true
-  });
+      name: ownerName,
+      email,
+      password: hashedPassword,
+      role: ROLE.pharmacy,
+      isActive: false
+    });
+
+    // Create pharmacy profile
     const pharmacy = await PharmacyModel.create({
       userId: user._id,
       shopName,
       ownerName,
-      email,
       phone,
-      password: hashedPassword,
       licenseNumber,
       address,
       city,
@@ -53,62 +58,213 @@ exports.registerPharmacy = async (req, res) => {
       pincode,
       location: {
         type: "Point",
-        coordinates: [lng, lat],
-      }
+        coordinates: [lng, lat]
+      },
+      approvalStatus: "PENDING",
+      isActive: false
     });
 
-    
-
-    res.status(201).json({
-      pharmacy,
+    return res.status(201).json({
       msg: "Pharmacy registered successfully. Waiting for admin approval.",
-      pharmacyId: pharmacy._id,
+      pharmacyId: pharmacy._id
     });
 
   } catch (err) {
-    res.status(500).json({ msg: `Server error ${err.message}` });
+    console.error(err);
+
+    return res.status(500).json({
+      msg: `Server error: ${err.message}`
+    });
   }
 };
 
-
-
-// ✅ LOGIN PHARMACY
 exports.loginPharmacy = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const pharmacy = await PharmacyModel.findOne({ email });
-    if (!pharmacy) {
-      return res.status(404).json({ msg: "Pharmacy not found" });
+    const user = await userModel.findOne({
+      email,
+      role: ROLE.pharmacy
+    });
+
+    if (!user) {
+      return res.status(401).json({
+        msg: "Invalid email or password"
+      });
     }
 
-    const isMatch = await bcrypt.compare(password, pharmacy.password);
-    if (!isMatch) {
-      return res.status(400).json({ msg: "Invalid credentials" });
-    }
-
-    if (!pharmacy.isVerified) {
+    if (!user.isActive) {
       return res.status(403).json({
-        msg: "Waiting for admin approval",
+        msg: "Your pharmacy account is not approved yet"
+      });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(401).json({
+        msg: "Invalid email or password"
+      });
+    }
+
+    const pharmacy = await PharmacyModel.findOne({
+      userId: user._id
+    });
+
+    if (!pharmacy) {
+      return res.status(404).json({
+        msg: "Pharmacy profile not found"
       });
     }
 
     const token = jwt.sign(
       {
-        id: pharmacy._id,
-        role: pharmacy.role,
+        id: user._id,
+        role: user.role
       },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+      {
+        expiresIn: "1d"
+      }
     );
 
-    res.json({
+    return res.status(200).json({
+      msg: "Pharmacy login successful",
       token,
-      role: pharmacy.role,
-      pharmacy,
+      role: user.role,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      },
+      pharmacy: {
+        id: pharmacy._id,
+        shopName: pharmacy.shopName,
+        ownerName: pharmacy.ownerName,
+        phone: pharmacy.phone,
+        licenseNumber: pharmacy.licenseNumber,
+        address: pharmacy.address,
+        city: pharmacy.city,
+        state: pharmacy.state,
+        pincode: pharmacy.pincode,
+        location: pharmacy.location
+      }
     });
 
   } catch (err) {
-    res.status(500).json({ msg: "Server error" });
+    console.error(err);
+
+    return res.status(500).json({
+      msg: `Server error: ${err.message}`
+    });
+  }
+};
+
+const parseMonthYear = (value) => {
+  if (!value) return null;
+
+  const match = value.match(/^(\d{1,2})[\/.-](\d{4})$/);
+
+  if (!match) return null;
+
+  const month = Number(match[1]);
+  const year = Number(match[2]);
+
+  if (month < 1 || month > 12) return null;
+
+  return new Date(year, month - 1, 1);
+};
+
+exports.addMedicine = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const {
+      medicineName,
+      strength,
+      batchNumber,
+      manufacturingDate,
+      expiryDate,
+      price,
+      stock,
+      category,
+      manufacturer,
+      description,
+      addedVia,
+    } = req.body;
+
+    if (
+      !medicineName ||
+      !batchNumber ||
+      !manufacturingDate ||
+      !expiryDate ||
+      price === undefined ||
+      stock === undefined
+    ) {
+      return res.status(400).json({
+        success: false,
+        msg: "Required medicine details are missing",
+      });
+    }
+
+    const manufacturing = parseMonthYear(manufacturingDate);
+    const expiry = parseMonthYear(expiryDate);
+
+    if (!manufacturing || !expiry) {
+      return res.status(400).json({
+        success: false,
+        msg: "Dates must be in MM/YYYY format",
+      });
+    }
+
+    const pharmacy = await PharmacyModel.findOne({ userId });
+
+    if (!pharmacy) {
+      return res.status(404).json({
+        success: false,
+        msg: "Pharmacy not found",
+      });
+    }
+
+    const existingMedicine = await MedicineModel.findOne({
+      pharmacyId: pharmacy._id,
+      batchNumber: batchNumber.trim(),
+    });
+
+    if (existingMedicine) {
+      return res.status(400).json({
+        success: false,
+        msg: "Medicine with this batch number already exists",
+      });
+    }
+
+    const medicine = await MedicineModel.create({
+      pharmacyId: pharmacy._id,
+      medicineName: medicineName.trim(),
+      strength: strength?.trim() || "",
+      batchNumber: batchNumber.trim(),
+      manufacturingDate: manufacturing,
+      expiryDate: expiry,
+      price: Number(price),
+      stock: Number(stock),
+      category: category?.trim() || "",
+      manufacturer: manufacturer?.trim() || "",
+      description: description?.trim() || "",
+      addedVia: addedVia === "OCR" ? "OCR" : "MANUAL",
+    });
+
+    return res.status(201).json({
+      success: true,
+      msg: "Medicine added successfully",
+      medicine,
+    });
+  } catch (error) {
+    console.error("Add medicine error:", error);
+
+    return res.status(500).json({
+      success: false,
+      msg: "Failed to add medicine",
+      error: error.message,
+    });
   }
 };

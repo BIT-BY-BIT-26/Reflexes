@@ -8,6 +8,13 @@ import { useSelector } from 'react-redux';
 const ProtectedRoutes = ({children,allowedRoles}) => {
   const {token, role, isAuthenticated} = useSelector((state)=>state.auth)
 
+  console.log("PROTECTED ROUTE");
+  console.log("TOKEN:", token);
+  console.log("ROLE:", role);
+  console.log("AUTH:", isAuthenticated);
+  console.log("ALLOWED:", allowedRoles);
+  console.log("ROLE MATCH:", allowedRoles?.includes(role));
+
   if(!isAuthenticated || !token){
     return <Navigate to='/login' replace />
   }

@@ -33,7 +33,7 @@ const roles = [
       "Manage medicines, inventory, availability, and orders.",
     icon: Pill,
     color: "from-emerald-500 to-green-500",
-    route: "/signup/pharmacy",
+    route: "/pharmacy/signup",
   },
 ];
 
@@ -68,7 +68,7 @@ const SelectRole = () => {
             return (
               <button
                 key={index}
-                onClick={()=>navigate(`/${role.route}`)}
+                onClick={()=>navigate(`${role.route}`)}
                 className="group text-left relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-8 transition-all duration-300 hover:-translate-y-2 hover:border-cyan-400/50 hover:shadow-[0_0_40px_rgba(34,211,238,0.15)]"
               >
                 {/* Gradient Circle */}
