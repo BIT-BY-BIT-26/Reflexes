@@ -13,6 +13,7 @@ const departmentModel = require('../models/departmentModel');
 const appointmentModel = require('../models/appointmentModel');
 const patientModel = require('../models/patientModel');
 const { redisClient } = require('../config/redisClient');
+const PharmacyModel = require('../models/PharmacyModel');
 
 const registerHospital = async (req, res) => {
     try {
@@ -500,4 +501,149 @@ const getHospitalCities = async (req, res) => {
   }
 };
 
-module.exports= { registerHospital,getHospitalById,updateHospitalProfile,getHospitalProfile, getStats, approveHospital,getAllHospitals,getHospitalsQuery, getHospitals, getHospitalCities, getHospitalStates};
+const getAllPharmacies = async (req, res) => {
+  try {
+    const pharmacies = await PharmacyModel
+      .find()
+      .populate("userId", "email isActive")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      msg: "Pharmacies fetched successfully",
+      count: pharmacies.length,
+      pharmacies
+    });
+
+  } catch (err) {
+    console.error(err);
+
+    return res.status(500).json({
+      msg: `Server error: ${err.message}`
+    });
+  }
+};
+
+const updatePharmacyStatus = async (req, res) => {
+  try {
+    const { pharmacyId } = req.params;
+    const { status } = req.body;
+
+    if (!["APPROVED", "REJECTED"].includes(status)) {
+      return res.status(400).json({
+        msg: "Invalid status"
+      });
+    }
+
+    const pharmacy = await PharmacyModel.findById(pharmacyId);
+
+    if (!pharmacy) {
+      return res.status(404).json({
+        msg: "Pharmacy not found"
+      });
+    }
+
+    if (pharmacy.approvalStatus !== "PENDING") {
+      return res.status(400).json({
+        msg: `Pharmacy is already ${pharmacy.approvalStatus}`
+      });
+    }
+
+    const user = await userModel.findById(pharmacy.userId);
+
+    if (!user) {
+      return res.status(404).json({
+        msg: "Associated user not found"
+      });
+    }
+
+    pharmacy.approvalStatus = status;
+
+    if (status === "APPROVED") {
+      pharmacy.isActive = true;
+      user.isActive = true;
+    }
+
+    if (status === "REJECTED") {
+      pharmacy.isActive = false;
+      user.isActive = false;
+    }
+
+    await pharmacy.save();
+    await user.save();
+
+    return res.status(200).json({
+      msg: `Pharmacy ${status.toLowerCase()} successfully`,
+      pharmacy,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isActive: user.isActive
+      },
+      status: pharmacy.approvalStatus
+    });
+
+  } catch (err) {
+    console.error(err);
+
+    return res.status(500).json({
+      msg: `Server error: ${err.message}`
+    });
+  }
+};
+
+
+const togglePharmacyActive = async (req, res) => {
+  try {
+    const { pharmacyId } = req.params;
+
+    const pharmacy = await PharmacyModel.findById(pharmacyId);
+
+    if (!pharmacy) {
+      return res.status(404).json({
+        msg: "Pharmacy not found"
+      });
+    }
+
+    if (pharmacy.approvalStatus !== "APPROVED") {
+      return res.status(400).json({
+        msg: "Only approved pharmacies can be activated or deactivated"
+      });
+    }
+
+    const user = await userModel.findById(pharmacy.userId);
+
+    if (!user) {
+      return res.status(404).json({
+        msg: "Associated user not found"
+      });
+    }
+
+    pharmacy.isActive = !pharmacy.isActive;
+    user.isActive = pharmacy.isActive;
+
+    await pharmacy.save();
+    await user.save();
+
+    return res.status(200).json({
+      msg: `Pharmacy ${pharmacy.isActive ? "activated" : "deactivated"} successfully`,
+      pharmacy,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isActive: user.isActive
+      }
+    });
+
+  } catch (err) {
+    console.error(err);
+
+    return res.status(500).json({
+      msg: `Server error: ${err.message}`
+    });
+  }
+};
+module.exports= { registerHospital,getHospitalById,updateHospitalProfile,getHospitalProfile, getStats, approveHospital,getAllHospitals,getHospitalsQuery, getHospitals, getHospitalCities, getHospitalStates, getAllPharmacies,updatePharmacyStatus,togglePharmacyActive};

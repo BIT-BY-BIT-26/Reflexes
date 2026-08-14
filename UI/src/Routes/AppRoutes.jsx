@@ -22,6 +22,10 @@ import AllDoctor from '../features/Admin/AllDoctor'
 import Appointment from '../components/Doctors/Appointment'
 import OpdSchedule from '../features/Admin/OpdSchedule'
 import NotificationSection from '../features/doctor/NotificationSection'
+import SignupPharmacy from '../components/Pharmacy/SignupPharmacy'
+import PharmacyDashboard from '../components/Pharmacy/PharmacyDashboard'
+import PharmacyLayout from '../features/pharmacy/PharmacyLayout'
+import AddMedicine from '../features/pharmacy/AddMedicine'
 
 const AppRoutes = () => {
   return (
@@ -86,6 +90,22 @@ const AppRoutes = () => {
             </ProtectedRoutes>
           }
         />
+
+      <Route
+        path="/pharmacy-dashboard"
+        element={
+          <ProtectedRoutes allowedRoles={[ROLE.pharmacy]}>
+            <PharmacyLayout />
+          </ProtectedRoutes>
+        }
+      >
+        <Route index element={<PharmacyDashboard />} />
+
+        <Route
+          path="add-medicine"
+          element={<AddMedicine />}
+        />
+      </Route>
     </Routes>
   )
 }
