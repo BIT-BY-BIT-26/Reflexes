@@ -629,36 +629,52 @@ exports.getOnlineAppointments = async (req, res) => {
   }
 };
 
-exports.completeAppointment = async(req,res)=>{
+exports.completeAppointment = async (req, res) => {
   const io = req.app.get("io");
-  try{
+  try {
     const appointment = await appointmentModel.findById(req.params.id);
-    if(!appointment){
+    if (!appointment) {
       return res.status(404).json({ message: "Appointment not found" });
     }
+
+    // 🔥 doctor fetch karke uska opdPaused check karo
+    const doctor = await docterModel.findById(appointment.doctor);
+    if (!doctor) {
+      return res.status(404).json({ message: "Doctor not found" });
+    }
+
+    if (doctor.opdPaused) {
+      return res.status(400).json({
+        message: "Cannot complete appointment while OPD is paused"
+      });
+    }
+
     appointment.status = "COMPLETED";
+    appointment.consultationEndedAt = new Date(); // baaki controllers ke pattern se consistent
     await appointment.save();
+
     const patientId = appointment.patient.toString();
     const doctorId = appointment.doctor.toString();
-     // 🔥 Realtime update doctor dashboard
+
+    // 🔥 Realtime update doctor dashboard
     io.to(`doctor_${doctorId}`).emit("appointmentCompleted", {
       appointmentId: req.params.id
     });
+
     // 🔥 Realtime notify patient
     io.to(`patient_${patientId}`).emit("APPOINTMENT_COMPLETED", {
       message: "Your consultation is completed"
     });
 
-     return res.status(200).json({
+    return res.status(200).json({
       message: "Appointment completed",
       appointment
     });
-  }catch (error) {
+  } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error completing appointment" });
   }
-}
-
+};
 exports.getTodayStats = async(req,res)=>{
   try{
     const doctorUserId = req.user.id;
