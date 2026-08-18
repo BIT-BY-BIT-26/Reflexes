@@ -23,6 +23,7 @@ const platformOwnerRoute = require("./routes/platformOwnerRoute.js");
 const reviewRouter = require("./routes/reviewRoute.js");
 const redisClient = require("./config/redisClient.js");
 const medicineRouter = require("./routes/medicine.js");
+const startMedicineExpiryCron = require("./cron/MedicineExpiryCron.js");
 
 const app = express();
 app.use(express.json());
@@ -31,6 +32,7 @@ mongoose
   .connect(process.env.MONGO_URI)
   .then(async () => {
     console.log("✅ MongoDB connected successfully");
+    startMedicineExpiryCron();
   })
   .catch((err) => console.log("❌ MongoDB connection error", err));
 
