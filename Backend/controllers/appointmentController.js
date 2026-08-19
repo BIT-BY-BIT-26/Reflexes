@@ -2,6 +2,7 @@ const { source } = require("../config/cloudinary");
 const { redisClient } = require("../config/redisClient");
 const appointmentModel = require("../models/appointmentModel");
 const docterModel = require("../models/docterModel");
+const PatientHospitalSchema = require("../models/PatientHospitalSchema");
 const patientModel = require("../models/patientModel");
 const { getUtcDayRange } = require("../utils/utcday");
 
@@ -104,6 +105,26 @@ exports.createAppointment = async (req, res) => {
       description,
       status: "PENDING"
     });
+
+    await PatientHospitalSchema.findOneAndUpdate(
+      {
+        patientId:patient._id,
+        hospitalId:doctorData.hospital,
+      },
+      {
+        $set:{
+          lastVisit:new Date(),
+          status:"ACTIVE",
+        },
+        $setOnInsert:{
+          firstVisit:new Date(),
+        },
+      },
+      {
+        upsert:true,
+        new:true,
+      }
+    );
 
     const room = `doctor_${doctorData._id.toString()}`;
 
@@ -209,6 +230,7 @@ exports.confirmAppointment = async (req, res) => {
       appointment.token = null;
     }
     await appointment.save();
+    await redisClient.del(`doctor:todayAppointments:${appointment.doctor.toString()}`);
 
     // ✅ Socket emit
     io.to(`patient_${appointment.patient.toString()}`)
@@ -276,6 +298,7 @@ exports.cancelAppointment = async (req, res) => {
     }
 
     await appointment.save();
+    await redisClient.del(`doctor:todayAppointments:${appointment.doctor.toString()}`);
 
     // Patient ko notify karo
     io.to(`patient_${appointment.patient.toString()}`).emit(

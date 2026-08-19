@@ -21,7 +21,7 @@ const doctorRouter = require("./routes/doctor.js");
 const consultationRouter = require("./routes/consultationRoute.js");
 const platformOwnerRoute = require("./routes/platformOwnerRoute.js");
 const reviewRouter = require("./routes/reviewRoute.js");
-const redisClient = require("./config/redisClient.js");
+const {redisClient} = require("./config/redisClient.js");
 const medicineRouter = require("./routes/medicine.js");
 const startMedicineExpiryCron = require("./cron/MedicineExpiryCron.js");
 

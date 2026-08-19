@@ -14,6 +14,7 @@ const appointmentModel = require('../models/appointmentModel');
 const patientModel = require('../models/patientModel');
 const { redisClient } = require('../config/redisClient');
 const PharmacyModel = require('../models/PharmacyModel');
+const PatientHospitalSchema = require('../models/PatientHospitalSchema');
 
 const registerHospital = async (req, res) => {
     try {
@@ -646,4 +647,154 @@ const togglePharmacyActive = async (req, res) => {
     });
   }
 };
-module.exports= { registerHospital,getHospitalById,updateHospitalProfile,getHospitalProfile, getStats, approveHospital,getAllHospitals,getHospitalsQuery, getHospitals, getHospitalCities, getHospitalStates, getAllPharmacies,updatePharmacyStatus,togglePharmacyActive};
+const getHospitalPatients = async (req, res) => {
+  try {
+    const hospitalId = req.user.hospitalId;
+    console.log(`here is hospitalId :${hospitalId}`);
+
+    if (!hospitalId) {
+      return res.status(400).json({
+        success: false,
+        message: "Hospital not associated with this user",
+      });
+    }
+
+    const links = await PatientHospitalSchema.find({
+      hospitalId,
+      status: "ACTIVE",
+    }).select("patientId");
+    const patientIds = links.map(link => link.patientId);
+
+    const patients = await patientModel.find({
+      _id: { $in: patientIds },
+    })
+      .populate("userId", "name email phone_number")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      count: patients.length,
+      patients,
+    });
+
+  } catch (error) {
+    console.error("Get hospital patients error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch hospital patients",
+      error: error.message,
+    });
+  }
+};
+
+const searchHospitalPatients = async (req, res) => {
+  try {
+    const { search } = req.query;
+
+    const hospitalId = req.user.hospitalId;
+
+    if (!hospitalId) {
+      return res.status(400).json({
+        success: false,
+        message: "Hospital not associated with this user",
+      });
+    }
+
+    if (!search || search.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        message: "Search value is required",
+      });
+    }
+
+    const searchTerm = search.trim();
+
+    // Get all patients linked to this hospital
+    const links = await PatientHospitalSchema
+      .find({
+        hospitalId,
+        status: "ACTIVE",
+      })
+      .select("patientId");
+
+    const patientIds = links.map((link) => link.patientId);
+
+    // Search phone number in Patient model
+    const phoneMatches = await patientModel
+      .find({
+        _id: { $in: patientIds },
+        phone_number: {
+          $regex: searchTerm,
+          $options: "i",
+        },
+      })
+      .select("_id");
+
+    // Search name/email in User model
+    const patients = await patientModel
+      .find({
+        _id: { $in: patientIds },
+      })
+      .populate({
+        path: "userId",
+        match: {
+          $or: [
+            {
+              name: {
+                $regex: searchTerm,
+                $options: "i",
+              },
+            },
+            {
+              email: {
+                $regex: searchTerm,
+                $options: "i",
+              },
+            },
+          ],
+        },
+        select: "name email phone_number",
+      });
+
+    const userMatches = patients
+      .filter((patient) => patient.userId)
+      .map((patient) => patient._id.toString());
+
+    const phoneMatchIds = phoneMatches.map(
+      (patient) => patient._id.toString()
+    );
+
+    // Combine name + email + phone results
+    const matchedIds = [
+      ...new Set([
+        ...userMatches,
+        ...phoneMatchIds,
+      ]),
+    ];
+
+    const result = await patientModel
+      .find({
+        _id: { $in: matchedIds },
+      })
+      .populate("userId", "name email phone_number")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      count: result.length,
+      patients: result,
+    });
+
+  } catch (error) {
+    console.error("Search hospital patients error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to search patients",
+      error: error.message,
+    });
+  }
+};
+
+module.exports= { registerHospital,getHospitalPatients,searchHospitalPatients,getHospitalById,updateHospitalProfile,getHospitalProfile, getStats, approveHospital,getAllHospitals,getHospitalsQuery, getHospitals, getHospitalCities, getHospitalStates, getAllPharmacies,updatePharmacyStatus,togglePharmacyActive};
