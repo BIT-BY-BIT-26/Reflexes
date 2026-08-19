@@ -281,23 +281,80 @@ const updatePatientProfile = async (req, res) => {
 };
 
 
-const getPatientProfile = async(req,res)=>{
-  try{
-    const patient = await patientModel.findById(req.params.patientId).populate("userId","name email");
-    if(!patient){
-      return res.status(400).json({message:"Patient not found"});
+const getPatientProfile = async (req, res) => {
+  try {
+    const { patientId } = req.params;
+
+    const patient = await patientModel
+      .findById(patientId)
+      .populate("userId", "name email");
+
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: "Patient not found",
+      });
     }
-    res.json({
-      id:patient._id,
-      name:patient.userId.name,
-      email:patient.userId.email,
-      gender:patient.gender,
-      patient
-    })
-  }catch(e){
-    res.status(500).json({message:"Failed to fetch patient"});
+
+    // Agar patient ka User account nahi mila
+    if (!patient.userId) {
+      return res.status(404).json({
+        success: false,
+        message: "Patient user information not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Patient profile fetched successfully",
+
+      patient: {
+        _id: patient._id,
+
+        // User details
+        userId: patient.userId._id,
+        name: patient.userId.name,
+        email: patient.userId.email,
+
+        // Patient details
+        age: patient.age,
+        dob: patient.dob,
+        gender: patient.gender,
+        bloodGroup: patient.bloodGroup,
+        phone_number: patient.phone_number,
+        profileImage: patient.profileImage,
+
+        // Address
+        address: {
+          line: patient.address?.line || "",
+          city: patient.address?.city || "",
+          state: patient.address?.state || "",
+          pincode: patient.address?.pincode || "",
+
+          location: patient.address?.location
+            ? {
+                type: patient.address.location.type,
+                coordinates: patient.address.location.coordinates,
+              }
+            : null,
+        },
+
+        // Timestamps
+        createdAt: patient.createdAt,
+        updatedAt: patient.updatedAt,
+      },
+    });
+
+  } catch (error) {
+    console.error("Get patient profile error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch patient profile",
+      error: error.message,
+    });
   }
-}
+};
 
 //FOR PATIENTS__
 const getMyProfile = async (req, res) => {
@@ -437,4 +494,4 @@ const getActiveQueueStatus = async (req, res) => {
   }
 };
 
-module.exports = { registerPatient,getActiveQueueStatus,getMyProfile,createWalkInPatient,getPatientAppointments,getPatientProfile ,getPatientReportForDoctor, updatePatientProfile,getMyReports};
+module.exports = {registerPatient,getActiveQueueStatus,getMyProfile,createWalkInPatient,getPatientAppointments,getPatientProfile ,getPatientReportForDoctor, updatePatientProfile,getMyReports};

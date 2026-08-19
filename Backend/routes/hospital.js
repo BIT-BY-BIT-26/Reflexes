@@ -1,6 +1,6 @@
 const express = require('express');
 const { getRouteToHospital } = require('../controllers/locationController.js');
-const { getHospitalStates, getHospitalCities, getHospitals, registerHospital, updateHospitalProfile, getHospitalProfile, getStats, getHospitalById, getAllPharmacies, updatePharmacyStatus, togglePharmacyActive } = require('../controllers/hospitalController.js');
+const { getHospitalStates, getHospitalCities, getHospitals, registerHospital, updateHospitalProfile, getHospitalProfile, getStats, getHospitalById, getAllPharmacies, updatePharmacyStatus, togglePharmacyActive, getHospitalPatients, searchHospitalPatients } = require('../controllers/hospitalController.js');
 const { hospitalUpload, upload } = require('../middleware/uploadCloud.js');
 const auth = require('../middleware/auth.js');
 const { updateDoctorOpdSchedule, uploadReportForPatient } = require('../controllers/adminController.js');
@@ -14,7 +14,7 @@ route.get('/test', (req, res) => {
 });
 
 route.get('/hospitals/states',getHospitalStates);
-route.get('/hospitals/cities',getHospitalCities)
+route.get('/hospitals/cities',getHospitalCities);
 route.get('/hospitals',getHospitals)
 route.post('/hospitals',registerHospital)
 route.post("/route-to-hospital",getRouteToHospital);
@@ -26,13 +26,18 @@ route.get("/pharmacies",auth, getAllPharmacies);
 route.get('/profile', auth, getHospitalProfile)
 route.get("/hospitals/profile/:id", getHospitalById);
 route.get('/statistics',auth,getStats);
-
-
 //done
 route.patch("/opd-schedule/:doctorId",auth,authorize(ROLE.admin),updateDoctorOpdSchedule);
 route.post("/upload-report",auth, authorize(ROLE.admin),upload.single("file"), uploadReportForPatient);
-route.patch("/approve-pharmacy/:pharmacyId",auth, authorize(ROLE.admin),updatePharmacyStatus);
+route.patch("/approve-pharmacy/:pharmacyId",auth, authorize(ROLE.platform_admin),updatePharmacyStatus);
 route.patch(
   "/pharmacies/:pharmacyId/toggle-active",auth,authorize(ROLE.admin),togglePharmacyActive
 );
+route.get(
+  "/all-patients",auth,authorize(ROLE.admin),getHospitalPatients
+);
+route.get(
+  "/search-patients",auth,authorize(ROLE.admin),searchHospitalPatients
+);
+
 module.exports=route;
