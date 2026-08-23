@@ -8,6 +8,8 @@ const jwt = require('jsonwebtoken');
 const getSignedUrl = require("../utils/getSignedUrl");
 const reportModel = require("../models/reportModel");
 const cloudinary  = require("../config/cloudinary");
+const HospitalModel = require("../models/HospitalModel");
+const EmergencyModel = require("../models/EmergencyModel");
 
 const registerPatient = async (req, res) => {
   try {
@@ -494,4 +496,224 @@ const getActiveQueueStatus = async (req, res) => {
   }
 };
 
-module.exports = {registerPatient,getActiveQueueStatus,getMyProfile,createWalkInPatient,getPatientAppointments,getPatientProfile ,getPatientReportForDoctor, updatePatientProfile,getMyReports};
+// =====================================================
+// CREATE EMERGENCY REQUEST - PATIENT
+// =====================================================
+
+const createEmergency = async (req, res) => {
+  try {
+    const io = req.app.get("io");
+
+    // -----------------------------------------
+    // 1. CHECK AUTHENTICATED USER
+    // -----------------------------------------
+
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+    }
+
+    const patientId = req.user._id;
+
+
+    // -----------------------------------------
+    // 2. GET DATA FROM REQUEST
+    // -----------------------------------------
+
+    const {
+      hospitalId,
+      latitude,
+      longitude,
+      reason,
+      message,
+    } = req.body;
+
+
+    // -----------------------------------------
+    // 3. VALIDATE HOSPITAL ID
+    // -----------------------------------------
+
+    if (!hospitalId) {
+      return res.status(400).json({
+        success: false,
+        message: "Hospital ID is required",
+      });
+    }
+
+
+    // -----------------------------------------
+    // 4. VALIDATE LOCATION
+    // -----------------------------------------
+
+    if (
+      latitude === undefined ||
+      longitude === undefined
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Patient location is required",
+      });
+    }
+
+    const lat = Number(latitude);
+    const lng = Number(longitude);
+
+    if (
+      Number.isNaN(lat) ||
+      Number.isNaN(lng)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid latitude or longitude",
+      });
+    }
+
+
+    // Latitude range
+    if (lat < -90 || lat > 90) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid latitude",
+      });
+    }
+
+
+    // Longitude range
+    if (lng < -180 || lng > 180) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid longitude",
+      });
+    }
+
+
+    // -----------------------------------------
+    // 5. CHECK HOSPITAL
+    // -----------------------------------------
+
+    const hospital = await HospitalModel.findOne({
+      _id: hospitalId,
+    });
+
+    if (!hospital) {
+      return res.status(404).json({
+        success: false,
+        message: "Hospital not available",
+      });
+    }
+
+
+    // -----------------------------------------
+    // 6. CHECK EXISTING ACTIVE EMERGENCY
+    // -----------------------------------------
+
+    const activeEmergency = await EmergencyModel.findOne({
+      patient: patientId,
+
+      status: {
+        $in: [
+          "REQUESTED",
+          "ACKNOWLEDGED",
+          "AMBULANCE_ASSIGNED",
+          "ON_THE_WAY",
+          "ARRIVED",
+          "PATIENT_PICKED",
+        ],
+      },
+    });
+
+    if (activeEmergency) {
+      return res.status(409).json({
+        success: false,
+        message: "You already have an active emergency request",
+        emergency: activeEmergency,
+      });
+    }
+
+
+    // -----------------------------------------
+    // 7. CREATE EMERGENCY
+    // -----------------------------------------
+
+    const emergency = await EmergencyModel.create({
+      patient: patientId,
+
+      hospital: hospital._id,
+
+      location: {
+        type: "Point",
+
+        // IMPORTANT:
+        // MongoDB GeoJSON = [longitude, latitude]
+
+        coordinates: [lng, lat],
+      },
+
+      reason: reason || "OTHER",
+
+      message: message || "",
+
+      status: "REQUESTED",
+    });
+
+
+    // -----------------------------------------
+    // 8. POPULATE DATA
+    // -----------------------------------------
+
+    const populatedEmergency =
+      await EmergencyModel.findById(emergency._id)
+        .populate(
+          "patient",
+          "name email phone_number"
+        )
+        .populate(
+          "hospital",
+          "name phone_number city state location"
+        );
+
+
+    // -----------------------------------------
+    // 9. SEND REAL-TIME ALERT TO HOSPITAL
+    // -----------------------------------------
+
+    if (io) {
+      io.to(`hospital:${hospital._id}`).emit(
+        "emergency-created",
+        populatedEmergency
+      );
+    }
+
+
+    // -----------------------------------------
+    // 10. RESPONSE
+    // -----------------------------------------
+
+    return res.status(201).json({
+      success: true,
+
+      message:
+        "Emergency request sent successfully",
+
+      emergency: populatedEmergency,
+    });
+
+  } catch (error) {
+
+    console.error(
+      "CREATE EMERGENCY ERROR:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create emergency request",
+      error: error.message,
+    });
+  }
+};
+
+
+module.exports = {registerPatient,getActiveQueueStatus,getMyProfile,createWalkInPatient,getPatientAppointments,getPatientProfile ,getPatientReportForDoctor, updatePatientProfile,getMyReports,createEmergency};
