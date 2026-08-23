@@ -1,9 +1,4 @@
-// const User = require("../model/userModel");
-// const Department = require("../model/departmentModel");
-// const docterModel = require("../models/docterModel");
-// const { ROLE } = require("../config/Role");
-// const HospitalModel = require("../models/HospitalModel");
-// const Appointment = require("../models/Appointment");
+
 
 const docterModel = require("../models/docterModel");
 const HospitalModel = require("../models/HospitalModel");
@@ -98,10 +93,6 @@ const getDoctorById = async(req,res)=>{
 }
 
 
-/* ================= TOGGLE DOCTOR ================= */
-
-/* ================= SEARCH PATIENT ================= */
-
 const searchPatient = async (req, res) => {
   const keyword = req.query.search
     ? {
@@ -122,7 +113,6 @@ const searchPatient = async (req, res) => {
   res.send(users);
 };
 
-/* ================= DOCTOR PROFILE ================= */
 
 const getProfileStatus = async (req, res) => {
   const doctor = await docterModel
@@ -139,7 +129,6 @@ const getProfileStatus = async (req, res) => {
   });
 };
 
-//done
 const submitProfile = async (req, res) => {
   try {
     const hospitalId = req.user.hospitalId;
@@ -298,7 +287,6 @@ const updateProfile = async (req, res) => {
     });
   }
 };
-
 
 const getMyProfile = async (req, res) => {
   try {
@@ -629,7 +617,61 @@ const uploadDoctorPhoto = async (req, res) => {
   }
 };
 
-///////////////
+const getCurrentPatient = async (req, res) => {
+  try {
+    const doctor = await docterModel.findOne({ userId: req.user.id });
+
+    if (!doctor) {
+      return res.status(404).json({
+        success: false,
+        message: "Doctor not found"
+      });
+    }
+
+    if (!doctor.opdStarted) {
+      return res.status(400).json({
+        success: false,
+        message: "OPD not started"
+      });
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const currentAppointment = await Appointment.findOne({
+      doctor: doctor.id,
+      status: "CURRENT",
+      date: { $gte: today, $lt: tomorrow }
+    }).populate("patient"); // agar patient details bhi chahiye toh
+
+    if (!currentAppointment) {
+      return res.status(200).json({
+        success: true,
+        message: "No current patient",
+        currentAppointment: null,
+        opdPaused: doctor.opdPaused
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Current patient fetched",
+      currentAppointment,
+      opdPaused: doctor.opdPaused
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+
 const startConsultation = async (req, res) => {
   try {
     const io = req.app.get("io");
@@ -711,7 +753,6 @@ const startConsultation = async (req, res) => {
   }
 };
 
-///STOP
 const stopConsultation = async (req, res) => {
   try {
     const io = req.app.get("io");
@@ -827,8 +868,6 @@ const pauseConsultation = async (req, res) => {
   }
 };
 
-
-/////////////////
 const resumeConsultation = async (req, res) => {
  
   try {
@@ -882,7 +921,6 @@ const resumeConsultation = async (req, res) => {
 };
 
 
-/////////////////////////////////////////////
 const skipPatient = async (req, res) => {
   try {
     const io = req.app.get("io");
@@ -1067,6 +1105,4 @@ const callNext = async (req, res) => {
   }
 };
 
-
-//module.exports={toggleOpd,resumeConsultation,pauseConsultation,callNext,skipPatient,startConsultation,stopConsultation,getProfileStatus,submitProfile, getDoctorByHospital, searchPatient,getDoctorsByDepartment,getMyProfile,getCompletedAppointments,updateProfile,uploadDoctorPhoto};
-module.exports={getDoctorDashboard,getUniquePatients,toggleOpd,getProfileStatus,submitProfile,getDoctorById, getDoctorByHospital, searchPatient,getDoctorsByDepartment,getMyProfile,getCompletedAppointments,updateProfile,uploadDoctorPhoto,callNext,skipPatient,pauseConsultation,resumeConsultation,stopConsultation,startConsultation};
+module.exports={getDoctorDashboard,getCurrentPatient,getUniquePatients,toggleOpd,getProfileStatus,submitProfile,getDoctorById, getDoctorByHospital, searchPatient,getDoctorsByDepartment,getMyProfile,getCompletedAppointments,updateProfile,uploadDoctorPhoto,callNext,skipPatient,pauseConsultation,resumeConsultation,stopConsultation,startConsultation};

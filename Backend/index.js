@@ -21,8 +21,10 @@ const doctorRouter = require("./routes/doctor.js");
 const consultationRouter = require("./routes/consultationRoute.js");
 const platformOwnerRoute = require("./routes/platformOwnerRoute.js");
 const reviewRouter = require("./routes/reviewRoute.js");
-const redisClient = require("./config/redisClient.js");
+const {redisClient} = require("./config/redisClient.js");
 const medicineRouter = require("./routes/medicine.js");
+const startMedicineExpiryCron = require("./cron/MedicineExpiryCron.js");
+const emergencyRoute = require("./routes/emergencyRoute.js");
 
 const app = express();
 app.use(express.json());
@@ -31,6 +33,7 @@ mongoose
   .connect(process.env.MONGO_URI)
   .then(async () => {
     console.log("✅ MongoDB connected successfully");
+    startMedicineExpiryCron();
   })
   .catch((err) => console.log("❌ MongoDB connection error", err));
 
@@ -68,6 +71,8 @@ app.use("/api",reviewRouter);
 app.use("/api/consultation", consultationRouter);
 app.use("/api/pharmacy", pharmacyRouter);
 app.use("/api/medicine",medicineRouter);
+app.use("/api/emergency",emergencyRoute);
+
 server.listen(process.env.PORT, () => {
   console.log(`Listening to port ${process.env.PORT}`);
 });

@@ -90,8 +90,6 @@ exports.shareReports = async (req, res) => {
   }
 };
 
-
-
 exports.sharePrescriptions = async (req, res) => {
   try {
     const patient = await patientModel.findOne({
