@@ -14,6 +14,8 @@ const appointmentModel = require('../models/appointmentModel');
 const patientModel = require('../models/patientModel');
 const { redisClient } = require('../config/redisClient');
 const PharmacyModel = require('../models/PharmacyModel');
+const PatientHospitalSchema = require('../models/PatientHospitalSchema');
+const EmergencyModel = require('../models/EmergencyModel');
 
 const registerHospital = async (req, res) => {
     try {
@@ -646,4 +648,361 @@ const togglePharmacyActive = async (req, res) => {
     });
   }
 };
-module.exports= { registerHospital,getHospitalById,updateHospitalProfile,getHospitalProfile, getStats, approveHospital,getAllHospitals,getHospitalsQuery, getHospitals, getHospitalCities, getHospitalStates, getAllPharmacies,updatePharmacyStatus,togglePharmacyActive};
+const getHospitalPatients = async (req, res) => {
+  try {
+    const hospitalId = req.user.hospitalId;
+    console.log(`here is hospitalId :${hospitalId}`);
+
+    if (!hospitalId) {
+      return res.status(400).json({
+        success: false,
+        message: "Hospital not associated with this user",
+      });
+    }
+
+    const links = await PatientHospitalSchema.find({
+      hospitalId,
+      status: "ACTIVE",
+    }).select("patientId");
+    const patientIds = links.map(link => link.patientId);
+
+    const patients = await patientModel.find({
+      _id: { $in: patientIds },
+    })
+      .populate("userId", "name email phone_number")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      count: patients.length,
+      patients,
+    });
+
+  } catch (error) {
+    console.error("Get hospital patients error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch hospital patients",
+      error: error.message,
+    });
+  }
+};
+
+const searchHospitalPatients = async (req, res) => {
+  try {
+    const { search } = req.query;
+
+    const hospitalId = req.user.hospitalId;
+
+    if (!hospitalId) {
+      return res.status(400).json({
+        success: false,
+        message: "Hospital not associated with this user",
+      });
+    }
+
+    if (!search || search.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        message: "Search value is required",
+      });
+    }
+
+    const searchTerm = search.trim();
+
+    // Get all patients linked to this hospital
+    const links = await PatientHospitalSchema
+      .find({
+        hospitalId,
+        status: "ACTIVE",
+      })
+      .select("patientId");
+
+    const patientIds = links.map((link) => link.patientId);
+
+    // Search phone number in Patient model
+    const phoneMatches = await patientModel
+      .find({
+        _id: { $in: patientIds },
+        phone_number: {
+          $regex: searchTerm,
+          $options: "i",
+        },
+      })
+      .select("_id");
+
+    // Search name/email in User model
+    const patients = await patientModel
+      .find({
+        _id: { $in: patientIds },
+      })
+      .populate({
+        path: "userId",
+        match: {
+          $or: [
+            {
+              name: {
+                $regex: searchTerm,
+                $options: "i",
+              },
+            },
+            {
+              email: {
+                $regex: searchTerm,
+                $options: "i",
+              },
+            },
+          ],
+        },
+        select: "name email phone_number",
+      });
+
+    const userMatches = patients
+      .filter((patient) => patient.userId)
+      .map((patient) => patient._id.toString());
+
+    const phoneMatchIds = phoneMatches.map(
+      (patient) => patient._id.toString()
+    );
+
+    // Combine name + email + phone results
+    const matchedIds = [
+      ...new Set([
+        ...userMatches,
+        ...phoneMatchIds,
+      ]),
+    ];
+
+    const result = await patientModel
+      .find({
+        _id: { $in: matchedIds },
+      })
+      .populate("userId", "name email phone_number")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      count: result.length,
+      patients: result,
+    });
+
+  } catch (error) {
+    console.error("Search hospital patients error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to search patients",
+      error: error.message,
+    });
+  }
+};
+
+const updateEmergencyStatus = async (req, res) => {
+  try {
+    const io = req.app.get("io");
+
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required"
+      });
+    }
+
+    const adminId = req.user._id;
+
+    const { emergencyId } = req.params;
+
+    const {
+      status,
+      ambulance
+    } = req.body;
+    const emergency = await EmergencyModel.findById(
+      emergencyId
+    );
+
+    if (!emergency) {
+      return res.status(404).json({
+        success: false,
+        message: "Emergency not found"
+      });
+    }
+
+    const adminHospitalId = req.user.hospitalId;
+
+    if (!adminHospitalId) {
+      return res.status(403).json({
+        success: false,
+        message: "Hospital information not found"
+      });
+    }
+    if (
+      emergency.hospital.toString() !==
+      adminHospitalId.toString()
+    ) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "You are not authorized to manage this emergency"
+      });
+    }
+    const validTransitions = {
+
+      REQUESTED: [
+        "ACKNOWLEDGED"
+      ],
+
+      ACKNOWLEDGED: [
+        "AMBULANCE_ASSIGNED"
+      ],
+
+      AMBULANCE_ASSIGNED: [
+        "ON_THE_WAY"
+      ],
+
+      ON_THE_WAY: [
+        "ARRIVED"
+      ],
+
+      ARRIVED: [
+        "PATIENT_PICKED"
+      ],
+
+      PATIENT_PICKED: [
+        "COMPLETED"
+      ],
+
+      COMPLETED: []
+    };
+
+
+    const nextStatuses =
+      validTransitions[emergency.status] || [];
+
+
+    if (!nextStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message:
+          `Cannot change ${emergency.status} to ${status}`
+      });
+    }
+    if (status === "AMBULANCE_ASSIGNED") {
+
+      if (!ambulance) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Ambulance details are required"
+        });
+      }
+
+
+      if (
+        !ambulance.vehicleNumber ||
+        !ambulance.driverName ||
+        !ambulance.driverPhone
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Vehicle number, driver name and driver phone are required"
+        });
+      }
+      emergency.ambulance = {
+
+        vehicleNumber:
+          ambulance.vehicleNumber,
+
+        driverName:
+          ambulance.driverName,
+
+        driverPhone:
+          ambulance.driverPhone
+      };
+      emergency.assignedBy = adminId;
+
+      emergency.assignedAt = new Date();
+    }
+    emergency.status = status;
+
+    if (status === "ACKNOWLEDGED") {
+
+      emergency.acknowledgedBy =
+        adminId;
+
+      emergency.acknowledgedAt =
+        new Date();
+    }
+    if (status === "COMPLETED") {
+
+      emergency.completedAt =
+        new Date();
+    }
+
+    await emergency.save();
+    const updatedEmergency =
+      await EmergencyModel.findById(
+        emergency._id
+      )
+
+      .populate(
+        "patient",
+        "name email phone_number"
+      )
+
+      .populate(
+        "hospital",
+        "name phone_number city state location"
+      )
+      .populate(
+        "assignedBy",
+        "name email phone_number role"
+      )
+      .populate(
+        "acknowledgedBy",
+        "name email phone_number role"
+      );
+
+    if (io) {
+
+      io.to(
+        `patient:${emergency.patient.toString()}`
+      ).emit(
+        "emergency-status-updated",
+        updatedEmergency
+      );
+    }
+
+    return res.status(200).json({
+
+      success: true,
+
+      message:
+        `Emergency status updated to ${status}`,
+
+      emergency: updatedEmergency
+    });
+
+
+  } catch (error) {
+
+    console.error(
+      "UPDATE EMERGENCY STATUS ERROR:",
+      error
+    );
+
+    return res.status(500).json({
+
+      success: false,
+
+      message:
+        "Failed to update emergency status",
+
+      error: error.message
+    });
+  }
+};
+
+
+module.exports= { registerHospital,updateEmergencyStatus,getHospitalPatients,searchHospitalPatients,getHospitalById,updateHospitalProfile,getHospitalProfile, getStats, approveHospital,getAllHospitals,getHospitalsQuery, getHospitals, getHospitalCities, getHospitalStates, getAllPharmacies,updatePharmacyStatus,togglePharmacyActive};

@@ -8,6 +8,8 @@ const jwt = require('jsonwebtoken');
 const getSignedUrl = require("../utils/getSignedUrl");
 const reportModel = require("../models/reportModel");
 const cloudinary  = require("../config/cloudinary");
+const HospitalModel = require("../models/HospitalModel");
+const EmergencyModel = require("../models/EmergencyModel");
 
 const registerPatient = async (req, res) => {
   try {
@@ -281,23 +283,80 @@ const updatePatientProfile = async (req, res) => {
 };
 
 
-const getPatientProfile = async(req,res)=>{
-  try{
-    const patient = await patientModel.findById(req.params.patientId).populate("userId","name email");
-    if(!patient){
-      return res.status(400).json({message:"Patient not found"});
+const getPatientProfile = async (req, res) => {
+  try {
+    const { patientId } = req.params;
+
+    const patient = await patientModel
+      .findById(patientId)
+      .populate("userId", "name email");
+
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: "Patient not found",
+      });
     }
-    res.json({
-      id:patient._id,
-      name:patient.userId.name,
-      email:patient.userId.email,
-      gender:patient.gender,
-      patient
-    })
-  }catch(e){
-    res.status(500).json({message:"Failed to fetch patient"});
+
+    // Agar patient ka User account nahi mila
+    if (!patient.userId) {
+      return res.status(404).json({
+        success: false,
+        message: "Patient user information not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Patient profile fetched successfully",
+
+      patient: {
+        _id: patient._id,
+
+        // User details
+        userId: patient.userId._id,
+        name: patient.userId.name,
+        email: patient.userId.email,
+
+        // Patient details
+        age: patient.age,
+        dob: patient.dob,
+        gender: patient.gender,
+        bloodGroup: patient.bloodGroup,
+        phone_number: patient.phone_number,
+        profileImage: patient.profileImage,
+
+        // Address
+        address: {
+          line: patient.address?.line || "",
+          city: patient.address?.city || "",
+          state: patient.address?.state || "",
+          pincode: patient.address?.pincode || "",
+
+          location: patient.address?.location
+            ? {
+                type: patient.address.location.type,
+                coordinates: patient.address.location.coordinates,
+              }
+            : null,
+        },
+
+        // Timestamps
+        createdAt: patient.createdAt,
+        updatedAt: patient.updatedAt,
+      },
+    });
+
+  } catch (error) {
+    console.error("Get patient profile error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch patient profile",
+      error: error.message,
+    });
   }
-}
+};
 
 //FOR PATIENTS__
 const getMyProfile = async (req, res) => {
@@ -437,4 +496,224 @@ const getActiveQueueStatus = async (req, res) => {
   }
 };
 
-module.exports = { registerPatient,getActiveQueueStatus,getMyProfile,createWalkInPatient,getPatientAppointments,getPatientProfile ,getPatientReportForDoctor, updatePatientProfile,getMyReports};
+// =====================================================
+// CREATE EMERGENCY REQUEST - PATIENT
+// =====================================================
+
+const createEmergency = async (req, res) => {
+  try {
+    const io = req.app.get("io");
+
+    // -----------------------------------------
+    // 1. CHECK AUTHENTICATED USER
+    // -----------------------------------------
+
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+    }
+
+    const patientId = req.user._id;
+
+
+    // -----------------------------------------
+    // 2. GET DATA FROM REQUEST
+    // -----------------------------------------
+
+    const {
+      hospitalId,
+      latitude,
+      longitude,
+      reason,
+      message,
+    } = req.body;
+
+
+    // -----------------------------------------
+    // 3. VALIDATE HOSPITAL ID
+    // -----------------------------------------
+
+    if (!hospitalId) {
+      return res.status(400).json({
+        success: false,
+        message: "Hospital ID is required",
+      });
+    }
+
+
+    // -----------------------------------------
+    // 4. VALIDATE LOCATION
+    // -----------------------------------------
+
+    if (
+      latitude === undefined ||
+      longitude === undefined
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Patient location is required",
+      });
+    }
+
+    const lat = Number(latitude);
+    const lng = Number(longitude);
+
+    if (
+      Number.isNaN(lat) ||
+      Number.isNaN(lng)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid latitude or longitude",
+      });
+    }
+
+
+    // Latitude range
+    if (lat < -90 || lat > 90) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid latitude",
+      });
+    }
+
+
+    // Longitude range
+    if (lng < -180 || lng > 180) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid longitude",
+      });
+    }
+
+
+    // -----------------------------------------
+    // 5. CHECK HOSPITAL
+    // -----------------------------------------
+
+    const hospital = await HospitalModel.findOne({
+      _id: hospitalId,
+    });
+
+    if (!hospital) {
+      return res.status(404).json({
+        success: false,
+        message: "Hospital not available",
+      });
+    }
+
+
+    // -----------------------------------------
+    // 6. CHECK EXISTING ACTIVE EMERGENCY
+    // -----------------------------------------
+
+    const activeEmergency = await EmergencyModel.findOne({
+      patient: patientId,
+
+      status: {
+        $in: [
+          "REQUESTED",
+          "ACKNOWLEDGED",
+          "AMBULANCE_ASSIGNED",
+          "ON_THE_WAY",
+          "ARRIVED",
+          "PATIENT_PICKED",
+        ],
+      },
+    });
+
+    if (activeEmergency) {
+      return res.status(409).json({
+        success: false,
+        message: "You already have an active emergency request",
+        emergency: activeEmergency,
+      });
+    }
+
+
+    // -----------------------------------------
+    // 7. CREATE EMERGENCY
+    // -----------------------------------------
+
+    const emergency = await EmergencyModel.create({
+      patient: patientId,
+
+      hospital: hospital._id,
+
+      location: {
+        type: "Point",
+
+        // IMPORTANT:
+        // MongoDB GeoJSON = [longitude, latitude]
+
+        coordinates: [lng, lat],
+      },
+
+      reason: reason || "OTHER",
+
+      message: message || "",
+
+      status: "REQUESTED",
+    });
+
+
+    // -----------------------------------------
+    // 8. POPULATE DATA
+    // -----------------------------------------
+
+    const populatedEmergency =
+      await EmergencyModel.findById(emergency._id)
+        .populate(
+          "patient",
+          "name email phone_number"
+        )
+        .populate(
+          "hospital",
+          "name phone_number city state location"
+        );
+
+
+    // -----------------------------------------
+    // 9. SEND REAL-TIME ALERT TO HOSPITAL
+    // -----------------------------------------
+
+    if (io) {
+      io.to(`hospital:${hospital._id}`).emit(
+        "emergency-created",
+        populatedEmergency
+      );
+    }
+
+
+    // -----------------------------------------
+    // 10. RESPONSE
+    // -----------------------------------------
+
+    return res.status(201).json({
+      success: true,
+
+      message:
+        "Emergency request sent successfully",
+
+      emergency: populatedEmergency,
+    });
+
+  } catch (error) {
+
+    console.error(
+      "CREATE EMERGENCY ERROR:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create emergency request",
+      error: error.message,
+    });
+  }
+};
+
+
+module.exports = {registerPatient,getActiveQueueStatus,getMyProfile,createWalkInPatient,getPatientAppointments,getPatientProfile ,getPatientReportForDoctor, updatePatientProfile,getMyReports,createEmergency};

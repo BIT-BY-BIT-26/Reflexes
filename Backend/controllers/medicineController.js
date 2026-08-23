@@ -1,3 +1,4 @@
+const Medicine = require("../models/Medicine");
 const { analyzeMedicineImage } = require("../services/medicineAnalysisService");
 
 exports.analyzeMedicine = async (req, res) => {
@@ -154,3 +155,100 @@ exports.analyzeMedicine = async (req, res) => {
   }
 
 };
+
+exports.getAllUniqueMedicines = async (req, res) => {
+  try {
+    const medicines = await Medicine.aggregate([
+      {
+        $match: {
+          status: { $ne: "EXPIRED" },
+          stock: { $gt: 0 }
+        }
+      },
+
+      {
+        $group: {
+          _id: {
+            medicineName: "$medicineName",
+            strength: "$strength"
+          },
+
+          totalStock: {
+            $sum: "$stock"
+          },
+
+          medicine: {
+            $first: "$$ROOT"
+          }
+        }
+      },
+
+      {
+        $replaceRoot: {
+          newRoot: {
+            $mergeObjects: [
+              "$medicine",
+              {
+                totalStock: "$totalStock"
+              }
+            ]
+          }
+        }
+      },
+
+      {
+        $project: {
+          batchNumber: 0,
+          expiryDate: 0,
+          stock: 0
+        }
+      },
+
+      {
+        $sort: {
+          name: 1
+        }
+      }
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      count: medicines.length,
+      medicines
+    });
+
+  } catch (error) {
+    console.error("Get unique medicines error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch medicines",
+      error: error.message
+    });
+  }
+};
+
+
+exports.getAllMedicine = async (req, res) => {
+  try {
+    const medicines = await Medicine.find()
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      count: medicines.length,
+      medicines,
+    });
+  } catch (error) {
+    console.error("Get all medicines error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch medicines",
+      error: error.message,
+    });
+  }
+};
+
+

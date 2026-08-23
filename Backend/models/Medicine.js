@@ -68,6 +68,12 @@ const medicineSchema = new mongoose.Schema(
       enum: ["MANUAL", "OCR"],
       default: "MANUAL",
     },
+    status: {
+      type: String,
+      enum: ["ACTIVE", "EXPIRED"],
+      default: "ACTIVE"
+    }
+
   },
   {
     timestamps: true,
