@@ -247,12 +247,16 @@ const updatePatientProfile = async (req, res) => {
     if (bloodGroup) patient.bloodGroup = bloodGroup;
     if(phone_number) patient.phone_number = phone_number;
     if (address) {
-      patient.address = {
-        ...patient.address,
-        ...address,
-      };
-    }
+    const parsedAddress =
+      typeof address === "string"
+        ? JSON.parse(address)
+        : address;
 
+        patient.address = {
+            ...patient.address?.toObject?.(),
+            ...parsedAddress
+        };
+    }
 
     await patient.save();
 
