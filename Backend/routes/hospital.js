@@ -37,7 +37,7 @@ route.get(
   "/all-patients",auth,authorize(ROLE.admin),getHospitalPatients
 );
 route.get(
-  "/search-patients",auth,authorize(ROLE.admin),searchHospitalPatients
+  "/search-patients",auth,authorize(ROLE.admin,ROLE.doctor),searchHospitalPatients
 );
 
 module.exports=route;

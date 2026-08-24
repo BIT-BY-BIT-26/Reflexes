@@ -8,7 +8,7 @@ const { patientUpload } = require('../middleware/uploadCloud');
 const patientRoute = express.Router();
 
 patientRoute.post('/register',registerPatient);
-patientRoute.get('/get-patient-profile/:patientId',getPatientProfile);
+patientRoute.get('/get-patient-profile/:patientId',auth,getPatientProfile);
 patientRoute.patch('/update-patient-profile',auth,patientUpload.single("profileImage") ,updatePatientProfile);
 patientRoute.get("/me",auth,authorize(ROLE.patient),getMyProfile);
 patientRoute.get('/get-appointments/:patientId',auth,getPatientAppointments);
