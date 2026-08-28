@@ -5,9 +5,8 @@ const { startConsultation, stopConsultation, pauseConsultation, resumeConsultati
 // consultationRouter.post("/start", auth,createConsultationRoom);
 // consultationRouter.get("/by-appointment/:appointmentId",getConsultationAppointment);
 
-
+consultationRouter.patch("/start-consultation",auth,startConsultation);
 consultationRouter.get("/current-patient",auth,getCurrentPatient);
-consultationRouter.patch("/start-consultation/:appointmentId",auth,startConsultation);
 consultationRouter.patch("/stop-consultation/:appointmentId",auth,stopConsultation);
 consultationRouter.patch("/pause-consultation/:appointmentId",auth,pauseConsultation);
 consultationRouter.patch("/resume-consultation/:appointmentId",auth,resumeConsultation);

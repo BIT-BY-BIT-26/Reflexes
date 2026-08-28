@@ -5,7 +5,6 @@ const {
   createAppointment,
   confirmAppointment,
   getAllAppointmentsForDate,
-  completeAppointment,
   getAppointmentById,
   getMyAppointments,
   getTodayStats,
@@ -16,7 +15,7 @@ const {
 
 const { ROLE } = require("../config/role");
 const auth = require("../middleware/auth");
-
+const { completeConsultation } = require("../controllers/DoctorController");
 // Patient books appointment (online)
 appointmentRouter.post(
   "/appointments",
@@ -39,7 +38,7 @@ appointmentRouter.get("/appointments/today-stats",auth,getTodayStats);
 appointmentRouter.get("/appointments/online-stats",auth,getTodayOnlineStats);
 appointmentRouter.get("/appointments/online",auth,getOnlineAppointmentsForDate);
 appointmentRouter.get("/appointments/:id", auth, getAppointmentById);
-appointmentRouter.patch("/appointments/:id/complete",auth, completeAppointment);
+appointmentRouter.patch("/appointments/:id/complete",auth, completeConsultation);
 
 module.exports = appointmentRouter;
 
