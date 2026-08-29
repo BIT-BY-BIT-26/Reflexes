@@ -26,6 +26,10 @@ import SignupPharmacy from '../components/Pharmacy/SignupPharmacy'
 import PharmacyDashboard from '../components/Pharmacy/PharmacyDashboard'
 import PharmacyLayout from '../features/pharmacy/PharmacyLayout'
 import AddMedicine from '../features/pharmacy/AddMedicine'
+import PatientReport from '../features/Admin/PatientProfileAdmin'
+import PatientProfileAdmin from '../features/Admin/PatientProfileAdmin'
+import PatientProfileDoctor from '../features/doctor/PatientProfileDoctor'
+import PrescriptionOptions from '../features/doctor/PrescritionOptions'
 
 const AppRoutes = () => {
   return (
@@ -65,6 +69,9 @@ const AppRoutes = () => {
           <Route path='doctors/add' element={<AddDoctor />}/>
           <Route path='doctors' element={<AllDoctor />}/>
           <Route path='doctor/opd-schedule/:doctorId' element={<OpdSchedule />}/>
+          <Route path='patients/:id' element={<PatientProfileAdmin />}/>
+          <Route path='patient-report/:id' element={<PatientReport />}/>
+          
         </Route>
 
 
@@ -74,7 +81,9 @@ const AppRoutes = () => {
           <Route index element={<DoctorDashboard />} />
           <Route path='appointments' element={<Appointment />} />
           <Route path='notifications' element={<NotificationSection />}/>
-        </Route>
+          <Route path='patients/:id' element={<PatientProfileDoctor />}/>
+          <Route path='patients/prescription' element={<PrescriptionOptions />}/>
+        </Route>  
 
         <Route path='/hospital-dashboard/profile' 
           element={

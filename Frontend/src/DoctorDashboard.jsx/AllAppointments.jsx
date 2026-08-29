@@ -4,15 +4,20 @@ import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { motion } from "framer-motion";
 import { fetchTodayAppointments } from '../redux/doctor/doctorThunk';
+import { updateAppointmentStatus } from '../redux/doctor/appointmentSlice';
 
-const AllAppointments = ({ appointments = [], onPatientClick }) => {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-
+  const AllAppointments = ({ appointments = [], onPatientClick }) => {
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
   const confirmAppointment = async (appointmentId) => {
     try {
-      await api.patch(`/appointments/${appointmentId}/confirm`);
-      dispatch(fetchTodayAppointments());
+      const res = await api.patch(`/appointments/${appointmentId}/confirm`);
+      // backend se updated appointment (status + token) expect kar rahe hain
+      dispatch(updateAppointmentStatus({
+        appointmentId,
+        status: "CONFIRMED",
+        token: res.data.token // backend jo bhi field bhejta hai wahi use karo
+      }));
     } catch (err) {
       console.error(err);
       alert("Unable to confirm appointments");
@@ -25,7 +30,10 @@ const AllAppointments = ({ appointments = [], onPatientClick }) => {
 
     try {
       await api.patch(`/appointments/${appointmentId}/complete`);
-      dispatch(fetchTodayAppointments());
+      dispatch(updateAppointmentStatus({
+        appointmentId,
+        status: "COMPLETED"
+      }));
     } catch (err) {
       console.error(err);
       alert("Unable to complete appointment");
