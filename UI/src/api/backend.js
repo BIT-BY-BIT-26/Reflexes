@@ -163,24 +163,80 @@ export const getConfirmedAppointments = ()=>
       appointmentType:"offline"
     }
   })
+export const startOPD = () => api.patch("/doctors/toggle-opd");
 
-export const startOPD = ()=>{
-  return api.patch("/doctors/toggle-opd");
-}
-export const startConsultation = ()=>{
-  return api.patch("/consultation/start-consultation/:id");
-}
-export const stopConsultation = ()=>{
-  return api.patch("/consultation/stop-consultation/:id");
-}
-export const resumeConsultation = ()=>{
-  return api.patch("/consultation/resume-consultation/:id");
-}
+// ⭐ id ko real param banao (backend ignore karta hai but URL structure follow karo)
+export const startConsultation = () =>
+  api.patch(`/consultation/start-consultation`);
 
-export const completeAppointment = (id)=>{
-  return api.patch(`/appointments/${id}/complete`);
-}
+export const stopConsultation = (id = "na") =>
+  api.patch(`/consultation/stop-consultation/${id}`);
+
+export const pauseConsultation = (id = "na") =>
+  api.patch(`/consultation/pause-consultation/${id}`);
+
+export const resumeConsultation = (id = "na") =>
+  api.patch(`/consultation/resume-consultation/${id}`);
+
+export const completeAppointment = (id = "na") =>
+  api.patch(`/appointments/${id}/complete`);
+
+export const callNext = () =>
+  api.patch(`/consultation/call-next`);
+
+export const skipPatient = () =>
+  api.patch(`/consultation/skip-patient`);
+
+export const getCurrentPatient = () =>
+  api.get(`/consultation/current-patient`); // apna actual route yahan confirm kar lena
+
 
 export const addMedicine = (data) => {
   return api.post(`/pharmacy/add-medicine`, data);
+};
+
+export const searchPatient = (data) => {
+  return api.get("/search-patients", {
+    params: {
+      search: data,
+    },
+  });
+};
+
+export const getPatientProfile = (patientId) => {
+  return api.get(`/patients/get-patient-profile/${patientId}`);
+};
+
+export const addPatientReport = (formData) => {
+  return api.post("/upload-report", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
+
+export const addPrescriptionImage = (formData) => {
+  return api.post(
+    "https://prescription-ai-service.onrender.com/api/prescription/ocr",
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+};
+
+export const PrescriptionDescription = (data) => {
+  return api.post(
+    "https://prescription-ai-service.onrender.com/api/prescription/parse",
+    data
+  );
+};
+
+export const ManualPrescription = (data) => {
+  return api.post(
+    "/prescription/create-prescription/",
+    data
+  );
 };
