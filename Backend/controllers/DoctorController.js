@@ -134,6 +134,9 @@ const submitProfile = async (req, res) => {
     const hospitalId = req.user.hospitalId;
     const userId = req.user.id;
 
+    // =========================
+    // Hospital ID validation
+    // =========================
     if (!hospitalId) {
       return res.status(400).json({
         success: false,
@@ -147,22 +150,20 @@ const submitProfile = async (req, res) => {
       department,
       experience,
       specialisations,
-      onlineAvailabitity,
+      onlineAvailability,
       registrationNumber,
       consultationFee,
       languages
     } = req.body;
-
-    // Required validation
     if (!position || !department) {
       return res.status(400).json({
         success: false,
         message: "Position and Department are required"
       });
     }
-
-    // Check doctor already exists
-    const existingDoctor = await docterModel.findOne({ userId });
+    const existingDoctor = await docterModel.findOne({
+      userId
+    });
 
     if (existingDoctor) {
       return res.status(400).json({
@@ -173,17 +174,16 @@ const submitProfile = async (req, res) => {
     }
 
     const departmentExists = await departmentModel.findOne({
-        _id: department,
-        hospital: hospitalId
+      _id: department,
+      hospital: hospitalId
+    });
+
+    if (!departmentExists) {
+      return res.status(404).json({
+        success: false,
+        message: "Department not found in this hospital"
       });
-
-      if (!departmentExists) {
-        return res.status(404).json({
-          success: false,
-          message: "Department not found in this hospital"
-        });
-      }
-
+    }
     if (registrationNumber) {
       const existingRegistration = await docterModel.findOne({
         registrationNumber
@@ -197,31 +197,74 @@ const submitProfile = async (req, res) => {
       }
     }
 
+    let finalOnlineAvailability = {};
+
+    if (onlineAvailability) {
+
+      if (
+        typeof onlineAvailability !== "object" ||
+        onlineAvailability === null
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid online availability format"
+        });
+      }
+
+      const { from, to } = onlineAvailability;
+      if ((from && !to) || (!from && to)) {
+        return res.status(400).json({
+          success: false,
+          message: "Both online availability from and to times are required"
+        });
+      }
+
+      if (from && to) {
+        finalOnlineAvailability = {
+          from,
+          to
+        };
+      }
+    }
+
     const doctor = new docterModel({
       userId,
       hospital: hospitalId,
+
       position,
-      profile_photo:profile_photo || "",
+
+      profile_photo: profile_photo || "",
+
       department,
-      experience:experience || 0,
-      specialisations : specialisations || [],
-      onlineAvailabitity : onlineAvailabitity || {},
+
+      experience: experience || 0,
+
+      specialisations: specialisations || [],
+
+      onlineAvailability: finalOnlineAvailability,
+
       registrationNumber,
-      consultationFee:consultationFee || 0,
-      languages:languages || [],
+
+      consultationFee: consultationFee || 0,
+
+      languages: languages || [],
+
       profileCompleted: true
     });
 
     await doctor.save();
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: "Doctor profile created successfully",
       doctor
     });
 
   } catch (error) {
-    res.status(500).json({
+
+    console.error("SUBMIT DOCTOR PROFILE ERROR:", error);
+
+    return res.status(500).json({
       success: false,
       message: "Profile submit failed",
       error: error.message
@@ -229,18 +272,20 @@ const submitProfile = async (req, res) => {
   }
 };
 
-
 const updateProfile = async (req, res) => {
   try {
     const userId = req.user.id;
     const hospitalId = req.user.hospitalId;
+
     const doctor = await docterModel.findOne({ userId });
+
     if (!doctor) {
       return res.status(404).json({
         success: false,
         message: "Doctor profile not found"
       });
     }
+
     const {
       position,
       profile_photo,
@@ -249,38 +294,93 @@ const updateProfile = async (req, res) => {
       experience,
       specialisations,
       availableDays,
-      onlineAvailabitity,
+      onlineAvailability,
       registrationNumber,
       consultationFee
     } = req.body;
 
-    // Professional safe update
-    if (position !== undefined) doctor.position = position;
-    if (profile_photo !== undefined) doctor.profile_photo = profile_photo;
-    if (department !== undefined) doctor.department = department;
-    if (opd_timing !== undefined) doctor.opd_timing = opd_timing;
-    if (experience !== undefined) doctor.experience = experience;
-    if (specialisation !== undefined) doctor.specialisation = specialisation;
-    if (availableDays !== undefined) doctor.availableDays = availableDays;
-    if (consultationFee !== undefined) doctor.consultationFee = consultationFee;
-    if (onlineAvailabitity !== undefined)
-      doctor.onlineAvailabitity = onlineAvailabitity;
+    // =========================
+    // Professional profile update
+    // =========================
+
+    if (position !== undefined)
+      doctor.position = position;
+
+    if (profile_photo !== undefined)
+      doctor.profile_photo = profile_photo;
+
+    if (department !== undefined)
+      doctor.department = department;
+
+    if (opd_timing !== undefined)
+      doctor.opd_timing = opd_timing;
+
+    if (experience !== undefined)
+      doctor.experience = experience;
+
+    if (specialisations !== undefined)
+      doctor.specialisations = specialisations;
+
+    if (availableDays !== undefined)
+      doctor.availableDays = availableDays;
+
+    if (consultationFee !== undefined)
+      doctor.consultationFee = consultationFee;
+
+    // =========================
+    // Online consultation timing
+    // =========================
+
+    if (onlineAvailability !== undefined) {
+
+      if (
+        typeof onlineAvailability !== "object" ||
+        onlineAvailability === null
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid online availability format"
+        });
+      }
+
+      const { from, to } = onlineAvailability;
+
+      if (!from || !to) {
+        return res.status(400).json({
+          success: false,
+          message: "Online availability must contain from and to time"
+        });
+      }
+
+      doctor.onlineAvailability = {
+        from,
+        to
+      };
+    }
+
+    // =========================
+    // Registration number
+    // =========================
+
     if (registrationNumber !== undefined)
       doctor.registrationNumber = registrationNumber;
 
-    // Always sync hospital from token
+    // Always sync hospital from logged-in user
     doctor.hospital = hospitalId;
 
     await doctor.save();
 
-    res.json({
+    return res.status(200).json({
       success: true,
       message: "Doctor profile updated successfully",
       doctor
     });
 
   } catch (error) {
-    res.status(500).json({
+
+    console.error("UPDATE DOCTOR PROFILE ERROR:", error);
+
+    return res.status(500).json({
       success: false,
       message: "Profile update failed",
       error: error.message
@@ -811,11 +911,74 @@ const getCurrentPatient = async (req, res) => {
 // Stops OPD fully. Blocked if a consultation is CURRENT.
 // Added the missing today/tomorrow date filter for consistency.
 // ============================================================
+// const stopConsultation = async (req, res) => {
+//   try {
+//     const io = req.app.get("io");
+
+//     const doctor = await docterModel.findOne({ userId: req.user.id });
+//     if (!doctor) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Doctor not found"
+//       });
+//     }
+
+//     if (!doctor.opdStarted) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "OPD is already stopped"
+//       });
+//     }
+
+//     const { today, tomorrow } = getTodayRange();
+
+//     const currentAppointment = await Appointment.findOne({
+//       doctor: doctor._id,
+//       status: "CURRENT",
+//       date: { $gte: today, $lt: tomorrow }
+//     }).populate({ path: "patient", populate: { path: "userId", select: "name email" } });
+
+//     if (currentAppointment) {
+//       return res.status(400).json({
+//         success: false,
+//         message:
+//           "Cannot stop OPD while a consultation is in progress. Complete the current consultation first.",
+//         currentAppointment
+//       });
+//     }
+
+//     doctor.opdStarted = false;
+//     doctor.opdPaused = false;
+//     await doctor.save();
+
+//     io.to(`doctor_${doctor._id}`).emit("opdStopped", {
+//       status: "STOPPED",
+//       message: "OPD stopped successfully"
+//     });
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "OPD stopped successfully",
+//       opdStarted: doctor.opdStarted,
+//       opdPaused: doctor.opdPaused
+//     });
+//   } catch (error) {
+//     console.error("STOP OPD ERROR:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: error.message
+//     });
+//   }
+// };
+
 const stopConsultation = async (req, res) => {
   try {
     const io = req.app.get("io");
 
-    const doctor = await docterModel.findOne({ userId: req.user.id });
+    const doctor = await docterModel.findOne({
+      userId: req.user.id
+    });
+
     if (!doctor) {
       return res.status(404).json({
         success: false,
@@ -836,34 +999,67 @@ const stopConsultation = async (req, res) => {
       doctor: doctor._id,
       status: "CURRENT",
       date: { $gte: today, $lt: tomorrow }
-    }).populate({ path: "patient", populate: { path: "userId", select: "name email" } });
+    }).populate({
+      path: "patient",
+      populate: {
+        path: "userId",
+        select: "name email"
+      }
+    });
 
+    /*
+     * Current patient exists.
+     * Emergency/force stop ke case mein consultation ko
+     * COMPLETED nahi karenge because consultation actually
+     * complete nahi hui hai.
+     *
+     * Is case mein SKIPPED better hai.
+     */
     if (currentAppointment) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Cannot stop OPD while a consultation is in progress. Complete the current consultation first.",
-        currentAppointment
+      currentAppointment.status = "SKIPPED";
+      currentAppointment.skippedAt = new Date();
+
+      await currentAppointment.save();
+
+      io.to(`doctor_${doctor._id}`).emit("consultationInterrupted", {
+        appointmentId: currentAppointment._id,
+        token: currentAppointment.token,
+        status: "SKIPPED",
+        message: "Consultation interrupted because OPD was stopped."
       });
     }
 
+    // Stop OPD
     doctor.opdStarted = false;
     doctor.opdPaused = false;
+
     await doctor.save();
 
+    // Notify doctor dashboard
     io.to(`doctor_${doctor._id}`).emit("opdStopped", {
       status: "STOPPED",
-      message: "OPD stopped successfully"
+      message: "OPD stopped successfully."
     });
 
     return res.status(200).json({
       success: true,
-      message: "OPD stopped successfully",
+      message: currentAppointment
+        ? "OPD stopped. Current consultation was interrupted."
+        : "OPD stopped successfully.",
       opdStarted: doctor.opdStarted,
-      opdPaused: doctor.opdPaused
+      opdPaused: doctor.opdPaused,
+      interruptedAppointment: currentAppointment
+        ? {
+            appointmentId: currentAppointment._id,
+            token: currentAppointment.token,
+            status: currentAppointment.status
+          }
+        : null
     });
+
   } catch (error) {
     console.error("STOP OPD ERROR:", error);
+
     return res.status(500).json({
       success: false,
       message: error.message
@@ -879,12 +1075,114 @@ const stopConsultation = async (req, res) => {
 // If frontend just wants "mark done, don't auto-advance", call
 // this with ?autoAdvance=false.
 // ============================================================
+// const completeConsultation = async (req, res) => {
+//   try {
+//     const io = req.app.get("io");
+//     const autoAdvance = req.query.autoAdvance !== "false";
+
+//     const doctor = await docterModel.findOne({ userId: req.user.id });
+//     if (!doctor) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Doctor not found"
+//       });
+//     }
+
+//     if (!doctor.opdStarted) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "OPD not started"
+//       });
+//     }
+
+//     const { today, tomorrow } = getTodayRange();
+
+//     const currentAppointment = await Appointment.findOne({
+//       doctor: doctor._id,
+//       status: "CURRENT",
+//       date: { $gte: today, $lt: tomorrow }
+//     });
+
+//     if (!currentAppointment) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "No active consultation"
+//       });
+//     }
+
+//     currentAppointment.status = "COMPLETED";
+//     currentAppointment.consultationEndedAt = new Date();
+//     await currentAppointment.save();
+
+//     io.to(`doctor_${doctor._id}`).emit("consultationCompleted", {
+//       appointmentId: currentAppointment._id,
+//       token: currentAppointment.token,
+//       status: "COMPLETED"
+//     });
+
+//     if (!autoAdvance) {
+//       return res.status(200).json({
+//         success: true,
+//         message: "Consultation completed",
+//         appointmentId: currentAppointment._id,
+//         token: currentAppointment.token,
+//         status: currentAppointment.status
+//       });
+//     }
+
+//     // Auto-advance to next patient
+//     const nextAppointment = await Appointment.findOneAndUpdate(
+//       {
+//         doctor: doctor._id,
+//         status: "CONFIRMED",
+//         date: { $gte: today, $lt: tomorrow }
+//       },
+//       { status: "CURRENT", consultationStartedAt: new Date() },
+//       { new: true, sort: { token: 1 } }
+//     ).populate({ path: "patient", populate: { path: "userId", select: "name email" } });
+
+//     if (!nextAppointment) {
+//       doctor.opdStarted = false;
+//       await doctor.save();
+
+//       io.to(`doctor_${doctor._id}`).emit("opdStopped", {
+//         status: "STOPPED",
+//         message: "No more patients. OPD ended."
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: "Consultation completed. No more patients — OPD ended."
+//       });
+//     }
+
+//     io.to(`doctor_${doctor._id}`).emit("queueUpdated", {
+//       currentToken: nextAppointment.token,
+//       status: "RUNNING"
+//     });
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Consultation completed. Next patient called.",
+//       currentAppointment: nextAppointment
+//     });
+//   } catch (error) {
+//     console.error("COMPLETE CONSULTATION ERROR:", error);
+//     return res.status(500).json({
+//       success: false,
+//       message: error.message
+//     });
+//   }
+// };
+
 const completeConsultation = async (req, res) => {
   try {
     const io = req.app.get("io");
-    const autoAdvance = req.query.autoAdvance !== "false";
 
-    const doctor = await docterModel.findOne({ userId: req.user.id });
+    const doctor = await docterModel.findOne({
+      userId: req.user.id
+    });
+
     if (!doctor) {
       return res.status(404).json({
         success: false,
@@ -899,79 +1197,37 @@ const completeConsultation = async (req, res) => {
       });
     }
 
-    const { today, tomorrow } = getTodayRange();
-
-    const currentAppointment = await Appointment.findOne({
-      doctor: doctor._id,
-      status: "CURRENT",
-      date: { $gte: today, $lt: tomorrow }
+    const result = await advanceQueue({
+      doctor,
+      io,
+      closeStatus: "COMPLETED",
+      socketEventName: "queueUpdated",
+      closingMessage: "No more patients. OPD ended."
     });
 
-    if (!currentAppointment) {
+    if (result.error) {
       return res.status(400).json({
         success: false,
-        message: "No active consultation"
+        message: result.error
       });
     }
 
-    currentAppointment.status = "COMPLETED";
-    currentAppointment.consultationEndedAt = new Date();
-    await currentAppointment.save();
-
-    io.to(`doctor_${doctor._id}`).emit("consultationCompleted", {
-      appointmentId: currentAppointment._id,
-      token: currentAppointment.token,
-      status: "COMPLETED"
-    });
-
-    if (!autoAdvance) {
+    if (result.ended) {
       return res.status(200).json({
         success: true,
-        message: "Consultation completed",
-        appointmentId: currentAppointment._id,
-        token: currentAppointment.token,
-        status: currentAppointment.status
+        message: result.message
       });
     }
-
-    // Auto-advance to next patient
-    const nextAppointment = await Appointment.findOneAndUpdate(
-      {
-        doctor: doctor._id,
-        status: "CONFIRMED",
-        date: { $gte: today, $lt: tomorrow }
-      },
-      { status: "CURRENT", consultationStartedAt: new Date() },
-      { new: true, sort: { token: 1 } }
-    ).populate({ path: "patient", populate: { path: "userId", select: "name email" } });
-
-    if (!nextAppointment) {
-      doctor.opdStarted = false;
-      await doctor.save();
-
-      io.to(`doctor_${doctor._id}`).emit("opdStopped", {
-        status: "STOPPED",
-        message: "No more patients. OPD ended."
-      });
-
-      return res.status(200).json({
-        success: true,
-        message: "Consultation completed. No more patients — OPD ended."
-      });
-    }
-
-    io.to(`doctor_${doctor._id}`).emit("queueUpdated", {
-      currentToken: nextAppointment.token,
-      status: "RUNNING"
-    });
 
     return res.status(200).json({
       success: true,
       message: "Consultation completed. Next patient called.",
-      currentAppointment: nextAppointment
+      currentAppointment: result.nextAppointment
     });
+
   } catch (error) {
     console.error("COMPLETE CONSULTATION ERROR:", error);
+
     return res.status(500).json({
       success: false,
       message: error.message

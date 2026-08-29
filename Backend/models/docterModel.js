@@ -27,12 +27,6 @@ const doctorSchema = new mongoose.Schema({
     ref: "Department",
     required: true
   },
-
-  opd_timing:{
-    from: {type:String},
-    to:{type:String}
-  },
-
   experience:{
     type: Number,
     min: 0
