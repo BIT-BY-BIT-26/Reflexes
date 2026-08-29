@@ -8,22 +8,55 @@ const { getUtcDayRange } = require("../utils/utcday");
 
 exports.createAppointment = async (req, res) => {
   const io = req.app.get("io");
+
   try {
-    const { doctor, date, appointmentType,reason,description} = req.body;
+    const {
+      doctor,
+      date,
+      appointmentType,
+      reason,
+      description
+    } = req.body;
 
-    const patient = await patientModel.findOne({ userId: req.user.id });
-
-    if (!patient) {
-      return res.status(404).json({ success: false,message: "Patient profile not found" });
+    // =========================
+    // 1. Validate appointment type
+    // =========================
+    if (!appointmentType || !["online", "offline"].includes(appointmentType)) {
+      return res.status(400).json({
+        success: false,
+        message: "Appointment type must be either online or offline"
+      });
     }
 
+    // =========================
+    // 2. Find patient
+    // =========================
+    const patient = await patientModel.findOne({
+      userId: req.user.id
+    });
+
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: "Patient profile not found"
+      });
+    }
+
+    // =========================
+    // 3. Find doctor
+    // =========================
     const doctorData = await docterModel.findById(doctor);
 
     if (!doctorData) {
-      return res.status(404).json({ success: false,message: "Doctor not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Doctor not found"
+      });
     }
 
-    const { start, end } = getUtcDayRange(date);
+    // =========================
+    // 4. Validate date
+    // =========================
     const appointmentDate = new Date(date);
 
     if (isNaN(appointmentDate.getTime())) {
@@ -33,136 +66,238 @@ exports.createAppointment = async (req, res) => {
       });
     }
 
+    const { start, end } = getUtcDayRange(date);
+
+    // =========================
+    // 5. Past date check
+    // =========================
     const today = new Date();
-    today.setHours(0,0,0,0);
+    today.setHours(0, 0, 0, 0);
+
     const selectedDate = new Date(appointmentDate);
-    selectedDate.setHours(0,0,0,0);
-    if(selectedDate < today){
+    selectedDate.setHours(0, 0, 0, 0);
+
+    if (selectedDate < today) {
       return res.status(400).json({
-          success:false,
-          message:"Past dates cannot be booked."
+        success: false,
+        message: "Past dates cannot be booked."
       });
     }
 
+    // =========================
+    // 6. Maximum 30 days advance
+    // =========================
     const maxDate = new Date(today);
-    maxDate.setDate(maxDate.getDate()+30);
-    if(selectedDate > maxDate){
+    maxDate.setDate(maxDate.getDate() + 30);
+
+    if (selectedDate > maxDate) {
       return res.status(400).json({
-          success:false,
-          message:"Appointments can only be booked up to 30 days in advance."
+        success: false,
+        message: "Appointments can only be booked up to 30 days in advance."
       });
     }
 
-    const dayName = appointmentDate.toLocaleDateString("en-US",{
-      weekday:"long",
-      timeZone:"Asia/Kolkata"
+    // =========================
+    // 7. Check doctor's OPD schedule
+    // =========================
+    const dayName = appointmentDate.toLocaleDateString("en-US", {
+      weekday: "long",
+      timeZone: "Asia/Kolkata"
     });
+
     const schedule = doctorData.opdSchedule.find(
-      s=>s.day===dayName && s.isAvailable
+      (s) => s.day === dayName && s.isAvailable
     );
-    if(!schedule){
+
+    if (!schedule) {
       return res.status(400).json({
-          success:false,
-          message:"Doctor is not available on selected day."
+        success: false,
+        message: "Doctor is not available on selected day."
       });
     }
 
-    if(selectedDate.getTime()===today.getTime()){
-      const [hour,minute]=schedule.from.split(":").map(Number);
-      const bookingClose=new Date();
-      bookingClose.setHours(hour,minute,0,0);
-      bookingClose.setMinutes(bookingClose.getMinutes()-30);
-      if(new Date()>bookingClose){
-          return res.status(400).json({
-            success:false,
-            message:"Booking is closed for today's OPD."
-          });
+    // =========================
+    // 8. Same-day booking closing
+    // =========================
+    if (selectedDate.getTime() === today.getTime()) {
+
+      const [hour, minute] = schedule.from
+        .split(":")
+        .map(Number);
+
+      const bookingClose = new Date();
+
+      bookingClose.setHours(hour, minute, 0, 0);
+      bookingClose.setMinutes(
+        bookingClose.getMinutes() - 30
+      );
+
+      if (new Date() > bookingClose) {
+        return res.status(400).json({
+          success: false,
+          message: "Booking is closed for today's OPD."
+        });
       }
     }
+
+    // =========================
+    // 9. Check duplicate appointment
+    // =========================
     const existingAppointment = await appointmentModel.findOne({
       patient: patient._id,
       doctor: doctorData._id,
-      appointmentType: appointmentType, 
-      date: { $gte: start, $lte: end },
-      status: { $in: ["PENDING", "CONFIRMED"] }
+      appointmentType: appointmentType,
+      date: {
+        $gte: start,
+        $lte: end
+      },
+      status: {
+        $in: ["PENDING", "CONFIRMED"]
+      }
     });
 
     if (existingAppointment) {
       return res.status(400).json({
         success: false,
-        message: " Your Appointment already exists for this date"
+        message: "Your appointment already exists for this date."
       });
     }
 
+    // =========================
+    // 10. Token only for OFFLINE
+    // =========================
+    let token = null;
+
+    if (appointmentType === "offline") {
+
+      const lastAppointment = await appointmentModel
+        .findOne({
+          doctor: doctorData._id,
+          appointmentType: "offline",
+          date: {
+            $gte: start,
+            $lte: end
+          },
+          token: {
+            $ne: null
+          }
+        })
+        .sort({
+          token: -1
+        });
+
+      token = lastAppointment
+        ? lastAppointment.token + 1
+        : 1;
+    }
+
+    // =========================
+    // 11. Create appointment
+    // =========================
     const appointment = await appointmentModel.create({
       patient: patient._id,
       doctor: doctorData._id,
       hospital: doctorData.hospital,
       department: doctorData.department,
-      date:appointmentDate, // exact time preserved,
-      appointmentType:appointmentType,
+
+      date: appointmentDate,
+
+      appointmentType,
+
+      // Offline → token
+      // Online → null
+      token,
+
       reason,
       description,
+
       status: "PENDING"
     });
 
+    // =========================
+    // 12. Update patient-hospital relation
+    // =========================
     await PatientHospitalSchema.findOneAndUpdate(
       {
-        patientId:patient._id,
-        hospitalId:doctorData.hospital,
+        patientId: patient._id,
+        hospitalId: doctorData.hospital
       },
       {
-        $set:{
-          lastVisit:new Date(),
-          status:"ACTIVE",
+        $set: {
+          lastVisit: new Date(),
+          status: "ACTIVE"
         },
-        $setOnInsert:{
-          firstVisit:new Date(),
-        },
+        $setOnInsert: {
+          firstVisit: new Date()
+        }
       },
       {
-        upsert:true,
-        new:true,
+        upsert: true,
+        new: true
       }
     );
 
+    // =========================
+    // 13. Notify doctor
+    // =========================
     const room = `doctor_${doctorData._id.toString()}`;
 
     console.log("📢 Sending appointment notification");
     console.log("Doctor ID:", doctorData._id.toString());
     console.log("Room:", room);
+    console.log("Appointment Type:", appointmentType);
 
-    io.to(`doctor_${doctorData._id}`).emit("new-appointment",{
-      message:"New appointment received",
-      appointmentId:appointment._id,
-      patientId:patient._id,
-      doctorId:doctorData._id,
+    io.to(room).emit("new-appointment", {
+      message: "New appointment received",
+
+      appointmentId: appointment._id,
+      patientId: patient._id,
+      doctorId: doctorData._id,
+
       appointmentType,
-      date:appointmentDate,
+
+      token,
+
+      date: appointmentDate,
+
       reason
-    })
-
-
-    const populatedAppointment = await appointmentModel.findById(appointment._id)
-    .populate({
-      path:"patient",
-      populate:{
-        path:"userId",
-        select:"name email gender"
-      }
     });
+
+    // =========================
+    // 14. Populate appointment
+    // =========================
+    const populatedAppointment =
+      await appointmentModel
+        .findById(appointment._id)
+        .populate({
+          path: "patient",
+          populate: {
+            path: "userId",
+            select: "name email gender"
+          }
+        })
+        .populate("doctor")
+        .populate("hospital")
+        .populate("department");
+
+    // =========================
+    // 15. Response
+    // =========================
     return res.status(201).json({
       success: true,
-      message: "Appointment booked successfully",
-      appointment
+      message: `${appointmentType} appointment booked successfully`,
+      appointment: populatedAppointment
     });
 
   } catch (err) {
-      return res.status(500).json({
-        success: false,
-        message: err.message
-      });
-    }
+
+    console.error("CREATE APPOINTMENT ERROR:", err);
+
+    return res.status(500).json({
+      success: false,
+      message: err.message
+    });
+  }
 };
 
 

@@ -16,6 +16,7 @@ const appointmentSchema = new mongoose.Schema({
     enum:["online","offline"],
     default:"offline"
   },
+  
   department: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Department",
