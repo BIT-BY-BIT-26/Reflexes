@@ -9,7 +9,7 @@ import {
   Sun,
   Moon,
 } from "lucide-react";
-import { getHospitalProfile } from "../api/backend";
+import { getHospitalProfile, searchPatient } from "../api/backend";
 import { useNavigate } from "react-router-dom";
 import { ROLE } from "../constants/Role";
 import { useDispatch, useSelector } from "react-redux";
@@ -23,6 +23,9 @@ export default function Navbar() {
   const [logo,setLogo] = useState("");
   const [profileOpen,setProfileOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [showSearchResults, setShowSearchResults] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const mode = useSelector((state) => state.theme.mode);
@@ -45,6 +48,34 @@ useEffect(() => {
 
   getLogo();
 }, []);
+
+
+useEffect(() => {
+  if (!query.trim()) {
+    setSearchResults([]);
+    setShowSearchResults(false);
+    return;
+  }
+
+  const timer = setTimeout(async () => {
+    try {
+      setSearchLoading(true);
+
+      const res = await searchPatient(query.trim());
+
+      setSearchResults(res.data.patients || []);
+      setShowSearchResults(true);
+
+    } catch (error) {
+      console.error("Patient search error:", error);
+      setSearchResults([]);
+    } finally {
+      setSearchLoading(false);
+    }
+  }, 500);
+
+  return () => clearTimeout(timer);
+}, [query]);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -84,18 +115,83 @@ useEffect(() => {
         {/* Center - Search */}
         <div className="hidden md:flex flex-1 max-w-xl mx-6">
           <div className="relative w-full">
-            <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-400"
-              size={24}
+
+            <Search 
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-400" 
+              size={24} 
             />
-            <input
+
+            <input 
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onFocus={() => {
+                if (searchResults.length > 0) {
+                  setShowSearchResults(true);
+                }
+              }}
               type="text"
-              placeholder="Search patients, doctors, appointments..."
-              className="w-full pl-10 pr-4 py-2 rounded-xl bg-gray-100 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500
-              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+              placeholder="Search patient by name email phone..."
+              className="w-full pl-10 pr-4 py-2 rounded-xl bg-gray-100 dark:bg-slate-900 border border-gray-300 dark:border-slate-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
             />
+
+            {/* Search Results */}
+            {showSearchResults && query.trim() && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden z-50">
+
+                {searchLoading ? (
+                  <div className="px-4 py-3 text-sm text-gray-500">
+                    Searching patients...
+                  </div>
+                ) : searchResults.length === 0 ? (
+                  <div className="px-4 py-3 text-sm text-gray-500">
+                    No patients found
+                  </div>
+                ) : (
+                  searchResults.map((patient) => (
+                    <button
+                      key={patient._id}
+                      onClick={() => {
+                        const basePath =
+                          role === ROLE.doctor
+                            ? "/doctor-dashboard"
+                            : "/hospital-dashboard";
+                        navigate(`${basePath}/patients/${patient._id}`);
+                        setQuery("");
+                        setShowSearchResults(false);
+                      }}
+                      className="w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-gray-100 dark:hover:bg-slate-800 transition"
+                    >
+
+                      {/* Patient Avatar */}
+                      <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
+                        <User
+                          size={20}
+                          className="text-blue-600 dark:text-blue-400"
+                        />
+                      </div>
+
+                      {/* Patient Info */}
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-900 dark:text-white truncate">
+                          {patient.userId?.name || "Unknown Patient"}
+                        </p>
+
+                        <p className="text-xs text-gray-500 dark:text-slate-400 truncate">
+                          {patient.userId?.email || "No email"}
+                        </p>
+
+                        <p className="text-xs text-gray-500 dark:text-slate-400">
+                          {patient.phone_number || patient.userId?.phone_number || "No phone"}
+                        </p>
+                      </div>
+
+                    </button>
+                  ))
+                )}
+
+              </div>
+            )}
+
           </div>
         </div>
 
