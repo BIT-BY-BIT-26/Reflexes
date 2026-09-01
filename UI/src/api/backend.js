@@ -236,7 +236,11 @@ export const PrescriptionDescription = (data) => {
 
 export const ManualPrescription = (data) => {
   return api.post(
-    "/prescription/create-prescription/",
+    "/prescription/create-prescription",
     data
   );
+};
+
+export const getPatientHistory = (patientId) => {
+  return api.get(`/doctors/patient-history/${patientId}`);
 };
