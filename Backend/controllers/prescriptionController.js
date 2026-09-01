@@ -4,42 +4,46 @@ const prescriptionModel = require("../models/prescriptionModel");
 
 const createPrescription = async (req, res) => {
   try {
-    const userId = req.user.id; // token se doctor
-    const doctor = await docterModel.findOne({ userId });
-    if (!doctor) {
-      return res.status(404).json({
-        success: false,
-        message: "Doctor profile not found"
-      });
-    }
-    const doctorId = doctor._id;
+    const doctorId = req.user.id;
+
     const {
+      patientId,
       appointmentId,
-      //patientId,
-      complaints,
-      diagnosis,
-      medicines,
-      tests,
       advice,
-      attachments,
       followUpDate
     } = req.body;
 
-    // if (!patientId) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "Patient ID required"
-    //   });
-    // }
+    // Convert form-data strings into arrays/objects
+    const complaints = JSON.parse(req.body.complaints || "[]");
+    const diagnosis = JSON.parse(req.body.diagnosis || "[]");
+    const medicines = JSON.parse(req.body.medicines || "[]");
+    const tests = JSON.parse(req.body.tests || "[]");
+
+    // Only save Cloudinary URLs
+    const attachments = req.files?.map(file => file.path) || [];
+
+    console.log("Patient ID:", patientId);
+    console.log("Appointment ID:", appointmentId);
+    console.log("Complaints:", complaints);
+    console.log("Diagnosis:", diagnosis);
+    console.log("Medicines:", medicines);
+    console.log("Tests:", tests);
+    console.log("Attachments:", attachments);
+
+    if (!patientId) {
+      return res.status(400).json({
+        success: false,
+        message: "Patient ID is required"
+      });
+    }
 
     if (!appointmentId) {
       return res.status(400).json({
         success: false,
-        message: "Appointment ID required"
+        message: "Appointment ID is required"
       });
     }
-    
-    // ✅ Check appointment exists
+
     const appointment = await appointmentModel.findById(appointmentId);
 
     if (!appointment) {
@@ -48,28 +52,18 @@ const createPrescription = async (req, res) => {
         message: "Appointment not found"
       });
     }
-    
-    // ✅ Check doctor owns this appointment
-    if (appointment.doctor.toString() !== doctorId.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: "Not authorized"
-      });
-    }
 
-    // ✅ Prevent duplicate prescription
-    const existingPrescription = await prescriptionModel.findOne({ appointmentId });
-    if (existingPrescription) {
+    if (appointment.patient.toString() !== patientId) {
       return res.status(400).json({
         success: false,
-        message: "Prescription already created for this appointment"
+        message: "Appointment does not belong to this patient"
       });
     }
 
-    const prescription = new prescriptionModel({
-      appointmentId,
-      patientId:appointment.patient,
+    const prescription = await prescriptionModel.create({
+      patientId,
       doctorId,
+      appointmentId,
       complaints,
       diagnosis,
       medicines,
@@ -79,27 +73,26 @@ const createPrescription = async (req, res) => {
       followUpDate
     });
 
-    await prescription.save();
-    // ===== Add Medical History Entry =====
-  
-
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: "Prescription created successfully",
       prescription
     });
 
   } catch (error) {
-    console.error("Create Prescription Error:", error);
+    console.error("========== CREATE PRESCRIPTION ERROR ==========");
+    console.error("Name:", error.name);
+    console.error("Message:", error.message);
+    console.error("Stack:", error.stack);
+    console.error("===============================================");
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: `Failed to create prescription ${error.message}`
+      message: "Failed to create prescription",
+      error: error.message
     });
   }
 };
-
-
 const updatePrescription = async (req, res) => {
   try {
     const userId = req.user.id;

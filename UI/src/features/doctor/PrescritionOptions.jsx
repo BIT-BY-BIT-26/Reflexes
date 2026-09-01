@@ -2,14 +2,19 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { addPrescriptionImage, ManualPrescription, PrescriptionDescription } from "../../api/backend";
+import { useParams, useSearchParams } from "react-router-dom";
 
-const PrescriptionOptions = ({ appointmentId }) => {
+const PrescriptionOptions = () => {
+  const {id:patientId} = useParams();
+  const [searchParams] = useSearchParams();
+  const appointmentId = searchParams.get("appointmentId");
+  console.log("Patient ID:", patientId);
+  console.log("Appointment ID:", appointmentId);
   const [method, setMethod] = useState(null);
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  // Final prescription data
   const [prescription, setPrescription] = useState({
     appointmentId: appointmentId || "",
     complaints: [],
@@ -21,9 +26,6 @@ const PrescriptionOptions = ({ appointmentId }) => {
     followUpDate: "",
   });
 
-  // -----------------------------
-  // MANUAL FORM STATE
-  // -----------------------------
 
   const [complaints, setComplaints] = useState("");
   const [diagnosis, setDiagnosis] = useState("");
@@ -69,70 +71,101 @@ const PrescriptionOptions = ({ appointmentId }) => {
 
     setMedicines(medicines.filter((_, i) => i !== index));
   };
+const handleManualSubmit = async (e) => {
+  e.preventDefault();
 
-  // -----------------------------
-  // MANUAL PRESCRIPTION
-  // -----------------------------
+  try {
+    setLoading(true);
+    setMessage("");
 
-  const handleManualSubmit = async (e) => {
-    e.preventDefault();
-
-    try {
-      setLoading(true);
-      setMessage("");
-
-      const data = {
-        appointmentId: appointmentId,
-
-        complaints: complaints
-          .split(",")
-          .map((item) => item.trim())
-          .filter(Boolean),
-
-        diagnosis: diagnosis
-          .split(",")
-          .map((item) => item.trim())
-          .filter(Boolean),
-
-        medicines,
-
-        tests: tests
-          .split(",")
-          .map((item) => item.trim())
-          .filter(Boolean),
-
-        advice,
-
-        attachments: [],
-
-        followUpDate,
-      };
-
-      console.log("Manual Prescription:", data);
-
-      const response = await ManualPrescription(data);
-      console.log(response.data);
-      console.log("Prescription Created:", response.data);
-
-      setPrescription(data);
-
-      setMessage("Prescription created successfully!");
-
-    } catch (error) {
-      console.error(error);
-
-      setMessage(
-        error.response?.data?.message ||
-          "Failed to create prescription."
-      );
-    } finally {
-      setLoading(false);
+    if (!patientId) {
+      setMessage("Patient ID is missing.");
+      return;
     }
-  };
 
-  // -----------------------------
-  // IMAGE OCR
-  // -----------------------------
+    if (!appointmentId) {
+      setMessage("Appointment ID is missing.");
+      return;
+    }
+
+    const formData = new FormData();
+
+    // IDs
+    formData.append("patientId", patientId);
+    formData.append("appointmentId", appointmentId);
+
+    // Arrays
+    formData.append(
+      "complaints",
+      JSON.stringify(
+        complaints
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean)
+      )
+    );
+
+    formData.append(
+      "diagnosis",
+      JSON.stringify(
+        diagnosis
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean)
+      )
+    );
+
+    formData.append(
+      "medicines",
+      JSON.stringify(medicines)
+    );
+
+    formData.append(
+      "tests",
+      JSON.stringify(
+        tests
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean)
+      )
+    );
+
+    // Normal fields
+    formData.append("advice", advice);
+    formData.append("followUpDate", followUpDate);
+    const response = await ManualPrescription(formData);
+    setMessage("Prescription created successfully!");
+
+    // Clear form
+    setComplaints("");
+    setDiagnosis("");
+    setTests("");
+    setAdvice("");
+    setFollowUpDate("");
+
+    setMedicines([
+      {
+        name: "",
+        dosage: "",
+        frequency: "",
+        duration: "",
+        instructions: "",
+      },
+    ]);
+
+  } catch (error) {
+
+
+    setMessage(
+      error.response?.data?.message ||
+      error.response?.data?.error ||
+      "Failed to create prescription."
+    );
+
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleImageUpload = async () => {
     if (!image) {
@@ -157,13 +190,7 @@ const PrescriptionOptions = ({ appointmentId }) => {
 
       console.log("OCR Response:", response.data);
 
-      /*
-        Depending on your OCR API response,
-        extracted data may be directly in response.data
-        or inside response.data.data/result.
-
-        Adjust this if your backend response differs.
-      */
+    
 
       const extracted =
         response.data?.data ||
