@@ -119,9 +119,8 @@ const PatientProfileAdmin = () => {
         {/* Patient Profile */}
         <PatientProfile />
         <div className="mt-10 flex gap-5">
-          <button onClick={()=> navigate("/doctor-dashboard/patients/prescription")} className="p-3 bg-blue-800 text-white rounded-md">Add prescription</button>
           <button className="p-3 bg-blue-800 text-white rounded-md">see medical summary</button>
-          <button className="p-3 bg-blue-800 text-white rounded-md">previous reports and prescription</button>
+          <button onClick={() =>navigate(`/doctor-dashboard/patients/${id}/history`)} className="p-3 bg-blue-800 text-white rounded-md">previous reports and prescription</button>
           <button className="p-3 bg-blue-800 text-white rounded-md">shared reports and prescription</button>
         </div>
       </div>
