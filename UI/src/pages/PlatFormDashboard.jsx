@@ -1,12 +1,6 @@
 import React from "react";
 import {
-  LayoutDashboard,
-  Building2,
-  Users,
-  Stethoscope,
-  Pill,
   Bell,
-  Settings,
   Search,
   Menu,
 } from "lucide-react";
@@ -14,87 +8,6 @@ import {
 const PlatformDashboard = () => {
   return (
     <div className="min-h-screen bg-[#15192C] flex text-white">
-      {/* Sidebar */}
-      <aside className="w-72 bg-[#1B2038] border-r border-gray-800 flex flex-col">
-        {/* Logo */}
-        <div className="h-20 flex items-center px-6 border-b border-gray-800">
-          <h1 className="text-2xl font-bold text-blue-400">
-            MediReach
-          </h1>
-        </div>
-
-        {/* Menu */}
-        <nav className="flex-1 py-6">
-          <ul className="space-y-2 px-4">
-            <li>
-              <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-blue-600">
-                <LayoutDashboard size={18} />
-                Dashboard
-              </button>
-            </li>
-
-            <li>
-              <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#262D4D] transition">
-                <Building2 size={18} />
-                Hospitals
-              </button>
-            </li>
-
-            <li>
-              <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#262D4D] transition">
-                <Users size={18} />
-                Users
-              </button>
-            </li>
-
-            <li>
-              <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#262D4D] transition">
-                <Stethoscope size={18} />
-                Doctors
-              </button>
-            </li>
-
-            <li>
-              <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#262D4D] transition">
-                <Pill size={18} />
-                Pharmacies
-              </button>
-            </li>
-
-            <li>
-              <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#262D4D] transition">
-                <Bell size={18} />
-                Notifications
-              </button>
-            </li>
-
-            <li>
-              <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#262D4D] transition">
-                <Settings size={18} />
-                Settings
-              </button>
-            </li>
-          </ul>
-        </nav>
-
-        {/* Profile */}
-        <div className="border-t border-gray-800 p-4">
-          <div className="flex items-center gap-3">
-            <img
-              src="https://i.pravatar.cc/100"
-              alt=""
-              className="h-10 w-10 rounded-full"
-            />
-            <div>
-              <p className="font-medium">Platform Admin</p>
-              <p className="text-xs text-gray-400">
-                admin@medireach.com
-              </p>
-            </div>
-          </div>
-        </div>
-      </aside>
-
       {/* Main */}
       <main className="flex-1">
         {/* Topbar */}

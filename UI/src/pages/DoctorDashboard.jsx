@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import Sidebar from '../components/Hospitals/Sidebar'
-import Navbar from '../components/Navbar'
 import AccessFeatures from '../features/doctor/AccessFeatures'
 import DoctorHome from '../components/Doctors/DoctorHome'
 import { getDoctorStatus } from '../api/backend'
