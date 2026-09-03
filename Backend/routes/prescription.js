@@ -1,5 +1,5 @@
 const express = require('express');
-const { createPrescription, getPatientPrescriptionsForDoctor, getPrescriptionByAppointment, updatePrescription } = require('../controllers/prescriptionController');
+const { createPrescription, getPatientPrescriptionsForDoctor, getPrescriptionByAppointment, updatePrescription, ocrPrescription } = require('../controllers/prescriptionController');
 
 const auth = require('../middleware/auth');
 const { ROLE } = require('../config/role');
@@ -13,6 +13,7 @@ prescriptionRoute.patch('/share-prescription',auth, sharePrescriptions);
 prescriptionRoute.put('/update-prescription/:prescriptionId',auth,authorize(ROLE.doctor),upload.array("attachments",5), updatePrescription);
 prescriptionRoute.get('/get-prescription/:patientId',auth,  getPatientPrescriptionsForDoctor);
 prescriptionRoute.get('/get-prescription/appointment/:appointmentId',auth, getPrescriptionByAppointment);
+prescriptionRoute.post("/prescription-image-extract",auth,upload.single("file"), ocrPrescription);
 
 
 module.exports=prescriptionRoute;
