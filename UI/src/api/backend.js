@@ -22,61 +22,16 @@
 //   );
 // };
 
-// export const logout = ()=>{
-//   localStorage.removeItem("token");
-//   localStorage.removeItem("role");
-//   window.location.href = '/login';
-// }
-
-// export const getHospitalProfile = async()=>{
-//   const token = localStorage.getItem("token");
-//   return axios.get(`${API}/profile`,{
-//     headers:{
-//       Authorization:`Bearer ${token}`,
-//     },
-//   });
-// }
-
-// // export const getStats = async()=>{
-// //   const token = localStorage.getItem("token");
-// //   return axios.get(`${API}/statistics`,{
-// //     headers:{
-// //       Authorization:`Bearer ${token}`,
-// //     },
-// //   });
-// // }
-
-// export const DepartmentsDoctorsCount = async()=>{
-//   const token = localStorage.getItem("token");
-//   return axios.get(`${API}/departments/doctor-count`,{
-//     headers:{
-//       Authorization:`Bearer ${token}`,
-//     }
-//   })
-// }
-
-
-// export const addDepartment = async(data)=>{
-//   const token = localStorage.getItem("token");
-//   return axios.post(`${API}/departments`,data,{
-//     headers:{
-//       Authorization:`Bearer ${token}`,
-//     }
-//   })
-// } 
-
-// export const addDoctor = async(data)=>{
-//   const token = localStorage.getItem("token");
-//   return axios.post(`${API}/doctors/add-doctor`,data,{
-//     headers:{
-//       Authorization:`Bearer ${token}`,
-//     }
-//   })
-// } 
-
 
 
 import api from "./axiosInstance";
+
+import axios from "axios";
+
+// AI service alag hai — ismein apne backend ka token nahi jaana chahiye
+const aiApi = axios.create({
+  timeout: 60000, // Render free tier cold start me 50s tak so jaata hai
+});
 
 // ---------------- Platform ----------------
 
@@ -215,24 +170,18 @@ export const addPatientReport = (formData) => {
   });
 };
 
-export const addPrescriptionImage = (formData) => {
-  return api.post(
-    "https://prescription-ai-service.onrender.com/api/prescription/ocr",
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
+export const addPrescriptionImage = (formData) =>
+  api.post(
+    "/prescription/prescription-image-extract",
+    formData
   );
-};
 
-export const PrescriptionDescription = (data) => {
-  return api.post(
-    "https://prescription-ai-service.onrender.com/api/prescription/parse",
-    data
+export const PrescriptionDescription = (data) =>
+  api.post(
+    "/prescription/prescription-description-extract",
+    data,
+    { headers: { "Content-Type": "application/json" } }
   );
-};
 
 export const ManualPrescription = (data) => {
   return api.post(
@@ -244,3 +193,9 @@ export const ManualPrescription = (data) => {
 export const getPatientHistory = (patientId) => {
   return api.get(`/doctors/patient-history/${patientId}`);
 };
+
+
+export const getAllHospitals = () => {
+  return api.get(`/all-hospitals`);
+};
+
