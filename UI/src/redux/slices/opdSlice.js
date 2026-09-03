@@ -13,7 +13,12 @@ const opdSlice = createSlice({
     setOpdPaused: (state, action) => { state.opdPaused = action.payload },
     setCurrentAppointment: (state, action) => { state.currentAppointment = action.payload },
     setAppointments: (state, action) => { state.appointments = action.payload },
-    resetOpd: () => initialState,
+    resetOpd: (state) => {
+      state.opdStarted = false;
+      state.opdPaused = false;
+      state.currentAppointment = null;
+      state.appointments = [];
+    }
   },
 })
 export const {
