@@ -12,16 +12,45 @@ const DoctorDashboard = () => {
   const dispatch = useDispatch();
   const [doctorStatus,setDoctorStatus] = useState(null);
   const [loading,setLoading] = useState(true);
-  console.log("localStorage user:", localStorage.getItem('user'));
   const user = useSelector((state)=>state.auth.user);
   const doctorId = user?.doctorId;
 
-  console.log("USER:", user);
-  console.log("DOCTOR ID:", doctorId);
+  useEffect(() => {
+  if (!doctorId) return;
+
+  console.log("🔵 Trying to connect socket...");
+  console.log("Doctor ID:", doctorId);
+
+  socket.connect();
+
+  socket.on("connect", () => {
+    console.log("🟢 SOCKET CONNECTED!");
+    console.log("Socket ID from nishu:", socket.id);
+
+    socket.emit("joinDoctor", doctorId);
+
+    console.log("📢 joinDoctor emitted:", doctorId);
+  });
+
+  socket.on("connect_error", (error) => {
+    console.log("❌ SOCKET CONNECTION ERROR:", error.message);
+  });
+
+  socket.on("disconnect", (reason) => {
+    console.log("🔴 SOCKET DISCONNECTED:", reason);
+  });
+
+  return () => {
+    socket.off("connect");
+    socket.off("connect_error");
+    socket.off("disconnect");
+
+    socket.disconnect();
+  };
+}, [doctorId]);
 
   useEffect(()=>{
     const handleNewAppointment = (data) =>{
-      console.log("New appointment",data);
       dispatch(addNotification({
       id: data.appointmentId,
       message: data.message,
