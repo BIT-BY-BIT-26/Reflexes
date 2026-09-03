@@ -39,7 +39,7 @@ mongoose
 
 // Root
 app.get("/", (req, res) => {
-  res.send("Server is running 🚀");
+  res.send("Server is running  here🚀");
 });
 
 // HTTP + Socket.IO

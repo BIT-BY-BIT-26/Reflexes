@@ -1,6 +1,7 @@
 const appointmentModel = require("../models/appointmentModel");
 const docterModel = require("../models/docterModel");
 const prescriptionModel = require("../models/prescriptionModel");
+const axios = require("axios");
 
 const createPrescription = async (req, res) => {
   try {
@@ -287,4 +288,328 @@ const getPrescriptionByAppointment = async (req, res) => {
   }
 };
 
-module.exports={createPrescription,updatePrescription,getPrescriptionById,getPatientPrescriptionsForDoctor,getPrescriptionByAppointment};
+
+const ocrPrescription = async (req, res) => {
+  try {
+
+    const { appointmentId } = req.body;
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "Prescription image is required",
+      });
+    }
+    if (!appointmentId) {
+      return res.status(400).json({
+        success: false,
+        message: "appointmentId is required",
+      });
+    }
+
+    const appointment = await appointmentModel.findById(
+      appointmentId
+    );
+
+    if (!appointment) {
+      return res.status(404).json({
+        success: false,
+        message: "Appointment not found",
+      });
+    }
+    const patientId = appointment.patient;
+    const doctorId = appointment.doctor;
+
+    console.log("Appointment:", appointment._id);
+    console.log("Patient:", patientId);
+    console.log("Doctor:", doctorId);
+
+    const imageUrl = req.file.path;
+
+    if (!imageUrl) {
+      return res.status(400).json({
+        success: false,
+        message: "Image URL not found",
+      });
+    }
+
+    console.log("Cloudinary URL:", imageUrl);
+
+    console.log("Downloading image from Cloudinary...");
+
+    const imageResponse = await axios.get(imageUrl, {
+      responseType: "arraybuffer",
+      timeout: 60000,
+    });
+
+    console.log("Image downloaded successfully");
+    console.log(
+      "Image size:",
+      imageResponse.data.length
+    );
+
+    const formData = new FormData();
+
+    // Convert image bytes to Blob
+    const imageBlob = new Blob(
+      [imageResponse.data],
+      {
+        type: req.file.mimetype,
+      }
+    );
+
+    formData.append(
+      "file",
+      imageBlob,
+      req.file.originalname
+    );
+
+    formData.append(
+      "appointmentId",
+      appointmentId.toString()
+    );
+
+    formData.append(
+      "doctorId",
+      doctorId.toString()
+    );
+
+    formData.append(
+      "patientId",
+      patientId.toString()
+    );
+
+    console.log("Sending image to AI OCR service...");
+
+    const aiResponse = await axios.post(
+      "https://prescription-ai-service.onrender.com/api/prescription/ocr",
+      formData,
+      {
+        timeout: 120000,
+
+        maxContentLength: Infinity,
+
+        maxBodyLength: Infinity,
+      }
+    );
+
+    console.log(
+      "AI RESPONSE:",
+      aiResponse.data
+    );
+    const extractedData = aiResponse.data;
+
+    const prescription =
+      await prescriptionModel.create({
+        patientId,
+        doctorId,
+        appointmentId,
+
+        complaints:
+          extractedData.complaints || [],
+
+        diagnosis:
+          extractedData.diagnosis || [],
+
+        medicines:
+          extractedData.medicines || [],
+
+        tests:
+          extractedData.tests || [],
+
+        advice:
+          extractedData.advice || "",
+
+        attachments:
+          extractedData.attachments || [],
+
+        followUpDate:
+          extractedData.followUpDate || null,
+      });
+
+    console.log(
+      "Prescription created:",
+      prescription._id
+    );
+
+    return res.status(201).json({
+      success: true,
+
+      message:
+        "Prescription extracted and created successfully",
+
+      prescription,
+    });
+
+  } catch (error) {
+    console.error(
+      "PRESCRIPTION OCR ERROR:",
+      error
+    );
+
+    console.error(
+      "AI ERROR RESPONSE:",
+      error.response?.data
+    );
+
+    return res.status(500).json({
+      success: false,
+
+      message:
+        error.response?.data?.message ||
+        "Failed to process prescription",
+
+      error: error.message,
+    });
+  }
+};
+
+const PrescriptionDescriptionParse = async (req, res) => {
+  try {
+    console.log("========== PRESCRIPTION DESCRIPTION PARSE ==========");
+
+    console.log("REQ.BODY:", req.body);
+
+    const {
+      appointmentId,
+      prescriptionText
+    } = req.body;
+
+    // ---------------------------------------
+    // 1. Validate input
+    // ---------------------------------------
+
+    if (!appointmentId) {
+      return res.status(400).json({
+        success: false,
+        message: "appointmentId is required",
+      });
+    }
+
+    if (!prescriptionText || !prescriptionText.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "prescriptionText is required",
+      });
+    }
+
+    // ---------------------------------------
+    // 2. Find appointment
+    // ---------------------------------------
+
+    const appointment =
+      await appointmentModel.findById(appointmentId);
+
+    if (!appointment) {
+      return res.status(404).json({
+        success: false,
+        message: "Appointment not found",
+      });
+    }
+
+    // ---------------------------------------
+    // 3. Get patient and doctor
+    // ---------------------------------------
+
+    const patientId = appointment.patient;
+    const doctorId = appointment.doctor;
+
+    console.log("Appointment:", appointmentId);
+    console.log("Patient:", patientId);
+    console.log("Doctor:", doctorId);
+
+    // ---------------------------------------
+    // 4. Send description to AI service
+    // ---------------------------------------
+
+    console.log("Sending prescription text to AI service...");
+
+    const aiResponse = await axios.post(
+      "https://prescription-ai-service.onrender.com/api/prescription/parse",
+      {
+        appointmentId: appointmentId.toString(),
+
+        prescriptionText: prescriptionText.trim(),
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        timeout: 120000,
+      }
+    );
+
+    console.log(
+      "AI PARSE RESPONSE:",
+      aiResponse.data
+    );
+
+    // ---------------------------------------
+    // 5. Extract AI response
+    // ---------------------------------------
+
+    const extracted =
+      aiResponse.data?.data ||
+      aiResponse.data?.result ||
+      aiResponse.data;
+
+    // ---------------------------------------
+    // 6. Return extracted prescription
+    // ---------------------------------------
+
+    return res.status(200).json({
+      success: true,
+
+      message: "Prescription description parsed successfully",
+
+      patientId,
+      doctorId,
+      appointmentId,
+
+      complaints:
+        extracted.complaints || [],
+
+      diagnosis:
+        extracted.diagnosis || [],
+
+      medicines:
+        extracted.medicines || [],
+
+      tests:
+        extracted.tests || [],
+
+      advice:
+        extracted.advice || "",
+
+      attachments:
+        extracted.attachments || [],
+
+      followUpDate:
+        extracted.followUpDate || null,
+    });
+
+  } catch (error) {
+    console.error(
+      "PRESCRIPTION DESCRIPTION ERROR:",
+      error
+    );
+
+    console.error(
+      "AI ERROR RESPONSE:",
+      error.response?.data
+    );
+
+    return res.status(500).json({
+      success: false,
+
+      message:
+        error.response?.data?.message ||
+        "Failed to parse prescription description",
+
+      error: error.message,
+    });
+  }
+};
+
+module.exports={ocrPrescription,PrescriptionDescriptionParse,createPrescription,updatePrescription,getPrescriptionById,getPatientPrescriptionsForDoctor,getPrescriptionByAppointment};

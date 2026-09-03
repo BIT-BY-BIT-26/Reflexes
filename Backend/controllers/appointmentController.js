@@ -461,91 +461,122 @@ exports.cancelAppointment = async (req, res) => {
   }
 };
 
-exports.getAllAppointmentsForDate = async(req,res)=>{
-  try{
+exports.getAllAppointmentsForDate = async (req, res) => {
+  try {
     console.log("entered");
+
     const doctorUserId = req.user.id;
-    const doctor = await docterModel.findOne({userId:doctorUserId})
-    .populate("department hospital","name");
-    if(!doctor){
+
+    const doctor = await docterModel
+      .findOne({ userId: doctorUserId })
+      .populate("department hospital", "name");
+
+    if (!doctor) {
       return res.status(404).json({
-        message:"Doctor profile not found",
-      })
+        message: "Doctor profile not found",
+      });
     }
 
+    // Redis cache key
     const cacheKey = `doctor:todayAppointments:${doctor._id}`;
-    const cachedAppointments = await redisClient.get(cacheKey);
-    if(cachedAppointments){
 
-  console.log("✅ Redis HIT");
+    // Check Redis first
+    const cachedAppointments = await redisClient.get(cacheKey);
+
+    if (cachedAppointments) {
+      console.log("✅ Redis HIT");
+
       return res.status(200).json({
         ...JSON.parse(cachedAppointments),
-        source:"redis"
-      })
+        source: "redis",
+      });
     }
-    //today's date range
+
+    console.log("❌ Redis MISS");
+
+    // Today's date range
     const startOfDay = new Date();
-    startOfDay.setHours(0,0,0,0);
+    startOfDay.setHours(0, 0, 0, 0);
 
     const endOfDay = new Date();
-    endOfDay.setHours(23,59,59,999);
+    endOfDay.setHours(23, 59, 59, 999);
 
-    const appointments = await appointmentModel.find({
-      doctor:doctor._id,
-      appointmentType:"offline",
-      date:{
-        $gte:startOfDay,
-        $lte:endOfDay,
-      }
-    })
-    .populate({
-      path:"patient",
-      populate:({
-        path:"userId",
-        select:"name email gender"
+    // Fetch today's appointments
+    // COMPLETED appointments will NOT be fetched
+    const appointments = await appointmentModel
+      .find({
+        doctor: doctor._id,
+        appointmentType: "offline",
+
+        // 🔥 Don't show completed appointments
+        status: { $ne: "COMPLETED" },
+
+        date: {
+          $gte: startOfDay,
+          $lte: endOfDay,
+        },
       })
-    })
-    .sort({createdAt:1});
+      .populate({
+        path: "patient",
+        populate: {
+          path: "userId",
+          select: "name email gender",
+        },
+      })
+      .sort({ createdAt: 1 });
 
-    const patients = appointments.map((appt,index)=>({
-      token: index+1,
-      appointmentId:appt._id,
-      patient:appt.patient,
-      status:appt.status,
-      bookedAt:appt.createdAt
-    }))
+    // Create patient/token list
+    const patients = appointments.map((appt, index) => ({
+      token: index + 1,
+      appointmentId: appt._id,
+      patient: appt.patient,
+      status: appt.status,
+      bookedAt: appt.createdAt,
+    }));
 
-    const response ={
-      success:true,
-      message:"Today's appointments fetched successfully",
-      doctor:{
-        id:doctor._id,
-        name:doctor.name,
-        department:doctor.department,
-        hospital:doctor.hospital
+    const response = {
+      success: true,
+      message: "Today's appointments fetched successfully",
+
+      doctor: {
+        id: doctor._id,
+        name: doctor.name,
+        department: doctor.department,
+        hospital: doctor.hospital,
       },
-      total:appointments.length,
+
+      total: appointments.length,
+
       patients,
     };
 
+    // Store fresh data in Redis for 60 seconds
     await redisClient.set(
       cacheKey,
       JSON.stringify(response),
       "EX",
       60
-    )
+    );
+
+    console.log("💾 Appointments cached in Redis");
+
     return res.status(200).json({
       ...response,
-      source:"mongodb"
+      source: "mongodb",
     });
 
-  }catch(error){
-    console.error("getAllAppointmentForToday error:", error);
-    res.status(500).json({
+  } catch (error) {
+    console.error(
+      "getAllAppointmentForToday error:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
       message: "Server error",
     });
   }
-}
+};
 
 exports.getOnlineAppointmentsForDate = async(req,res)=>{
   try{
@@ -789,48 +820,86 @@ exports.getOnlineAppointments = async (req, res) => {
 
 exports.completeAppointment = async (req, res) => {
   const io = req.app.get("io");
+
   try {
+    // 1. Find appointment
     const appointment = await appointmentModel.findById(req.params.id);
+
     if (!appointment) {
-      return res.status(404).json({ message: "Appointment not found" });
-    }
-
-    // 🔥 doctor fetch karke uska opdPaused check karo
-    const doctor = await docterModel.findById(appointment.doctor);
-    if (!doctor) {
-      return res.status(404).json({ message: "Doctor not found" });
-    }
-
-    if (doctor.opdPaused) {
-      return res.status(400).json({
-        message: "Cannot complete appointment while OPD is paused"
+      return res.status(404).json({
+        message: "Appointment not found",
       });
     }
 
+    // 2. Find doctor
+    const doctor = await docterModel.findById(appointment.doctor);
+
+    if (!doctor) {
+      return res.status(404).json({
+        message: "Doctor not found",
+      });
+    }
+
+    // 3. Check if OPD is paused
+    if (doctor.opdPaused) {
+      return res.status(400).json({
+        message: "Cannot complete appointment while OPD is paused",
+      });
+    }
+
+    // 4. Check if appointment is already completed
+    if (appointment.status === "COMPLETED") {
+      return res.status(400).json({
+        message: "Appointment is already completed",
+      });
+    }
+
+    // 5. Mark appointment as completed
     appointment.status = "COMPLETED";
-    appointment.consultationEndedAt = new Date(); // baaki controllers ke pattern se consistent
+    appointment.consultationEndedAt = new Date();
+
     await appointment.save();
 
+    // 6. 🔥 IMPORTANT: Delete today's appointment cache
+    const cacheKey = `doctor:todayAppointments:${doctor._id}`;
+
+    await redisClient.del(cacheKey);
+
+    console.log("🗑️ Redis cache deleted:", cacheKey);
+
+    // 7. IDs for socket rooms
     const patientId = appointment.patient.toString();
     const doctorId = appointment.doctor.toString();
 
-    // 🔥 Realtime update doctor dashboard
-    io.to(`doctor_${doctorId}`).emit("appointmentCompleted", {
-      appointmentId: req.params.id
-    });
+    // 8. Notify doctor dashboard in real-time
+    if (io) {
+      io.to(`doctor_${doctorId}`).emit("appointmentCompleted", {
+        appointmentId: appointment._id,
+        status: "COMPLETED",
+      });
 
-    // 🔥 Realtime notify patient
-    io.to(`patient_${patientId}`).emit("APPOINTMENT_COMPLETED", {
-      message: "Your consultation is completed"
-    });
+      // 9. Notify patient
+      io.to(`patient_${patientId}`).emit("APPOINTMENT_COMPLETED", {
+        appointmentId: appointment._id,
+        message: "Your consultation is completed",
+      });
+    }
 
+    // 10. Send response
     return res.status(200).json({
-      message: "Appointment completed",
-      appointment
+      success: true,
+      message: "Appointment completed successfully",
+      appointment,
     });
+
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error completing appointment" });
+    console.error("Complete appointment error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Error completing appointment",
+      error: error.message,
+    });
   }
 };
 exports.getTodayStats = async(req,res)=>{

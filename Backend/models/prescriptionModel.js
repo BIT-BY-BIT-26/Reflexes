@@ -7,15 +7,12 @@ const medicineSchema = new mongoose.Schema({
   },
   dosage: {
     type: String, // e.g. 500mg
-    required: true
   },
   frequency: {
     type: String, // e.g. OD, BD, TDS, etc.
-    required: true
   },
   duration: {
     type: String, // e.g. 5 days
-    required: true
   },
   instructions: {
     type: String // e.g. After food
