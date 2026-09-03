@@ -71,6 +71,10 @@ const PrescriptionOptions = () => {
 
     setMedicines(medicines.filter((_, i) => i !== index));
   };
+
+
+
+  ///manual submit
 const handleManualSubmit = async (e) => {
   e.preventDefault();
 
@@ -167,134 +171,204 @@ const handleManualSubmit = async (e) => {
   }
 };
 
-  const handleImageUpload = async () => {
-    if (!image) {
-      setMessage("Please select a prescription image.");
-      return;
-    }
+const handleImageUpload = async () => {
+  if (!image) {
+    setMessage("Please select a prescription image.");
+    return;
+  }
 
-    try {
-      setLoading(true);
-      setMessage("");
+  if (!appointmentId) {
+    setMessage("Appointment ID is missing.");
+    return;
+  }
 
-      const formData = new FormData();
+  try {
+    setLoading(true);
+    setMessage("");
 
-      formData.append("file", image);
+    const formData = new FormData();
 
-      // If your API expects appointmentId
-      formData.append("appointmentId", appointmentId);
+    formData.append("file", image);
+    formData.append("appointmentId", appointmentId);
 
-      console.log("Sending image to OCR API...");
+    console.log("Sending prescription to MediReach backend...");
 
-      const response = await addPrescriptionImage(formData);
+    const response = await addPrescriptionImage(formData);
 
-      console.log("OCR Response:", response.data);
+    console.log("Prescription Response:", response.data);
 
-    
+    if (response.data.success) {
 
-      const extracted =
-        response.data?.data ||
-        response.data?.result ||
-        response.data;
+      const prescriptionData = response.data.prescription;
 
-      const finalData = {
-        appointmentId,
+      setPrescription({
+        appointmentId: prescriptionData.appointmentId,
 
-        complaints: extracted.complaints || [],
-
-        diagnosis: extracted.diagnosis || [],
-
-        medicines: extracted.medicines || [],
-
-        tests: extracted.tests || [],
-
-        advice: extracted.advice || "",
-
-        attachments: extracted.attachments || [],
-
-        followUpDate: extracted.followUpDate || "",
-      };
-
-      setPrescription(finalData);
+        complaints: prescriptionData.complaints || [],
+        diagnosis: prescriptionData.diagnosis || [],
+        medicines: prescriptionData.medicines || [],
+        tests: prescriptionData.tests || [],
+        advice: prescriptionData.advice || "",
+        attachments: prescriptionData.attachments || [],
+        followUpDate: prescriptionData.followUpDate || "",
+      });
 
       setMessage(
-        "Prescription extracted successfully. Please review it."
+        "Prescription extracted and saved successfully."
       );
-
-    } catch (error) {
-      console.error("OCR Error:", error);
-
-      setMessage(
-        error.response?.data?.message ||
-          "Failed to process prescription image."
-      );
-    } finally {
-      setLoading(false);
     }
-  };
+
+  } catch (error) {
+    console.error("Prescription Error:", error);
+
+    setMessage(
+      error.response?.data?.message ||
+      "Failed to process prescription."
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   // -----------------------------
   // DESCRIPTION / AI PARSE
   // -----------------------------
 
-  const handleDescriptionParse = async () => {
-    if (!description.trim()) {
-      setMessage("Please enter prescription description.");
-      return;
-    }
+ const handleDescriptionParse = async () => {
+  if (!description.trim()) {
+    setMessage("Please enter prescription description.");
+    return;
+  }
 
-    try {
-      setLoading(true);
-      setMessage("");
+  try {
+    setLoading(true);
+    setMessage("");
 
     const response = await PrescriptionDescription({
-        appointmentId,
-        prescriptionText: description,
+      appointmentId,
+      prescriptionText: description,
     });
 
-      console.log("Parse Response:", response.data);
+    console.log("========== AI PARSE RESPONSE ==========");
+    console.log(response.data);
 
-      const extracted =
-        response.data?.data ||
-        response.data?.result ||
-        response.data;
+    const extracted =
+      response.data?.data ||
+      response.data?.result ||
+      response.data;
 
-      const finalData = {
-        appointmentId,
+    console.log("Extracted Data:", extracted);
 
-        complaints: extracted.complaints || [],
+    // -----------------------------------
+    // AI DATA -> MANUAL FORM STATES
+    // -----------------------------------
 
-        diagnosis: extracted.diagnosis || [],
+    setComplaints(
+      Array.isArray(extracted.complaints)
+        ? extracted.complaints.join(", ")
+        : extracted.complaints || ""
+    );
 
-        medicines: extracted.medicines || [],
+    setDiagnosis(
+      Array.isArray(extracted.diagnosis)
+        ? extracted.diagnosis.join(", ")
+        : extracted.diagnosis || ""
+    );
 
-        tests: extracted.tests || [],
+    setTests(
+      Array.isArray(extracted.tests)
+        ? extracted.tests.join(", ")
+        : extracted.tests || ""
+    );
 
-        advice: extracted.advice || "",
+    setAdvice(extracted.advice || "");
 
-        attachments: extracted.attachments || [],
+    setFollowUpDate(
+      extracted.followUpDate
+        ? extracted.followUpDate.split("T")[0]
+        : ""
+    );
 
-        followUpDate: extracted.followUpDate || "",
-      };
+    // -----------------------------------
+    // MEDICINES
+    // -----------------------------------
 
-      setPrescription(finalData);
+    const aiMedicines = Array.isArray(extracted.medicines)
+      ? extracted.medicines
+      : [];
 
-      setMessage(
-        "Prescription generated successfully. Please review it."
-      );
+    const formattedMedicines = aiMedicines.map((medicine) => ({
+      name: medicine.name || "",
+      dosage:
+        medicine.dosage ||
+        medicine.strength ||
+        "",
+      frequency: medicine.frequency || "",
+      duration: medicine.duration
+        ? String(medicine.duration).includes("day")
+          ? String(medicine.duration)
+          : `${medicine.duration} days`
+        : "",
+      instructions:
+        medicine.instructions ||
+        "",
+    }));
 
-    } catch (error) {
-      console.error("Parse Error:", error);
+    setMedicines(
+      formattedMedicines.length > 0
+        ? formattedMedicines
+        : [
+            {
+              name: "",
+              dosage: "",
+              frequency: "",
+              duration: "",
+              instructions: "",
+            },
+          ]
+    );
 
-      setMessage(
-        error.response?.data?.message ||
-          "Failed to generate prescription."
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+    // -----------------------------------
+    // prescription state bhi update karo
+    // -----------------------------------
 
+    setPrescription({
+      appointmentId,
+
+      complaints: extracted.complaints || [],
+
+      diagnosis: extracted.diagnosis || [],
+
+      medicines: formattedMedicines,
+
+      tests: extracted.tests || [],
+
+      advice: extracted.advice || "",
+
+      attachments: extracted.attachments || [],
+
+      followUpDate: extracted.followUpDate || "",
+    });
+
+    // IMPORTANT:
+    // AI generate hone ke baad manual form dikhao
+    setMethod("manual");
+
+    setMessage(
+      "AI prescription generated. Please review and edit the form before saving."
+    );
+
+  } catch (error) {
+    console.error("Parse Error:", error);
+
+    setMessage(
+      error.response?.data?.message ||
+        "Failed to generate prescription."
+    );
+  } finally {
+    setLoading(false);
+  }
+};
   // -----------------------------
   // FINAL SUBMIT OCR / AI
   // -----------------------------
@@ -942,3 +1016,296 @@ const handleManualSubmit = async (e) => {
 
 export default PrescriptionOptions;
 
+
+
+// PrescriptionOptions.jsx
+// Teen raaste (manual / image / description) — lekin save karne ka ek hi raasta.
+// Description ya image se data aate hi wahi editable form auto-fill ho jaata hai.
+
+// import React, { useState } from "react";
+// import { useParams, useSearchParams } from "react-router-dom";
+
+// import {
+//   addPrescriptionImage,
+//   ManualPrescription,
+//   PrescriptionDescription,
+// } from "../../api/backend";
+
+// import PrescriptionForm from "./PrescriptionForm";
+// import usePrescriptionForm, { buildFormData } from "./usePrescriptionForm";
+
+// const METHODS = [
+//   {
+//     id: "manual",
+//     icon: "✍️",
+//     title: "Write it yourself",
+//     text: "Type complaints, diagnosis, medicines, tests and advice.",
+//   },
+//   {
+//     id: "description",
+//     icon: "🤖",
+//     title: "Describe in plain language",
+//     text: "Write it the way you would say it. AI turns it into a form you can edit.",
+//   },
+//   {
+//     id: "image",
+//     icon: "📷",
+//     title: "Upload a prescription",
+//     text: "Scan an existing prescription and pull the details out of it.",
+//   },
+// ];
+
+// const PrescriptionOptions = () => {
+//   const { id: patientId } = useParams();
+//   const [searchParams] = useSearchParams();
+//   const appointmentId = searchParams.get("appointmentId");
+
+//   const [method, setMethod] = useState("manual");
+//   const [loading, setLoading] = useState(false);
+//   const [status, setStatus] = useState(null); // { type: "info" | "error" | "success", text }
+
+//   const [description, setDescription] = useState("");
+//   const [image, setImage] = useState(null);
+
+//   const {
+//     form,
+//     source,
+//     setField,
+//     setMedicine,
+//     addMedicine,
+//     removeMedicine,
+//     fillFromApi,
+//     reset,
+//   } = usePrescriptionForm();
+
+//   const notify = (type, text) => setStatus({ type, text });
+
+// const readError = (error, fallback) => {
+//   console.error("Parse failed:", error);
+
+//   if (error.code === "ECONNABORTED") {
+//     return "Service took too long to respond. Try once more.";
+//   }
+
+//   if (!error.response) {
+//     return "Could not reach the parsing service (network or CORS). Check the browser console.";
+//   }
+
+//   return (
+//     error.response.data?.message ||
+//     error.response.data?.error ||
+//     `${fallback} (status ${error.response.status})`
+//   );
+// };
+
+//   /* ---------------------------------------------------------------- */
+//   /* AI description -> autofill                                        */
+//   /* ---------------------------------------------------------------- */
+
+//   const handleDescriptionParse = async () => {
+//     if (!description.trim()) return notify("error", "Write the prescription first.");
+//     if (!appointmentId) return notify("error", "Appointment ID missing in the URL.");
+
+//     try {
+//       setLoading(true);
+//       setStatus(null);
+
+//       const response = await PrescriptionDescription({
+//         appointmentId,
+//         prescriptionText: description,
+//       });
+
+//       const mapped = fillFromApi(response, "ai");
+
+//       setMethod("manual"); // form ke saath review screen par le jao
+
+//       const noMedicines = !mapped.medicines.some((m) => m.name.trim());
+
+//       notify(
+//         noMedicines ? "info" : "success",
+//         noMedicines
+//           ? "Form filled, but no medicines were picked up. Add them below before saving."
+//           : "Form filled from your description. Review it, then save."
+//       );
+//     } catch (error) {
+//       notify("error", readError(error, "Could not read that description. Try again."));
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   /* ---------------------------------------------------------------- */
+//   /* OCR image -> autofill (same form, same save button)               */
+//   /* ---------------------------------------------------------------- */
+
+//   const handleImageUpload = async () => {
+//     if (!image) return notify("error", "Choose a prescription image first.");
+//     if (!appointmentId) return notify("error", "Appointment ID missing in the URL.");
+
+//     try {
+//       setLoading(true);
+//       setStatus(null);
+
+//       const formData = new FormData();
+//       formData.append("file", image);
+//       formData.append("appointmentId", appointmentId);
+
+//       const response = await addPrescriptionImage(formData);
+
+//       fillFromApi(response, "ocr");
+//       setMethod("manual");
+
+//       notify("success", "Form filled from the image. Check each field before saving.");
+//     } catch (error) {
+//       notify("error", readError(error, "Could not read that image. Try a clearer photo."));
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   /* ---------------------------------------------------------------- */
+//   /* Ek hi save — manual, AI aur OCR teeno ke liye. Yahi MongoDB me    */
+//   /* jaata hai.                                                        */
+//   /* ---------------------------------------------------------------- */
+
+//   const handleSave = async (e) => {
+//     e.preventDefault();
+
+//     if (!patientId) return notify("error", "Patient ID missing in the URL.");
+//     if (!appointmentId) return notify("error", "Appointment ID missing in the URL.");
+
+//     if (!form.medicines.some((m) => m.name.trim())) {
+//       return notify("error", "Add at least one medicine before saving.");
+//     }
+
+//     try {
+//       setLoading(true);
+//       setStatus(null);
+
+//       const payload = buildFormData(form, { patientId, appointmentId, source });
+//       await ManualPrescription(payload);
+
+//       reset();
+//       setDescription("");
+//       setImage(null);
+
+//       notify("success", "Prescription saved.");
+//     } catch (error) {
+//       notify("error", readError(error, "Could not save. Check the fields and try again."));
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   /* ---------------------------------------------------------------- */
+
+//   const statusStyles = {
+//     error: "border-red-200 bg-red-50 text-red-700",
+//     success: "border-green-200 bg-green-50 text-green-700",
+//     info: "border-blue-200 bg-blue-50 text-blue-700",
+//   };
+
+//   return (
+//     <div className="mx-auto max-w-5xl p-6">
+//       <h1 className="mb-2 text-2xl font-bold text-gray-800">Create prescription</h1>
+//       <p className="mb-6 text-gray-500">Pick how you want to start. You can edit everything before saving.</p>
+
+//       {status && (
+//         <div className={`mb-5 rounded-lg border p-3 ${statusStyles[status.type]}`}>
+//           {status.text}
+//         </div>
+//       )}
+
+//       <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+//         {METHODS.map((m) => (
+//           <button
+//             key={m.id}
+//             type="button"
+//             onClick={() => setMethod(m.id)}
+//             className={`rounded-xl border p-6 text-left transition hover:border-blue-500 hover:shadow-md ${
+//               method === m.id ? "border-blue-500 bg-blue-50" : "bg-white"
+//             }`}
+//           >
+//             <div className="mb-3 text-3xl">{m.icon}</div>
+//             <h2 className="text-lg font-semibold text-gray-800">{m.title}</h2>
+//             <p className="mt-1 text-sm text-gray-500">{m.text}</p>
+//           </button>
+//         ))}
+//       </div>
+
+//       {method === "description" && (
+//         <div className="mt-8 rounded-xl border bg-white p-6 shadow-sm">
+//           <h2 className="mb-2 text-xl font-semibold text-gray-800">Describe the prescription</h2>
+//           <p className="mb-5 text-sm text-gray-500">
+//             Write it in normal language. The form opens filled in, ready to check.
+//           </p>
+
+//           <textarea
+//             value={description}
+//             onChange={(e) => setDescription(e.target.value)}
+//             rows={8}
+//             placeholder="Fever and headache. Viral fever. Paracetamol 500 BD for 5 days after food, cetirizine 10 OD for 3 days at night. CBC test. Rest and drink plenty of water. Follow up after 5 days."
+//             className="mb-5 w-full rounded-lg border p-4 outline-none focus:border-blue-500"
+//           />
+
+//           <button
+//             type="button"
+//             onClick={handleDescriptionParse}
+//             disabled={loading || !description.trim()}
+//             className="rounded-lg bg-purple-600 px-6 py-3 font-medium text-white hover:bg-purple-700 disabled:opacity-50"
+//           >
+//             {loading ? "Reading..." : "Fill the form"}
+//           </button>
+//         </div>
+//       )}
+
+//       {method === "image" && (
+//         <div className="mt-8 rounded-xl border bg-white p-6 shadow-sm">
+//           <h2 className="mb-2 text-xl font-semibold text-gray-800">Upload a prescription</h2>
+//           <p className="mb-5 text-sm text-gray-500">
+//             A flat, well-lit photo reads best. The form opens filled in, ready to check.
+//           </p>
+
+//           <input
+//             type="file"
+//             accept="image/*"
+//             onChange={(e) => setImage(e.target.files[0])}
+//             className="mb-5 block w-full rounded-lg border p-3"
+//           />
+
+//           {image && (
+//             <img
+//               src={URL.createObjectURL(image)}
+//               alt="Selected prescription"
+//               className="mb-5 max-h-80 rounded-lg border object-contain"
+//             />
+//           )}
+
+//           <button
+//             type="button"
+//             onClick={handleImageUpload}
+//             disabled={loading || !image}
+//             className="rounded-lg bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+//           >
+//             {loading ? "Reading..." : "Fill the form"}
+//           </button>
+//         </div>
+//       )}
+
+//       {method === "manual" && (
+//         <PrescriptionForm
+//           form={form}
+//           source={source}
+//           loading={loading}
+//           onFieldChange={setField}
+//           onMedicineChange={setMedicine}
+//           onAddMedicine={addMedicine}
+//           onRemoveMedicine={removeMedicine}
+//           onSubmit={handleSave}
+//         />
+//       )}
+//     </div>
+//   );
+// };
+
+// export default PrescriptionOptions;

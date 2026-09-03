@@ -1,5 +1,5 @@
 const express = require('express');
-const { createPrescription, getPatientPrescriptionsForDoctor, getPrescriptionByAppointment, updatePrescription, ocrPrescription } = require('../controllers/prescriptionController');
+const { createPrescription, getPatientPrescriptionsForDoctor, getPrescriptionByAppointment, updatePrescription, ocrPrescription, PrescriptionDescriptionParse } = require('../controllers/prescriptionController');
 
 const auth = require('../middleware/auth');
 const { ROLE } = require('../config/role');
@@ -14,6 +14,6 @@ prescriptionRoute.put('/update-prescription/:prescriptionId',auth,authorize(ROLE
 prescriptionRoute.get('/get-prescription/:patientId',auth,  getPatientPrescriptionsForDoctor);
 prescriptionRoute.get('/get-prescription/appointment/:appointmentId',auth, getPrescriptionByAppointment);
 prescriptionRoute.post("/prescription-image-extract",auth,upload.single("file"), ocrPrescription);
-
+prescriptionRoute.post("/prescription-description-extract",auth,upload.single("file"), PrescriptionDescriptionParse);
 
 module.exports=prescriptionRoute;
