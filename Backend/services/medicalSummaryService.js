@@ -1,6 +1,8 @@
-const { GoogleGenAI, Type } = require("@google/genai");
+const Groq = require("groq-sdk");
 
-const MODEL = "gemini-3.6-flash";
+// Groq model ids move faster than this repo does, so it stays overridable.
+// The default must be one that supports json_schema structured outputs.
+const MODEL = process.env.GROQ_MODEL || "openai/gpt-oss-120b";
 const REQUEST_TIMEOUT_MS = 60000;
 
 // Echoed verbatim by the model and rendered visibly in the UI.
@@ -43,61 +45,71 @@ STYLE
 - If the record holds fewer than two entries in total, set insufficientRecord to true, keep every section minimal, and do not pad.
 - Set disclaimer to exactly: "${DISCLAIMER}"`;
 
+/*
+ * Plain JSON Schema for Groq structured outputs. Strict mode requires every
+ * property to appear in `required` and every object to set
+ * additionalProperties: false - a missing one is rejected by the API rather
+ * than silently ignored.
+ */
 const RESPONSE_SCHEMA = {
-  type: Type.OBJECT,
+  type: "object",
+  additionalProperties: false,
   properties: {
     insufficientRecord: {
-      type: Type.BOOLEAN,
+      type: "boolean",
       description: "True when there are fewer than two records in total.",
     },
     patientSnapshot: {
-      type: Type.STRING,
+      type: "string",
       description:
         'One or two lines: age, gender, blood group. Use "not recorded" for anything absent.',
     },
     visitTimeline: {
-      type: Type.ARRAY,
+      type: "array",
       description: "Most recent first, at most 10 entries.",
       items: {
-        type: Type.OBJECT,
+        type: "object",
+        additionalProperties: false,
         properties: {
-          date: { type: Type.STRING },
-          detail: { type: Type.STRING },
+          date: { type: "string" },
+          detail: { type: "string" },
         },
         required: ["date", "detail"],
       },
     },
     activeMedications: {
-      type: Type.ARRAY,
+      type: "array",
       description:
         "Medicines from the most recent prescription only. Copy each value verbatim from the record. Never merge fields and never add narration.",
       items: {
-        type: Type.OBJECT,
+        type: "object",
+        additionalProperties: false,
         properties: {
           name: {
-            type: Type.STRING,
+            type: "string",
             description: 'Drug name only, e.g. "Amlodipine".',
           },
           dosage: {
-            type: Type.STRING,
+            type: "string",
             description: 'Strength only, e.g. "5mg". "not recorded" if absent.',
           },
           frequency: {
-            type: Type.STRING,
+            type: "string",
             description:
               'Frequency code only, e.g. "OD", "BD", "TDS". "not recorded" if absent.',
           },
           duration: {
-            type: Type.STRING,
-            description: 'Duration only, e.g. "30 days". "not recorded" if absent.',
+            type: "string",
+            description:
+              'Duration only, e.g. "30 days". "not recorded" if absent.',
           },
           instructions: {
-            type: Type.STRING,
+            type: "string",
             description:
               'Instruction only, e.g. "After food". "not recorded" if absent.',
           },
           lastPrescribedOn: {
-            type: Type.STRING,
+            type: "string",
             description: "Date of that prescription, DD-MM-YYYY. Nothing else.",
           },
         },
@@ -112,28 +124,28 @@ const RESPONSE_SCHEMA = {
       },
     },
     recurringPatterns: {
-      type: Type.ARRAY,
+      type: "array",
       description:
         "Complaints or diagnoses appearing more than once, with counts and date ranges.",
-      items: { type: Type.STRING },
+      items: { type: "string" },
     },
     reportsOnFile: {
-      type: Type.ARRAY,
+      type: "array",
       description: "Title, type and date only. Contents were not analysed.",
-      items: { type: Type.STRING },
+      items: { type: "string" },
     },
     pointsOfAttention: {
-      type: Type.ARRAY,
+      type: "array",
       description: "At most 5. Allow-list only. Empty array if none apply.",
-      items: { type: Type.STRING },
+      items: { type: "string" },
     },
     dataGaps: {
-      type: Type.ARRAY,
+      type: "array",
       description:
         "What was unavailable, so the doctor knows what this summary could not cover.",
-      items: { type: Type.STRING },
+      items: { type: "string" },
     },
-    disclaimer: { type: Type.STRING },
+    disclaimer: { type: "string" },
   },
   required: [
     "insufficientRecord",
@@ -164,56 +176,67 @@ class MedicalSummaryError extends Error {
 let client = null;
 
 const getClient = () => {
-  if (!process.env.GEMINI_API_KEY) {
+  if (!process.env.GROQ_API_KEY) {
     throw new MedicalSummaryError(
-      "GEMINI_API_KEY is not configured on the server",
+      "GROQ_API_KEY is not configured on the server",
       503
     );
   }
 
   if (!client) {
-    client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    client = new Groq({ apiKey: process.env.GROQ_API_KEY });
   }
 
   return client;
 };
 
 const generateMedicalSummary = async (summaryInput) => {
-  const ai = getClient();
+  const groq = getClient();
 
   let response;
 
   try {
-    response = await ai.models.generateContent({
-      model: MODEL,
-      contents: [
-        {
-          role: "user",
-          parts: [
-            {
-              text: `Summarise this patient record.\n\n${JSON.stringify(
-                summaryInput
-              )}`,
-            },
-          ],
-        },
-      ],
-      config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
-        responseMimeType: "application/json",
-        responseSchema: RESPONSE_SCHEMA,
+    response = await groq.chat.completions.create(
+      {
+        model: MODEL,
+        messages: [
+          { role: "system", content: SYSTEM_INSTRUCTION },
+          {
+            role: "user",
+            content: `Summarise this patient record.\n\n${JSON.stringify(
+              summaryInput
+            )}`,
+          },
+        ],
         temperature: 0.2,
-        abortSignal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: "medical_summary",
+            strict: true,
+            schema: RESPONSE_SCHEMA,
+          },
+        },
       },
-    });
+      {
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+        // The controller surfaces 429 to the caller as its own message, so
+        // retrying a rate limit inside a 60s budget just burns the window.
+        maxRetries: 0,
+      }
+    );
   } catch (error) {
     const status = error?.status || error?.response?.status;
 
-    if (error?.name === "TimeoutError" || error?.name === "AbortError") {
+    if (
+      error?.name === "TimeoutError" ||
+      error?.name === "AbortError" ||
+      error instanceof Groq.APIConnectionTimeoutError
+    ) {
       throw new MedicalSummaryError("Summary generation timed out", 504);
     }
 
-    console.error("Gemini summary error:", status, error?.message);
+    console.error("Groq summary error:", status, error?.message);
 
     throw new MedicalSummaryError(
       status === 429
@@ -223,10 +246,13 @@ const generateMedicalSummary = async (summaryInput) => {
     );
   }
 
-  const text = response?.text;
+  const text = response?.choices?.[0]?.message?.content;
 
   if (!text) {
-    throw new MedicalSummaryError("Summary service returned an empty response", 502);
+    throw new MedicalSummaryError(
+      "Summary service returned an empty response",
+      502
+    );
   }
 
   let summary;
@@ -237,7 +263,7 @@ const generateMedicalSummary = async (summaryInput) => {
     throw new MedicalSummaryError("Summary service returned invalid JSON", 502);
   }
 
-  // responseSchema makes this unlikely, but a missing section would render as
+  // response_format makes this unlikely, but a missing section would render as
   // a blank card in the UI, so fail loudly instead.
   if (!summary || typeof summary.patientSnapshot !== "string") {
     throw new MedicalSummaryError(

@@ -1,0 +1,239 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------------------------------------------------------------------------
+   mediReach design tokens
+
+   Palette, type scale and radii come from the Stitch "MediReach Healthcare
+   Management System" screens, which ship a Material 3 token set. Light values
+   are the ones Stitch generated; the dark set is the M3 counterpart of the same
+   hues (dark primary is light's inverse-primary, and so on).
+
+   Raw values live here as --md-* variables on :root / .dark, and @theme inline
+   maps them onto Tailwind colour names. That means `bg-surface text-on-surface`
+   flips with the `.dark` class that useThemeSync toggles on <html> - no
+   dark:bg-* duplicates needed for anything built on these tokens.
+--------------------------------------------------------------------------- */
+
+:root {
+  /* Primary - clinical teal */
+  --md-primary: #00685f;
+  --md-on-primary: #ffffff;
+  --md-primary-container: #008378;
+  --md-on-primary-container: #f4fffc;
+
+  /* Secondary - information blue */
+  --md-secondary: #006398;
+  --md-on-secondary: #ffffff;
+  --md-secondary-container: #cce5ff;
+  --md-on-secondary-container: #00476e;
+
+  /* Tertiary - indigo, used for online/tele-consult accents */
+  --md-tertiary: #4648d4;
+  --md-on-tertiary: #ffffff;
+  --md-tertiary-container: #e1e0ff;
+  --md-on-tertiary-container: #07006c;
+
+  /* Warning - not part of M3; needed for waiting/pending states */
+  --md-warning: #8a5a12;
+  --md-warning-container: #ffdfb0;
+  --md-on-warning-container: #5c3a00;
+
+  /* Error */
+  --md-error: #ba1a1a;
+  --md-on-error: #ffffff;
+  --md-error-container: #ffdad6;
+  --md-on-error-container: #93000a;
+
+  /* Surfaces */
+  --md-background: #faf8ff;
+  --md-on-background: #131b2e;
+  --md-surface: #faf8ff;
+  --md-on-surface: #131b2e;
+  --md-surface-variant: #dae2fd;
+  --md-on-surface-variant: #3d4947;
+  --md-surface-lowest: #ffffff;
+  --md-surface-low: #f2f3ff;
+  --md-surface-container: #eaedff;
+  --md-surface-high: #e2e7ff;
+  --md-surface-highest: #dae2fd;
+
+  /* Lines */
+  --md-outline: #6d7a77;
+  --md-outline-variant: #bcc9c6;
+
+  /* Inverse */
+  --md-inverse-surface: #283044;
+  --md-inverse-on-surface: #eef0ff;
+  --md-inverse-primary: #6bd8cb;
+
+  --md-shadow: 0 1px 2px rgba(19, 27, 46, 0.06), 0 10px 26px -18px rgba(19, 27, 46, 0.45);
+}
+
+.dark {
+  --md-primary: #6bd8cb;
+  --md-on-primary: #00382f;
+  --md-primary-container: #005049;
+  --md-on-primary-container: #89f5e7;
+
+  --md-secondary: #93ccff;
+  --md-on-secondary: #003354;
+  --md-secondary-container: #004b73;
+  --md-on-secondary-container: #cce5ff;
+
+  --md-tertiary: #c0c1ff;
+  --md-on-tertiary: #07006c;
+  --md-tertiary-container: #2f2ebe;
+  --md-on-tertiary-container: #e1e0ff;
+
+  --md-warning: #e0b25a;
+  --md-warning-container: #4a3000;
+  --md-on-warning-container: #ffdfb0;
+
+  --md-error: #ffb4ab;
+  --md-on-error: #690005;
+  --md-error-container: #93000a;
+  --md-on-error-container: #ffdad6;
+
+  --md-background: #0e1513;
+  --md-on-background: #dee4e2;
+  --md-surface: #0e1513;
+  --md-on-surface: #dee4e2;
+  --md-surface-variant: #3f4947;
+  --md-on-surface-variant: #bfc9c6;
+  --md-surface-lowest: #090f0e;
+  --md-surface-low: #161d1c;
+  --md-surface-container: #1a2221;
+  --md-surface-high: #242c2b;
+  --md-surface-highest: #2f3736;
+
+  --md-outline: #89938f;
+  --md-outline-variant: #3f4947;
+
+  --md-inverse-surface: #dee4e2;
+  --md-inverse-on-surface: #2b3230;
+  --md-inverse-primary: #00685f;
+
+  --md-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 12px 30px -20px rgba(0, 0, 0, 0.9);
+}
+
+@theme inline {
+  --color-primary: var(--md-primary);
+  --color-on-primary: var(--md-on-primary);
+  --color-primary-container: var(--md-primary-container);
+  --color-on-primary-container: var(--md-on-primary-container);
+
+  --color-secondary: var(--md-secondary);
+  --color-on-secondary: var(--md-on-secondary);
+  --color-secondary-container: var(--md-secondary-container);
+  --color-on-secondary-container: var(--md-on-secondary-container);
+
+  --color-tertiary: var(--md-tertiary);
+  --color-on-tertiary: var(--md-on-tertiary);
+  --color-tertiary-container: var(--md-tertiary-container);
+  --color-on-tertiary-container: var(--md-on-tertiary-container);
+
+  --color-warning: var(--md-warning);
+  --color-warning-container: var(--md-warning-container);
+  --color-on-warning-container: var(--md-on-warning-container);
+
+  --color-error: var(--md-error);
+  --color-on-error: var(--md-on-error);
+  --color-error-container: var(--md-error-container);
+  --color-on-error-container: var(--md-on-error-container);
+
+  --color-background: var(--md-background);
+  --color-on-background: var(--md-on-background);
+  --color-surface: var(--md-surface);
+  --color-on-surface: var(--md-on-surface);
+  --color-surface-variant: var(--md-surface-variant);
+  --color-on-surface-variant: var(--md-on-surface-variant);
+  --color-surface-lowest: var(--md-surface-lowest);
+  --color-surface-low: var(--md-surface-low);
+  --color-surface-container: var(--md-surface-container);
+  --color-surface-high: var(--md-surface-high);
+  --color-surface-highest: var(--md-surface-highest);
+
+  --color-outline: var(--md-outline);
+  --color-outline-variant: var(--md-outline-variant);
+
+  --color-inverse-surface: var(--md-inverse-surface);
+  --color-inverse-on-surface: var(--md-inverse-on-surface);
+  --color-inverse-primary: var(--md-inverse-primary);
+
+  /* Typography - Plus Jakarta Sans for headings, Inter for everything else */
+  --font-display: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
+  --font-sans: Inter, 'Segoe UI', system-ui, sans-serif;
+
+  --text-hero: 44px;
+  --text-hero--line-height: 52px;
+  --text-hero--letter-spacing: -0.02em;
+  --text-hero--font-weight: 700;
+
+  --text-headline-lg: 32px;
+  --text-headline-lg--line-height: 40px;
+  --text-headline-lg--letter-spacing: -0.015em;
+  --text-headline-lg--font-weight: 600;
+
+  --text-headline-md: 24px;
+  --text-headline-md--line-height: 32px;
+  --text-headline-md--letter-spacing: -0.01em;
+  --text-headline-md--font-weight: 600;
+
+  --text-headline-sm: 18px;
+  --text-headline-sm--line-height: 26px;
+  --text-headline-sm--letter-spacing: -0.005em;
+  --text-headline-sm--font-weight: 600;
+
+  --text-title-card: 15px;
+  --text-title-card--line-height: 22px;
+  --text-title-card--font-weight: 600;
+
+  --text-body-lg: 16px;
+  --text-body-lg--line-height: 26px;
+  --text-body-lg--letter-spacing: -0.005em;
+
+  --text-body-md: 14px;
+  --text-body-md--line-height: 22px;
+
+  --text-body-sm: 13px;
+  --text-body-sm--line-height: 18px;
+  --text-body-sm--letter-spacing: 0.005em;
+
+  --text-label-md: 12px;
+  --text-label-md--line-height: 16px;
+  --text-label-md--letter-spacing: 0.01em;
+  --text-label-md--font-weight: 500;
+
+  --text-label-caps: 11px;
+  --text-label-caps--line-height: 14px;
+  --text-label-caps--letter-spacing: 0.06em;
+  --text-label-caps--font-weight: 600;
+
+  /* Radii - Stitch keeps these tight; a card is 8px, not 24px */
+  --radius-control: 0.25rem;
+  --radius-card: 0.5rem;
+  --radius-pill: 0.75rem;
+
+  --shadow-panel: var(--md-shadow);
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  background-color: var(--md-background);
+  color: var(--md-on-background);
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Numeric columns (tokens, counts, vitals-style figures) line up */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}

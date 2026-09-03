@@ -33,7 +33,7 @@ cd medical_prescription_chatbot && uv sync && streamlit run app.py
 ### Backend environment
 
 `Backend/.env` (no `.env.example` exists — these are the vars actually read in code):
-`PORT`, `MONGO_URI`, `JWT_SECRET`, `REDIS_HOST`, `REDIS_PORT`, `EMAIL_USER`, `EMAIL_PASS`, `ORS_API_KEY`, `NODE_ENV`.
+`PORT`, `MONGO_URI`, `JWT_SECRET`, `REDIS_HOST`, `REDIS_PORT`, `EMAIL_USER`, `EMAIL_PASS`, `ORS_API_KEY`, `GROQ_API_KEY`, `NODE_ENV`.
 
 `REDIS_PASSWORD` is **commented out** in `config/redisClient.js` — a hosted Redis needing auth will fail until that line is restored.
 
@@ -144,7 +144,7 @@ Provider for state (not Bloc/Riverpod) with every provider registered in `lib/ma
 - `Backend/routes/inventoryRoute.js` is never mounted, so all of `controllers/inventoryController.js` is unreachable. Medicine stock is handled through `medicineController.js` / `pharmacyController.js` instead.
 - In `UI/src`: `lib/queryClient.js` is never imported (`main.jsx` constructs its own `new QueryClient()`, so any invalidation written against the exported instance is a no-op), `context/store.js` is empty, and `context/slice/AuthSlice.jsx` is superseded by `redux/slices/authSlice.js`.
 - `mediscan/mediscan.py` imports five sibling modules that were never committed.
-- `@google/genai` is a dependency of both `Backend/` and `UI/`, but only `Backend/services/medicalSummaryService.js` imports it — in `UI/` it is unused.
+- `@google/genai` is still a dependency of `UI/` and is imported by nothing there. `Backend/` dropped it for `groq-sdk` — `services/medicalSummaryService.js` is the only file that calls an LLM, and it reads `GROQ_API_KEY` (plus optional `GROQ_MODEL`, default `openai/gpt-oss-120b`). An override must support `json_schema` structured outputs.
 
 ## Repo hygiene notes
 
