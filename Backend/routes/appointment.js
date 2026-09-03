@@ -40,5 +40,7 @@ appointmentRouter.get("/appointments/online",auth,getOnlineAppointmentsForDate);
 appointmentRouter.get("/appointments/:id", auth, getAppointmentById);
 appointmentRouter.patch("/appointments/:id/complete",auth, completeConsultation);
 
+
+
 module.exports = appointmentRouter;
 
