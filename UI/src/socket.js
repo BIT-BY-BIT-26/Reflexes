@@ -1,11 +1,13 @@
 // src/socket.js
 import { io } from "socket.io-client";
 
-const socket = io("http://10.4.7.5:3000", {
-  autoConnect: false,
-  auth: (cb) => {
+const socket = io("http://localhost:3000", {
+  autoConnect: false ,  // ⭐ manual control rakhne ke liye — login hone ke baad connect karenge
+  auth:(cb)=>{
     const token = localStorage.getItem("token");
-    cb({ token });
+    cb({
+      token
+    })
   }
 });
 
