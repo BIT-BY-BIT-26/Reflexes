@@ -1,12 +1,9 @@
 const appointmentModel = require("../models/appointmentModel");
 const docterModel = require("../models/docterModel");
 const prescriptionModel = require("../models/prescriptionModel");
-<<<<<<< HEAD
 const { redisClient } = require("../config/redisClient");
 const { summaryCacheKey } = require("./medicalSummaryController");
-=======
 const axios = require("axios");
->>>>>>> main
 
 const createPrescription = async (req, res) => {
   try {
