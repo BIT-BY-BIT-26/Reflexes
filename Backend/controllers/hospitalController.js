@@ -302,7 +302,6 @@ const getAllHospitals = async(req,res)=>{
   }
 }
 
-
 const getAllHospitalSearch = async (req, res) => {
   try {
     const { search } = req.query;
@@ -463,7 +462,6 @@ const getHospitals = async (req, res) => {
     });
   }
 };
-
 
 const getHospitalStates = async (req, res) => {
   try {
@@ -1036,5 +1034,4 @@ const updateEmergencyStatus = async (req, res) => {
   }
 };
 
-
-module.exports= { registerHospital,getAllHospitalSearch,updateEmergencyStatus,getHospitalPatients,searchHospitalPatients,getHospitalById,updateHospitalProfile,getHospitalProfile, getStats, approveHospital,getAllHospitals,getHospitalsQuery, getHospitals, getHospitalCities, getHospitalStates, getAllPharmacies,updatePharmacyStatus,togglePharmacyActive};
+module.exports= { registerHospital,updateEmergencyStatus,getHospitalPatients,getAllHospitalSearch,searchHospitalPatients,getHospitalById,updateHospitalProfile,getHospitalProfile, getStats, approveHospital,getAllHospitals,getHospitalsQuery, getHospitals, getHospitalCities, getHospitalStates, getAllPharmacies,updatePharmacyStatus,togglePharmacyActive};

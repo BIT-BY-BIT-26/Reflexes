@@ -73,19 +73,25 @@ const createReferral = async (req, res) => {
       });
     }
 
-    // 7. Check if patient already has an active referral
-    const existingReferral = await referralModel.findOne({
-      patient: patientId,
-      status: "PENDING",
-    });
+      // 7. Check if patient already has an active referral
+  const existingReferral = await referralModel.findOne({
+    patient: patientId,
+    referredToHospital: referredToHospital,
+    status: "PENDING",
+  });
+  console.log("=================================");
+  console.log("PATIENT ID:", patientId);
+  console.log("DESTINATION HOSPITAL:", referredToHospital);
+  console.log("EXISTING PENDING REFERRAL:", existingReferral);
+  console.log("=================================");
 
-    if (existingReferral) {
-      return res.status(409).json({
-        success: false,
-        message: "Patient already has a pending referral",
-        referral: existingReferral,
-      });
-    }
+  if (existingReferral) {
+    return res.status(409).json({
+      success: false,
+      message: "Patient already has a pending referral",
+      referral: existingReferral,
+    });
+  }
 
     // 8. Create referral
     const referral = await referralModel.create({
