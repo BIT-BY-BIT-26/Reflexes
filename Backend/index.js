@@ -75,6 +75,6 @@ app.use("/api/medicine",medicineRouter);
 app.use("/api/emergency",emergencyRoute)
 app.use("/api/referral",referralRoute)
 
-server.listen(process.env.PORT, () => {
+server.listen(process.env.PORT,'0.0.0.0', () => {
   console.log(`Listening to port ${process.env.PORT}`);
 });
