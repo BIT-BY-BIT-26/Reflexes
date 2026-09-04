@@ -1,6 +1,6 @@
 const express = require('express');
 const { getRouteToHospital } = require('../controllers/locationController.js');
-const { getHospitalStates, getHospitalCities, getHospitals, registerHospital, updateHospitalProfile, getHospitalProfile, getStats, getHospitalById, getAllPharmacies, updatePharmacyStatus, togglePharmacyActive, getHospitalPatients, searchHospitalPatients, getAllHospitals } = require('../controllers/hospitalController.js');
+const { getHospitalStates, getHospitalCities, getHospitals, registerHospital, updateHospitalProfile, getHospitalProfile, getStats, getHospitalById, getAllPharmacies, updatePharmacyStatus, togglePharmacyActive, getHospitalPatients, searchHospitalPatients, getAllHospitals, getAllHospitalSearch } = require('../controllers/hospitalController.js');
 const { hospitalUpload, upload } = require('../middleware/uploadCloud.js');
 const auth = require('../middleware/auth.js');
 const { updateDoctorOpdSchedule, uploadReportForPatient } = require('../controllers/adminController.js');
@@ -15,8 +15,9 @@ route.get('/test', (req, res) => {
 
 route.get('/hospitals/states',getHospitalStates);
 route.get('/hospitals/cities',getHospitalCities);
-route.get('/hospitals',getHospitals)
-route.get('/all-hospitals',getAllHospitals)
+route.get('/hospitals',getHospitals);
+route.get('/all-hospitals',getAllHospitals);
+route.get('/search-hospitals',getAllHospitalSearch);
 route.post('/hospitals',registerHospital)
 route.post("/route-to-hospital",getRouteToHospital);
 route.patch('/profile',auth, hospitalUpload.fields([{name:"logo",maxCount:1},
