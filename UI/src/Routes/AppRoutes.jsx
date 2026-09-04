@@ -26,6 +26,12 @@ import SignupPharmacy from '../components/Pharmacy/SignupPharmacy'
 import PharmacyDashboard from '../components/Pharmacy/PharmacyDashboard'
 import PharmacyLayout from '../features/pharmacy/PharmacyLayout'
 import AddMedicine from '../features/pharmacy/AddMedicine'
+import PatientReport from '../features/Admin/PatientProfileAdmin'
+import PatientProfileAdmin from '../features/Admin/PatientProfileAdmin'
+import PatientProfileDoctor from '../features/doctor/PatientProfileDoctor'
+import PrescriptionOptions from '../features/doctor/PrescritionOptions'
+import PatientHistory from '../features/doctor/PatientHistory'
+import AllHospitals from '../common/AllHospitals'
 
 const AppRoutes = () => {
   return (
@@ -65,16 +71,24 @@ const AppRoutes = () => {
           <Route path='doctors/add' element={<AddDoctor />}/>
           <Route path='doctors' element={<AllDoctor />}/>
           <Route path='doctor/opd-schedule/:doctorId' element={<OpdSchedule />}/>
+          <Route path='patients/:id' element={<PatientProfileAdmin />}/>
+          <Route path='patient-report/:id' element={<PatientReport />}/>
+          <Route path='all-hospitals' element={<AllHospitals />}/>
+          
         </Route>
 
 
         <Route path='/doctor-dashboard' element={<ProtectedRoutes allowedRoles={[ROLE.doctor]}>
           <HospitalLayout />
         </ProtectedRoutes>}>
+          
           <Route index element={<DoctorDashboard />} />
           <Route path='appointments' element={<Appointment />} />
           <Route path='notifications' element={<NotificationSection />}/>
-        </Route>
+          <Route path='patients/:id' element={<PatientProfileDoctor />}/>
+          <Route path='patients/:id/prescription' element={<PrescriptionOptions />}/>
+          <Route path='patients/:id/history' element={<PatientHistory />}/>
+        </Route>  
 
         <Route path='/hospital-dashboard/profile' 
           element={
