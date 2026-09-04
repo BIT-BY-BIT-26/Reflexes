@@ -374,8 +374,18 @@ const PatientProfileAdmin = () => {
             </div>
           )}
 
-          <button onClick={()=>navigate('/hospital-dashboard/all-hospitals')} className="p-4 bg-blue-500 text-white">Refer this Patient</button>
-
+          <button
+            onClick={() =>
+              navigate("/hospital-dashboard/all-hospitals", {
+                state: {
+                  patientId: id,
+                },
+              })
+            }
+            className="p-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium transition"
+          >
+            Refer this Patient
+        </button>
         </div>
 
       </div>
