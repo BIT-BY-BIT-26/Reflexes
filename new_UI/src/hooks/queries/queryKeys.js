@@ -12,4 +12,6 @@ export const queryKeys = {
   hospitalStats: ["hospital", "stats"],
   allDoctors:["doctors","all"],
   allDepartments:["departments","all"],
+
+  pharmacyInventory: ["pharmacy", "inventory"],
 };

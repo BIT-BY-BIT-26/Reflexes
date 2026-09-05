@@ -26,6 +26,8 @@ import SignupPharmacy from '../components/Pharmacy/SignupPharmacy'
 import PharmacyDashboard from '../components/Pharmacy/PharmacyDashboard'
 import PharmacyLayout from '../features/pharmacy/PharmacyLayout'
 import AddMedicine from '../features/pharmacy/AddMedicine'
+import MedicineInventory from '../features/pharmacy/MedicineInventory'
+import StockAlerts from '../features/pharmacy/StockAlerts'
 import PatientReport from '../features/Admin/PatientProfileAdmin'
 import PatientProfileAdmin from '../features/Admin/PatientProfileAdmin'
 import PatientProfileDoctor from '../features/doctor/PatientProfileDoctor'
@@ -99,11 +101,9 @@ const AppRoutes = () => {
         }
       >
         <Route index element={<PharmacyDashboard />} />
-
-        <Route
-          path="add-medicine"
-          element={<AddMedicine />}
-        />
+        <Route path='medicines' element={<MedicineInventory />} />
+        <Route path='add-medicine' element={<AddMedicine />} />
+        <Route path='stock-alerts' element={<StockAlerts />} />
       </Route>
     </Routes>
   )

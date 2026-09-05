@@ -14,7 +14,12 @@ import { logout } from "../../redux/slices/authSlice";
   /login, unchanged.
 */
 
-const AppSidebar = ({ items, sectionLabel = "Workspace", children }) => {
+const AppSidebar = ({
+  items,
+  sectionLabel = "Workspace",
+  brandLabel = "Clinical Portal",
+  children,
+}) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -37,7 +42,7 @@ const AppSidebar = ({ items, sectionLabel = "Workspace", children }) => {
             mediReach
           </span>
           <span className="block text-label-caps uppercase text-on-surface-variant">
-            Clinical Portal
+            {brandLabel}
           </span>
         </span>
       </div>

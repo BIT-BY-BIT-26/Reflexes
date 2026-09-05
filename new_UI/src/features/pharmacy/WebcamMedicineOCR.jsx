@@ -7,6 +7,7 @@ import {
   RotateCcw,
   ScanLine,
 } from "lucide-react";
+import { toast } from "react-toastify";
 import { addMedicine } from "../../api/backend";
 
 const WebcamMedicineOCR = ({
@@ -102,7 +103,7 @@ const WebcamMedicineOCR = ({
       details.stock === ""
     ) {
 
-      alert(
+      toast.error(
         "Medicine name, batch number, dates, price aur stock zaroori hain."
       );
 
@@ -157,7 +158,7 @@ const WebcamMedicineOCR = ({
         error?.response?.data
       );
 
-      alert(
+      toast.error(
         error?.response?.data?.msg ||
         error?.response?.data?.message ||
         error?.message ||
@@ -230,7 +231,7 @@ const WebcamMedicineOCR = ({
         error
       );
 
-      alert(
+      toast.error(
         "Camera permission nahi mili. Browser settings se camera permission allow karo."
       );
 
@@ -310,7 +311,7 @@ const WebcamMedicineOCR = ({
       !video.videoHeight
     ) {
 
-      alert(
+      toast.error(
         "Camera frame ready nahi hai. Thoda wait karke dobara try karo."
       );
 
@@ -703,7 +704,7 @@ Rules:
       );
 
 
-      alert(
+      toast.error(
         error?.message ||
         "Medicine scan failed."
       );
@@ -761,7 +762,7 @@ Rules:
               onBack();
 
             }}
-            className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+            className="flex h-10 w-10 items-center justify-center rounded-control border border-outline-variant bg-surface-lowest text-on-surface-variant transition hover:bg-surface-container hover:text-on-surface"
           >
 
             <ArrowLeft size={19} />
@@ -773,14 +774,14 @@ Rules:
 
         <div>
 
-          <h1 className="text-2xl font-bold text-slate-800">
+          <h1 className="font-display text-headline-lg text-on-surface">
 
             Scan Medicine
 
           </h1>
 
 
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-body-md text-on-surface-variant">
 
             Capture the medicine package and extract its details.
 
@@ -802,7 +803,7 @@ Rules:
             CAMERA SECTION
         ===================================== */}
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-card border border-outline-variant bg-surface-lowest p-5">
 
 
           {/* CAMERA HEADER */}
@@ -813,10 +814,10 @@ Rules:
 
               <ScanLine
                 size={20}
-                className="text-blue-600"
+                className="text-primary"
               />
 
-              <h2 className="font-semibold text-slate-800">
+              <h2 className="font-display text-headline-sm text-on-surface">
 
                 Medicine Scanner
 
@@ -827,9 +828,9 @@ Rules:
 
             {cameraOn && (
 
-              <span className="flex items-center gap-2 text-xs font-medium text-green-600">
+              <span className="flex items-center gap-2 text-label-md font-medium text-primary">
 
-                <span className="h-2 w-2 rounded-full bg-green-500" />
+                <span className="h-2 w-2 rounded-pill bg-primary" />
 
                 Camera Active
 
@@ -842,7 +843,7 @@ Rules:
 
           {/* CAMERA VIEW */}
 
-          <div className="relative aspect-video overflow-hidden rounded-xl bg-slate-950">
+          <div className="relative aspect-video overflow-hidden rounded-card bg-inverse-surface">
 
 
             <video
@@ -858,17 +859,17 @@ Rules:
 
             {!cameraOn && (
 
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-slate-400">
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-inverse-on-surface/70">
 
                 <Camera size={42} />
 
-                <p className="mt-3 text-sm">
+                <p className="mt-3 text-body-md">
 
                   Camera is currently off
 
                 </p>
 
-                <p className="mt-1 text-xs">
+                <p className="mt-1 text-body-sm">
 
                   Start camera to scan medicine
 
@@ -885,9 +886,9 @@ Rules:
 
               <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
 
-                <div className="relative h-[55%] w-[85%] rounded-xl border-2 border-blue-400">
+                <div className="relative h-[55%] w-[85%] rounded-card border-2 border-primary">
 
-                  <span className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-black/60 px-3 py-1 text-xs text-white">
+                  <span className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-control bg-inverse-surface/85 px-3 py-1 text-label-md text-inverse-on-surface">
 
                     Place medicine inside the frame
 
@@ -919,7 +920,7 @@ Rules:
 
               <button
                 onClick={startCamera}
-                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
+                className="flex flex-1 items-center justify-center gap-2 rounded-control bg-primary px-5 py-2.5 text-body-md font-semibold text-on-primary transition hover:brightness-110"
               >
 
                 <Camera size={18} />
@@ -935,7 +936,7 @@ Rules:
                 <button
                   onClick={scanMedicine}
                   disabled={loading}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-control bg-primary px-5 py-2.5 text-body-md font-semibold text-on-primary transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
                 >
 
                   <ScanLine size={18} />
@@ -950,7 +951,7 @@ Rules:
                 <button
                   onClick={stopCamera}
                   disabled={loading}
-                  className="rounded-lg border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+                  className="rounded-control border border-outline-variant px-5 py-2.5 text-body-md font-medium text-on-surface transition hover:bg-surface-container disabled:opacity-50"
                 >
 
                   Stop
@@ -968,21 +969,21 @@ Rules:
 
           {loading && (
 
-            <div className="mt-5 rounded-xl bg-blue-50 p-4">
+            <div className="mt-5 rounded-card border border-outline-variant bg-surface-container p-4">
 
               <div className="flex items-center gap-3">
 
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+                <div className="h-5 w-5 animate-spin rounded-pill border-2 border-primary border-t-transparent" />
 
                 <div>
 
-                  <p className="text-sm font-semibold text-blue-700">
+                  <p className="text-title-card text-on-surface">
 
                     Analyzing medicine...
 
                   </p>
 
-                  <p className="mt-1 text-xs text-blue-600">
+                  <p className="mt-1 text-body-sm text-on-surface-variant">
 
                     Please wait while the medicine details are extracted.
 
@@ -999,16 +1000,16 @@ Rules:
 
           {/* INSTRUCTIONS */}
 
-          <div className="mt-5 rounded-xl bg-slate-50 p-4">
+          <div className="mt-5 rounded-card border border-outline-variant bg-surface-container p-4">
 
-            <p className="text-sm font-semibold text-slate-700">
+            <p className="text-title-card text-on-surface">
 
               For better accuracy
 
             </p>
 
 
-            <ul className="mt-2 space-y-1 text-xs text-slate-500">
+            <ul className="mt-2 space-y-1 text-body-sm text-on-surface-variant">
 
               <li>
                 • Keep the medicine package straight.
@@ -1041,7 +1042,7 @@ Rules:
             DETAILS SECTION
         ===================================== */}
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-card border border-outline-variant bg-surface-lowest p-5">
 
 
           {/* DETAILS HEADER */}
@@ -1050,14 +1051,14 @@ Rules:
 
             <div>
 
-              <h2 className="font-semibold text-slate-800">
+              <h2 className="font-display text-headline-sm text-on-surface">
 
                 Extracted Details
 
               </h2>
 
 
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-body-sm text-on-surface-variant">
 
                 Review and correct the information before saving.
 
@@ -1070,7 +1071,7 @@ Rules:
 
               <CheckCircle2
                 size={22}
-                className="text-green-500"
+                className="text-primary"
               />
 
             )}
@@ -1201,7 +1202,7 @@ Rules:
 
             <div>
 
-              <label className="mb-1.5 block text-xs font-medium text-slate-600">
+              <label className="mb-1.5 block text-label-md font-medium text-on-surface-variant">
 
                 Description
 
@@ -1220,7 +1221,7 @@ Rules:
                 }
                 rows={4}
                 placeholder="Not detected"
-                className="w-full resize-none rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                className="w-full resize-none rounded-control border border-outline-variant bg-surface-lowest px-3 py-2.5 text-body-md text-on-surface outline-none transition placeholder:text-on-surface-variant focus:border-primary"
               />
 
             </div>
@@ -1238,7 +1239,7 @@ Rules:
               <button
                 onClick={resetScan}
                 disabled={loading || saving}
-                className="flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+                className="flex items-center gap-2 rounded-control border border-outline-variant px-4 py-2.5 text-body-md font-medium text-on-surface transition hover:bg-surface-container disabled:opacity-50"
               >
 
                 <RotateCcw size={16} />
@@ -1251,7 +1252,7 @@ Rules:
               <button
                 onClick={handleContinue}
                 disabled={loading || saving}
-                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50"
+                className="flex flex-1 items-center justify-center gap-2 rounded-control bg-primary px-4 py-2.5 text-body-md font-semibold text-on-primary transition hover:brightness-110 disabled:opacity-50"
               >
 
                 {saving ? "Saving..." : "Continue"}
@@ -1293,7 +1294,7 @@ const OCRInput = ({
 
     <div>
 
-      <label className="mb-1.5 block text-xs font-medium text-slate-600">
+      <label className="mb-1.5 block text-label-md font-medium text-on-surface-variant">
 
         {label}
 
@@ -1307,7 +1308,7 @@ const OCRInput = ({
           onChange(e.target.value)
         }
         placeholder="Not detected"
-        className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+        className="w-full rounded-control border border-outline-variant bg-surface-lowest px-3 py-2.5 text-body-md text-on-surface outline-none transition placeholder:text-on-surface-variant focus:border-primary"
       />
 
     </div>

@@ -195,6 +195,13 @@ export const addMedicine = (data) => {
   return api.post(`/pharmacy/add-medicine`, data);
 };
 
+// Batches belonging to the logged-in pharmacy, plus its profile.
+// /medicine/all-medicine is unauthenticated and returns every pharmacy's
+// stock, so the pharmacy screens use this scoped route instead.
+export const getPharmacyInventory = () => {
+  return api.get(`/pharmacy/my-inventory`);
+};
+
 export const searchPatient = (data) => {
   return api.get("/search-patients", {
     params: {

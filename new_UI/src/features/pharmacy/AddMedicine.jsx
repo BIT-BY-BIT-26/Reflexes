@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -8,68 +8,90 @@ import {
   FilePenLine,
   ShieldCheck,
 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-toastify";
 import WebcamMedicineOCR from "./WebcamMedicineOCR";
+import PageHeader from "../../components/layout/PageHeader";
+import { addMedicine } from "../../api/backend";
+import { queryKeys } from "../../hooks/queries/queryKeys";
+
+/*
+  Two ways into the inventory: type it in, or scan the strip.
+
+  Field names match the Medicine schema exactly (medicineName / stock / price,
+  not name / quantity / mrp) because both paths POST to the same
+  /pharmacy/add-medicine route - the OCR screen already did, the manual form
+  used to only console.log a differently-shaped object.
+
+  Dates go as MM/YYYY: the server parses them with parseMonthYear and rejects
+  anything else, so the same check runs here first.
+*/
 
 const initialMedicine = {
-  name: "",
-  genericName: "",
+  medicineName: "",
   strength: "",
-  dosageForm: "",
-  manufacturer: "",
   batchNumber: "",
   manufacturingDate: "",
   expiryDate: "",
-  mrp: "",
-  purchasePrice: "",
-  sellingPrice: "",
-  quantity: "",
-  reorderLevel: "",
-  prescriptionRequired: false,
+  price: "",
+  stock: "",
+  category: "",
+  manufacturer: "",
+  description: "",
 };
+
+const MONTH_YEAR = /^(0?[1-9]|1[0-2])[/.-]\d{4}$/;
 
 const AddMedicine = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [method, setMethod] = useState(null);
   const [medicine, setMedicine] = useState(initialMedicine);
   const [saving, setSaving] = useState(false);
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
 
-    setMedicine((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+    setMedicine((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleOCRResult = (ocrData) => {
-    setMedicine((prev) => ({
-      ...prev,
-      ...ocrData,
-    }));
-
-    setMethod("ocr");
+  // The OCR screen saves the batch itself, so this only refreshes and exits.
+  const handleOCRSaved = () => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.pharmacyInventory });
+    setMedicine(initialMedicine);
+    setMethod(null);
+    navigate("/pharmacy-dashboard/medicines");
   };
 
   const validateMedicine = () => {
-    if (!medicine.name.trim()) {
-      alert("Medicine name is required.");
+    if (!medicine.medicineName.trim()) {
+      toast.error("Medicine name is required.");
       return false;
     }
 
     if (!medicine.batchNumber.trim()) {
-      alert("Batch number is required.");
+      toast.error("Batch number is required.");
       return false;
     }
 
-    if (!medicine.expiryDate.trim()) {
-      alert("Expiry date is required.");
+    if (!MONTH_YEAR.test(medicine.manufacturingDate.trim())) {
+      toast.error("Manufacturing date must be in MM/YYYY format.");
       return false;
     }
 
-    if (!medicine.quantity) {
-      alert("Quantity is required.");
+    if (!MONTH_YEAR.test(medicine.expiryDate.trim())) {
+      toast.error("Expiry date must be in MM/YYYY format.");
+      return false;
+    }
+
+    if (medicine.price === "" || Number(medicine.price) < 0) {
+      toast.error("Enter a valid price.");
+      return false;
+    }
+
+    if (medicine.stock === "" || Number(medicine.stock) < 0) {
+      toast.error("Enter a valid stock quantity.");
       return false;
     }
 
@@ -84,27 +106,24 @@ const AddMedicine = () => {
     try {
       setSaving(true);
 
-      /*
-        Connect your MediReach API here.
+      await addMedicine({ ...medicine, addedVia: "MANUAL" });
 
-        Example:
+      queryClient.invalidateQueries({ queryKey: queryKeys.pharmacyInventory });
 
-        await axios.post(
-          "/api/pharmacy/medicines",
-          medicine
-        );
-      */
-
-      console.log("MEDICINE TO SAVE:", medicine);
-
-      alert("Medicine added successfully.");
+      toast.success("Medicine added to inventory.");
 
       setMedicine(initialMedicine);
       setMethod(null);
 
+      navigate("/pharmacy-dashboard/medicines");
     } catch (error) {
       console.error(error);
-      alert("Failed to add medicine.");
+
+      toast.error(
+        error?.response?.data?.msg ||
+          error?.response?.data?.message ||
+          "Failed to add medicine."
+      );
     } finally {
       setSaving(false);
     }
@@ -112,157 +131,102 @@ const AddMedicine = () => {
 
   if (!method) {
     return (
-      <div className="min-h-[calc(100vh-120px)]">
-
-        {/* Header */}
-        <div className="mb-8 flex items-center gap-4">
-
+      <div className="flex flex-col gap-6">
+        <PageHeader
+          eyebrow="Pharmacy"
+          title="Add Medicine"
+          description="Choose how this batch goes into the inventory. Either way it is stored per batch number."
+        >
           <button
             onClick={() => navigate("/pharmacy-dashboard")}
-            className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50"
+            className="inline-flex items-center gap-2 rounded-control border border-outline-variant px-4 py-2.5 text-body-md font-medium text-on-surface transition hover:bg-surface-container"
           >
-            <ArrowLeft size={19} />
+            <ArrowLeft size={16} />
+            Back to overview
           </button>
+        </PageHeader>
 
-          <div>
-            <h1 className="text-2xl font-bold text-slate-800">
-              Add Medicine
-            </h1>
-
-            <p className="mt-1 text-sm text-slate-500">
-              Choose how you want to add medicine to your inventory
-            </p>
-          </div>
-
-        </div>
-
-        {/* Options */}
-        <div className="grid gap-6 lg:grid-cols-2">
-
+        <div className="grid gap-4 lg:grid-cols-2">
           {/* Manual */}
           <button
             onClick={() => setMethod("manual")}
-            className="group rounded-2xl border border-green-200 bg-gradient-to-br from-green-50 to-white p-8 text-left transition hover:-translate-y-1 hover:shadow-lg"
+            className="group flex flex-col rounded-card border border-outline-variant bg-surface-lowest p-6 text-left transition hover:border-primary"
           >
-            <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-              <FilePenLine
-                size={29}
-                className="text-green-600"
-              />
-            </div>
+            <span className="flex h-12 w-12 items-center justify-center rounded-control bg-primary-container/20 text-primary">
+              <FilePenLine size={22} />
+            </span>
 
-            <div className="flex items-start justify-between">
-
-              <div>
-                <h2 className="text-xl font-bold text-slate-800">
-                  Add Manually
-                </h2>
-
-                <p className="mt-2 text-sm text-slate-500">
-                  Enter medicine details manually into the inventory.
-                </p>
-              </div>
+            <span className="mt-5 flex items-start justify-between gap-3">
+              <span>
+                <span className="block font-display text-headline-sm text-on-surface">
+                  Enter manually
+                </span>
+                <span className="mt-1 block text-body-md text-on-surface-variant">
+                  Type the batch details straight into the inventory.
+                </span>
+              </span>
 
               <ArrowRight
                 size={20}
-                className="text-green-600 transition group-hover:translate-x-1"
+                className="mt-1 flex-none text-primary transition group-hover:translate-x-1"
               />
+            </span>
 
-            </div>
-
-            <div className="mt-7 space-y-3">
-
-              <Feature text="Enter medicine information step by step" />
-              <Feature text="Add price, stock, expiry date and more" />
-              <Feature text="Best for single medicine entry" />
-
-            </div>
-
-            <div className="mt-7 inline-flex items-center gap-2 rounded-lg bg-green-600 px-5 py-3 text-sm font-semibold text-white">
-              Add Manually
-              <ArrowRight size={17} />
-            </div>
-
+            <span className="mt-5 flex flex-col gap-2">
+              <Feature text="Full control over every field" />
+              <Feature text="Price, stock, batch and expiry in one form" />
+              <Feature text="Best for a single batch" />
+            </span>
           </button>
 
           {/* OCR */}
           <button
             onClick={() => setMethod("ocr")}
-            className="group relative rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 to-white p-8 text-left transition hover:-translate-y-1 hover:shadow-lg"
+            className="group relative flex flex-col rounded-card border border-outline-variant bg-surface-lowest p-6 text-left transition hover:border-primary"
           >
-
-            <span className="absolute right-6 top-6 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+            <span className="absolute right-6 top-6 rounded-pill bg-secondary-container px-3 py-1 text-label-md font-medium text-on-secondary-container">
               Recommended
             </span>
 
-            <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
-              <Camera
-                size={29}
-                className="text-blue-600"
-              />
-            </div>
+            <span className="flex h-12 w-12 items-center justify-center rounded-control bg-secondary-container text-on-secondary-container">
+              <Camera size={22} />
+            </span>
 
-            <div className="flex items-start justify-between">
-
-              <div>
-                <h2 className="text-xl font-bold text-slate-800">
-                  Upload via Webcam OCR
-                </h2>
-
-                <p className="mt-2 text-sm text-slate-500">
-                  Scan the medicine strip and automatically extract details.
-                </p>
-              </div>
+            <span className="mt-5 flex items-start justify-between gap-3">
+              <span>
+                <span className="block font-display text-headline-sm text-on-surface">
+                  Scan with the webcam
+                </span>
+                <span className="mt-1 block text-body-md text-on-surface-variant">
+                  Capture the strip and let the analyser fill the fields in.
+                </span>
+              </span>
 
               <ArrowRight
                 size={20}
-                className="text-blue-600 transition group-hover:translate-x-1"
+                className="mt-1 flex-none text-secondary transition group-hover:translate-x-1"
               />
+            </span>
 
-            </div>
-
-            <div className="mt-7 space-y-3">
-
-              <Feature text="Use webcam to capture medicine strip" />
-              <Feature text="OCR extracts medicine information automatically" />
-              <Feature text="Review and edit before saving" />
-
-            </div>
-
-            <div className="mt-7 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white">
-              Start Webcam OCR
-              <ArrowRight size={17} />
-            </div>
-
+            <span className="mt-5 flex flex-col gap-2">
+              <Feature text="Capture the medicine package on camera" />
+              <Feature text="Details are extracted automatically" />
+              <Feature text="Review and correct before saving" />
+            </span>
           </button>
-
         </div>
 
-        {/* Security */}
-        <div className="mt-8 rounded-xl border border-blue-100 bg-blue-50 p-5">
+        <div className="flex gap-3 rounded-card border border-outline-variant bg-surface-container px-5 py-4">
+          <ShieldCheck size={20} className="mt-0.5 flex-none text-primary" />
 
-          <div className="flex gap-3">
-
-            <ShieldCheck
-              size={22}
-              className="mt-0.5 text-blue-600"
-            />
-
-            <div>
-              <h3 className="text-sm font-semibold text-slate-800">
-                Review before saving
-              </h3>
-
-              <p className="mt-1 text-xs leading-5 text-slate-500">
-                OCR extracted information should always be reviewed by the
-                pharmacy staff before adding it to inventory.
-              </p>
-            </div>
-
+          <div>
+            <h3 className="text-title-card text-on-surface">Review before saving</h3>
+            <p className="mt-1 text-body-sm text-on-surface-variant">
+              Scanned details are a starting point, not a source of truth. Check the batch number,
+              expiry and strength against the pack before adding it to stock.
+            </p>
           </div>
-
         </div>
-
       </div>
     );
   }
@@ -271,7 +235,7 @@ const AddMedicine = () => {
     return (
       <WebcamMedicineOCR
         onBack={() => setMethod(null)}
-        onExtract={handleOCRResult}
+        onExtract={handleOCRSaved}
         initialData={medicine}
       />
     );
@@ -289,70 +253,41 @@ const AddMedicine = () => {
 };
 
 const Feature = ({ text }) => (
-  <div className="flex items-center gap-3 text-sm text-slate-600">
-    <CheckCircle2
-      size={17}
-      className="shrink-0 text-green-600"
-    />
+  <span className="flex items-center gap-2 text-body-sm text-on-surface-variant">
+    <CheckCircle2 size={15} className="flex-none text-primary" />
     {text}
-  </div>
+  </span>
 );
 
-const ManualMedicineForm = ({
-  medicine,
-  handleChange,
-  handleSubmit,
-  saving,
-  onBack,
-}) => {
+const ManualMedicineForm = ({ medicine, handleChange, handleSubmit, saving, onBack }) => {
   return (
-    <div>
-
-      {/* Header */}
-      <div className="mb-7 flex items-center gap-4">
-
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        eyebrow="Pharmacy"
+        title="Add Medicine Manually"
+        description="Every batch is stored separately, so a batch number can only be used once."
+      >
         <button
           onClick={onBack}
-          className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+          className="inline-flex items-center gap-2 rounded-control border border-outline-variant px-4 py-2.5 text-body-md font-medium text-on-surface transition hover:bg-surface-container"
         >
-          <ArrowLeft size={19} />
+          <ArrowLeft size={16} />
+          Back
         </button>
-
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">
-            Add Medicine Manually
-          </h1>
-
-          <p className="mt-1 text-sm text-slate-500">
-            Enter complete medicine and inventory details.
-          </p>
-        </div>
-
-      </div>
+      </PageHeader>
 
       <form
         onSubmit={handleSubmit}
-        className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+        className="rounded-card border border-outline-variant bg-surface-lowest p-6"
       >
-
-        {/* Basic Information */}
-        <FormSection title="Basic Information">
-
+        <FormSection title="Medicine">
           <Input
-            label="Medicine Name"
-            name="name"
-            value={medicine.name}
+            label="Medicine name"
+            name="medicineName"
+            value={medicine.medicineName}
             onChange={handleChange}
             placeholder="e.g. Paracetamol"
             required
-          />
-
-          <Input
-            label="Generic Name"
-            name="genericName"
-            value={medicine.genericName}
-            onChange={handleChange}
-            placeholder="e.g. Paracetamol IP"
           />
 
           <Input
@@ -363,10 +298,18 @@ const ManualMedicineForm = ({
             placeholder="e.g. 650 mg"
           />
 
+          <Input
+            label="Manufacturer"
+            name="manufacturer"
+            value={medicine.manufacturer}
+            onChange={handleChange}
+            placeholder="e.g. Cipla"
+          />
+
           <Select
-            label="Dosage Form"
-            name="dosageForm"
-            value={medicine.dosageForm}
+            label="Category"
+            name="category"
+            value={medicine.category}
             onChange={handleChange}
             options={[
               "Tablet",
@@ -380,22 +323,11 @@ const ManualMedicineForm = ({
               "Other",
             ]}
           />
-
-          <Input
-            label="Manufacturer"
-            name="manufacturer"
-            value={medicine.manufacturer}
-            onChange={handleChange}
-            placeholder="Manufacturer name"
-          />
-
         </FormSection>
 
-        {/* Batch */}
-        <FormSection title="Batch & Expiry">
-
+        <FormSection title="Batch & expiry">
           <Input
-            label="Batch Number"
+            label="Batch number"
             name="batchNumber"
             value={medicine.batchNumber}
             onChange={handleChange}
@@ -404,187 +336,125 @@ const ManualMedicineForm = ({
           />
 
           <Input
-            label="Manufacturing Date"
+            label="Manufacturing date"
             name="manufacturingDate"
             value={medicine.manufacturingDate}
             onChange={handleChange}
             placeholder="MM/YYYY"
+            hint="Month and year, e.g. 03/2025"
+            required
           />
 
           <Input
-            label="Expiry Date"
+            label="Expiry date"
             name="expiryDate"
             value={medicine.expiryDate}
             onChange={handleChange}
             placeholder="MM/YYYY"
+            hint="Month and year, e.g. 09/2027"
             required
           />
-
         </FormSection>
 
-        {/* Pricing */}
-        <FormSection title="Pricing">
-
+        <FormSection title="Stock & price">
           <Input
-            label="MRP"
-            name="mrp"
+            label="Price per unit"
+            name="price"
             type="number"
-            value={medicine.mrp}
+            min="0"
+            step="0.01"
+            value={medicine.price}
             onChange={handleChange}
-            placeholder="₹ 0.00"
-          />
-
-          <Input
-            label="Purchase Price"
-            name="purchasePrice"
-            type="number"
-            value={medicine.purchasePrice}
-            onChange={handleChange}
-            placeholder="₹ 0.00"
-          />
-
-          <Input
-            label="Selling Price"
-            name="sellingPrice"
-            type="number"
-            value={medicine.sellingPrice}
-            onChange={handleChange}
-            placeholder="₹ 0.00"
-          />
-
-        </FormSection>
-
-        {/* Inventory */}
-        <FormSection title="Inventory">
-
-          <Input
-            label="Quantity"
-            name="quantity"
-            type="number"
-            value={medicine.quantity}
-            onChange={handleChange}
-            placeholder="Enter stock quantity"
+            placeholder="0.00"
             required
           />
 
           <Input
-            label="Reorder Level"
-            name="reorderLevel"
+            label="Stock quantity"
+            name="stock"
             type="number"
-            value={medicine.reorderLevel}
+            min="0"
+            value={medicine.stock}
             onChange={handleChange}
-            placeholder="e.g. 10"
+            placeholder="Units in this batch"
+            required
           />
-
-          <div className="flex items-center gap-3 pt-7">
-            <input
-              id="prescriptionRequired"
-              type="checkbox"
-              name="prescriptionRequired"
-              checked={medicine.prescriptionRequired}
-              onChange={handleChange}
-              className="h-4 w-4 rounded border-slate-300 text-blue-600"
-            />
-
-            <label
-              htmlFor="prescriptionRequired"
-              className="text-sm text-slate-600"
-            >
-              Prescription required
-            </label>
-          </div>
-
         </FormSection>
 
-        {/* Actions */}
-        <div className="mt-8 flex justify-end gap-3 border-t border-slate-100 pt-6">
+        <section className="mb-6">
+          <h2 className="mb-4 font-display text-headline-sm text-on-surface">Notes</h2>
 
+          <label className="mb-2 block text-label-md font-medium text-on-surface-variant">
+            Description
+          </label>
+
+          <textarea
+            name="description"
+            value={medicine.description}
+            onChange={handleChange}
+            rows={3}
+            placeholder="Storage instructions, composition, anything worth recording"
+            className="w-full resize-none rounded-control border border-outline-variant bg-surface-lowest px-4 py-2.5 text-body-md text-on-surface outline-none transition placeholder:text-on-surface-variant focus:border-primary"
+          />
+        </section>
+
+        <div className="flex justify-end gap-3 border-t border-outline-variant pt-6">
           <button
             type="button"
             onClick={onBack}
-            className="rounded-lg border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+            className="rounded-control border border-outline-variant px-5 py-2.5 text-body-md font-medium text-on-surface transition hover:bg-surface-container"
           >
-            Back
+            Cancel
           </button>
 
           <button
             type="submit"
             disabled={saving}
-            className="rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-control bg-primary px-6 py-2.5 text-body-md font-semibold text-on-primary transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {saving ? "Saving..." : "Add to Inventory"}
+            {saving ? "Saving…" : "Add to inventory"}
           </button>
-
         </div>
-
       </form>
-
     </div>
   );
 };
 
 const FormSection = ({ title, children }) => (
-  <section className="mb-8">
+  <section className="mb-6">
+    <h2 className="mb-4 font-display text-headline-sm text-on-surface">{title}</h2>
 
-    <h2 className="mb-4 text-base font-semibold text-slate-800">
-      {title}
-    </h2>
-
-    <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-      {children}
-    </div>
-
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">{children}</div>
   </section>
 );
 
-const Input = ({
-  label,
-  name,
-  value,
-  onChange,
-  placeholder,
-  type = "text",
-  required = false,
-}) => (
+const Input = ({ label, hint, required = false, type = "text", ...props }) => (
   <div>
-    <label className="mb-2 block text-sm font-medium text-slate-700">
+    <label className="mb-2 block text-label-md font-medium text-on-surface-variant">
       {label}
-      {required && (
-        <span className="ml-1 text-red-500">*</span>
-      )}
+      {required && <span className="ml-1 text-error">*</span>}
     </label>
 
     <input
       type={type}
-      name={name}
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
       required={required}
-      className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+      {...props}
+      className="w-full rounded-control border border-outline-variant bg-surface-lowest px-4 py-2.5 text-body-md text-on-surface outline-none transition placeholder:text-on-surface-variant focus:border-primary"
     />
+
+    {hint && <p className="mt-1.5 text-body-sm text-on-surface-variant">{hint}</p>}
   </div>
 );
 
-const Select = ({
-  label,
-  name,
-  value,
-  onChange,
-  options,
-}) => (
+const Select = ({ label, options, ...props }) => (
   <div>
-    <label className="mb-2 block text-sm font-medium text-slate-700">
-      {label}
-    </label>
+    <label className="mb-2 block text-label-md font-medium text-on-surface-variant">{label}</label>
 
     <select
-      name={name}
-      value={value}
-      onChange={onChange}
-      className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+      {...props}
+      className="w-full rounded-control border border-outline-variant bg-surface-lowest px-4 py-2.5 text-body-md text-on-surface outline-none transition focus:border-primary"
     >
-      <option value="">Select form</option>
+      <option value="">Select a category</option>
 
       {options.map((option) => (
         <option key={option} value={option}>
