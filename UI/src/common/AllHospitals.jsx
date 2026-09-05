@@ -1,3 +1,14 @@
+<<<<<<< HEAD
+import React from 'react'
+
+const AllHospitals = () => {
+  return (
+    <div>AllHospitals</div>
+  )
+}
+
+export default AllHospitals
+=======
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import {
@@ -829,3 +840,4 @@ const HospitalCard = ({
 };
 
 export default AllHospitals;
+>>>>>>> b9e6f0f6bf88485b03619677651207f148e9f35e
