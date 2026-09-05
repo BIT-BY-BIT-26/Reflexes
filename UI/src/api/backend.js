@@ -211,3 +211,7 @@ export const HospitalSearch = (searchTerm) => {
 export const createReferral = (referralData) => {
   return api.post("/referral/create", referralData);
 };
+
+export const getSharedMedicalData = async (patientId) => {
+  return api.get(`/doctors/patient-history/${patientId}`);
+};
