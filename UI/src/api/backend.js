@@ -199,18 +199,6 @@ export const getAllHospitals = () => {
   return api.get(`/all-hospitals`);
 };
 
-export const HospitalSearch = (searchTerm) => {
-  return api.get(`/search-hospitals`, {
-    params: {
-      search: searchTerm,
-    },
-  });
-};
-
-
-export const createReferral = (referralData) => {
-  return api.post("/referral/create", referralData);
-};
 
 export const getSharedMedicalData = async (patientId) => {
   return api.get(`/doctors/patient-history/${patientId}`);

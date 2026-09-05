@@ -78,6 +78,17 @@ module.exports = (io, onlineDoctors, onlinePatients) => {
 
 
     // Patient
+<<<<<<< HEAD
+    socket.on("patient-join", ({ patientId }) => {
+
+      onlinePatients.set(patientId, socket.id);
+
+      socket.join(`patient_${patientId}`);
+
+      console.log("Patient connected:", patientId);
+    });
+
+=======
 socket.on("patient-join", ({ patientId }) => {
 
   onlinePatients.set(patientId, socket.id);
@@ -93,6 +104,7 @@ socket.on("patient-join", ({ patientId }) => {
     socketId: socket.id,
   });
 });
+>>>>>>> b9e6f0f6bf88485b03619677651207f148e9f35e
 
     // Disconnect
     socket.on("disconnect", async () => {
@@ -133,6 +145,8 @@ socket.on("patient-join", ({ patientId }) => {
 
       console.log("🔴 Disconnected:", socket.id);
     });
+<<<<<<< HEAD
+=======
     socket.on("call-user", ({ targetSocketId, offer }) => {
       console.log("📞 Call request");
       console.log("From:", socket.id);
@@ -157,6 +171,7 @@ socket.on("patient-join", ({ patientId }) => {
         candidate,
       });
     });
+>>>>>>> b9e6f0f6bf88485b03619677651207f148e9f35e
 
   });
 

@@ -4,6 +4,7 @@ const { getHospitalStates, getHospitalCities, getHospitals, registerHospital, up
 const { hospitalUpload, upload } = require('../middleware/uploadCloud.js');
 const auth = require('../middleware/auth.js');
 const { updateDoctorOpdSchedule, uploadReportForPatient } = require('../controllers/adminController.js');
+const { getAllHospitalSearch } = require('../controllers/hospitalController.js');
 const authorize = require('../middleware/authorize.js');
 const { ROLE } = require('../config/role.js');
 
