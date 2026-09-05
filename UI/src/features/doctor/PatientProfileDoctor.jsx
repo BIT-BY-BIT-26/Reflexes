@@ -5,127 +5,142 @@ import { addPatientReport } from "../../api/backend";
 import PatientProfile from "../../components/PatientProfile";
 
 const PatientProfileAdmin = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const [showReportForm, setShowReportForm] = useState(false);
+const { id } = useParams();
+const navigate = useNavigate();
 
-  const [title, setTitle] = useState("");
-  const [type, setType] = useState("LAB");
-  const [file, setFile] = useState(null);
+const [showReportForm, setShowReportForm] = useState(false);
 
-  const [uploading, setUploading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+const [title, setTitle] = useState("");
+const [type, setType] = useState("LAB");
+const [file, setFile] = useState(null);
 
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
+const [uploading, setUploading] = useState(false);
+const [message, setMessage] = useState("");
+const [error, setError] = useState("");
 
-    if (!selectedFile) return;
+const handleFileChange = (e) => {
+const selectedFile = e.target.files[0];
 
-    // Optional: only image/pdf
-    const allowedTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/jpg",
-      "application/pdf",
-    ];
+if (!selectedFile) return;
 
-    if (!allowedTypes.includes(selectedFile.type)) {
-      setError("Only JPG, PNG or PDF files are allowed.");
-      setFile(null);
-      return;
-    }
+const allowedTypes = [
+  "image/jpeg",
+  "image/png",
+  "image/jpg",
+  "application/pdf",
+];
 
-    setError("");
-    setFile(selectedFile);
-  };
+if (!allowedTypes.includes(selectedFile.type)) {
+  setError("Only JPG, PNG or PDF files are allowed.");
+  setFile(null);
+  return;
+}
 
-  const handleUploadReport = async (e) => {
-    e.preventDefault();
+setError("");
+setFile(selectedFile);
 
-    setError("");
-    setMessage("");
 
-    if (!id) {
-      setError("Patient ID not found");
-      return;
-    }
+};
 
-    if (!title.trim()) {
-      setError("Please enter report title");
-      return;
-    }
+const handleUploadReport = async (e) => {
+e.preventDefault();
 
-    if (!type) {
-      setError("Please select report type");
-      return;
-    }
+setError("");
+setMessage("");
 
-    if (!file) {
-      setError("Please select a report file");
-      return;
-    }
+if (!id) {
+  setError("Patient ID not found");
+  return;
+}
 
-    try {
-      setUploading(true);
+if (!title.trim()) {
+  setError("Please enter report title");
+  return;
+}
 
-      const formData = new FormData();
+if (!type) {
+  setError("Please select report type");
+  return;
+}
 
-      formData.append("patientId", id);
-      formData.append("title", title);
-      formData.append("type", type);
-      formData.append("file", file);
+if (!file) {
+  setError("Please select a report file");
+  return;
+}
 
-      console.log("Uploading report:");
-      console.log("patientId:", id);
-      console.log("title:", title);
-      console.log("type:", type);
-      console.log("file:", file);
+try {
+  setUploading(true);
 
-      const res = await addPatientReport(formData);
+  const formData = new FormData();
 
-      if (res.data.success) {
-        setMessage("Report uploaded successfully.");
+  formData.append("patientId", id);
+  formData.append("title", title);
+  formData.append("type", type);
+  formData.append("file", file);
 
-        // Reset form
-        setTitle("");
-        setType("LAB");
-        setFile(null);
+  const res = await addPatientReport(formData);
 
-        // file input reset
-        document.getElementById("report-file").value = "";
+  if (res.data.success) {
+    setMessage("Report uploaded successfully.");
 
-        setShowReportForm(false);
-      } else {
-        setError(res.data.message || "Failed to upload report");
-      }
-    } catch (err) {
-      console.error("Report upload failed:", err);
+    setTitle("");
+    setType("LAB");
+    setFile(null);
 
-      setError(
-        err.response?.data?.message ||
-          err.response?.data?.error ||
-          "Report upload failed"
-      );
-    } finally {
-      setUploading(false);
-    }
-  };
+    document.getElementById("report-file").value = "";
 
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-black p-6">
-      <div className="max-w-5xl mx-auto">
+    setShowReportForm(false);
+  } else {
+    setError(res.data.message || "Failed to upload report");
+  }
+} catch (err) {
+  console.error("Report upload failed:", err);
 
-        {/* Patient Profile */}
-        <PatientProfile />
-        <div className="mt-10 flex gap-5">
-          <button className="p-3 bg-blue-800 text-white rounded-md">see medical summary</button>
-          <button onClick={() =>navigate(`/doctor-dashboard/patients/${id}/history`)} className="p-3 bg-blue-800 text-white rounded-md">previous reports and prescription</button>
-          <button className="p-3 bg-blue-800 text-white rounded-md">shared reports and prescription</button>
-        </div>
-      </div>
-    </div>
+  setError(
+    err.response?.data?.message ||
+      err.response?.data?.error ||
+      "Report upload failed"
   );
+} finally {
+  setUploading(false);
+}
+
+};
+
+return ( <div className="min-h-screen bg-gray-50 dark:bg-black p-6"> <div className="max-w-5xl mx-auto">
+
+    {/* Patient Profile */}
+    <PatientProfile />
+
+    <div className="mt-10 flex gap-5">
+
+      <button className="p-3 bg-blue-800 text-white rounded-md">
+        See Medical Summary
+      </button>
+
+      <button
+        onClick={() =>
+          navigate(`/doctor-dashboard/patients/${id}/history`)
+        }
+        className="p-3 bg-blue-800 text-white rounded-md"
+      >
+        Previous Reports and Prescription
+      </button>
+
+      <button
+        onClick={() =>
+          navigate(`/doctor-dashboard/patients/${id}/shared-data`)
+        }
+        className="p-3 bg-blue-800 text-white rounded-md"
+      >
+        Shared Reports and Prescription
+      </button>
+
+    </div>
+  </div>
+</div>
+
+);
 };
 
 export default PatientProfileAdmin;

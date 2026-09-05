@@ -7,10 +7,14 @@ import {
   Stethoscope,
   ExternalLink,
 } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import { toggleTheme } from "../../redux/slices/themeSlice";
 import { getPatientHistory } from "../../api/backend";
 
 const PatientHistory = () => {
   const { id } = useParams();
+  const dispatch = useDispatch();
+  const mode = useSelector((state) => state.theme.mode);
 
   const [history, setHistory] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -55,16 +59,18 @@ const PatientHistory = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <p className="text-gray-600">Loading patient history...</p>
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-black">
+        <p className="text-gray-600 dark:text-gray-400">
+          Loading patient history...
+        </p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="mx-auto max-w-5xl rounded-xl bg-red-50 p-5 text-red-600">
+      <div className="min-h-screen bg-gray-50 dark:bg-black p-6">
+        <div className="mx-auto max-w-5xl rounded-xl bg-red-50 dark:bg-red-900/20 p-5 text-red-600 dark:text-red-400">
           {error}
         </div>
       </div>
@@ -73,8 +79,10 @@ const PatientHistory = () => {
 
   if (!history) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <p>No patient history found.</p>
+      <div className="min-h-screen bg-gray-50 dark:bg-black p-6">
+        <p className="text-gray-800 dark:text-white">
+          No patient history found.
+        </p>
       </div>
     );
   }
@@ -82,53 +90,55 @@ const PatientHistory = () => {
   const { reports = [], prescriptions = [] } = history;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-black p-6">
       <div className="mx-auto max-w-6xl">
 
         {/* HEADER */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">
-            Patient History
-          </h1>
+        <div className="mb-8 flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
+              Patient History
+            </h1>
 
-          <p className="mt-1 text-gray-500">
-            Medical reports and prescriptions
-          </p>
+            <p className="mt-1 text-gray-500 dark:text-gray-400">
+              Medical reports and prescriptions
+            </p>
+          </div>
         </div>
 
         {/* SUMMARY CARDS */}
         <div className="mb-8 grid grid-cols-1 gap-5 md:grid-cols-2">
 
-          <div className="rounded-xl border bg-white p-5 shadow-sm">
+          <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-blue-100 p-3">
-                <FileText className="text-blue-600" size={24} />
+              <div className="rounded-lg bg-blue-100 dark:bg-blue-900/25 p-3">
+                <FileText className="text-blue-600 dark:text-blue-400" size={24} />
               </div>
 
               <div>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   Medical Reports
                 </p>
 
-                <p className="text-2xl font-bold text-gray-800">
+                <p className="text-2xl font-bold text-gray-800 dark:text-white">
                   {reports.length}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="rounded-xl border bg-white p-5 shadow-sm">
+          <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm">
             <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-green-100 p-3">
-                <Pill className="text-green-600" size={24} />
+              <div className="rounded-lg bg-green-100 dark:bg-green-900/25 p-3">
+                <Pill className="text-green-600 dark:text-green-400" size={24} />
               </div>
 
               <div>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   Prescriptions
                 </p>
 
-                <p className="text-2xl font-bold text-gray-800">
+                <p className="text-2xl font-bold text-gray-800 dark:text-white">
                   {prescriptions.length}
                 </p>
               </div>
@@ -141,14 +151,14 @@ const PatientHistory = () => {
         <section className="mb-10">
 
           <div className="mb-4 flex items-center gap-2">
-            <FileText className="text-blue-600" />
-            <h2 className="text-xl font-semibold text-gray-800">
+            <FileText className="text-blue-600 dark:text-blue-400" />
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
               Medical Reports
             </h2>
           </div>
 
           {reports.length === 0 ? (
-            <div className="rounded-xl border bg-white p-6 text-center text-gray-500">
+            <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 text-center text-gray-500 dark:text-gray-400">
               No medical reports available.
             </div>
           ) : (
@@ -157,63 +167,64 @@ const PatientHistory = () => {
               {reports.map((report) => (
                 <div
                   key={report._id}
-                  className="rounded-xl border bg-white p-5 shadow-sm transition hover:shadow-md"
+                  className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 shadow-sm transition hover:shadow-md"
                 >
 
                   <div className="flex items-start justify-between">
 
                     <div className="flex items-center gap-3">
-                      <div className="rounded-lg bg-blue-50 p-3">
+                      <div className="rounded-lg bg-blue-50 dark:bg-blue-900/25 p-3">
                         <FileText
                           size={22}
-                          className="text-blue-600"
+                          className="text-blue-600 dark:text-blue-400"
                         />
                       </div>
 
                       <div>
-                        <h3 className="font-semibold text-gray-800">
+                        <h3 className="font-semibold text-gray-800 dark:text-white">
                           {report.title}
                         </h3>
 
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
                           {report.type}
                         </p>
                       </div>
                     </div>
 
-                    <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
+                    <span className="rounded-full bg-green-100 dark:bg-green-900/30 px-3 py-1 text-xs font-medium text-green-700 dark:text-green-400">
                       {report.fileType}
                     </span>
 
                   </div>
 
-                  <div className="mt-4 space-y-2 text-sm text-gray-500">
+                  <div className="mt-4 space-y-2 text-sm text-gray-500 dark:text-gray-400">
 
                     <p>
                       Uploaded by:{" "}
-                      <span className="font-medium text-gray-700">
+                      <span className="font-medium text-gray-700 dark:text-gray-200">
                         {report.uploadedBy}
                       </span>
                     </p>
 
                     <p>
                       Date:{" "}
-                      <span className="font-medium text-gray-700">
+                      <span className="font-medium text-gray-700 dark:text-gray-200">
                         {new Date(report.createdAt).toLocaleDateString()}
                       </span>
                     </p>
 
                   </div>
 
+                  
                   <a
-                    href={report.fileUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                  href={report.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 dark:bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 dark:hover:bg-blue-600"
                   >
-                    View Report
-                    <ExternalLink size={16} />
-                  </a>
+                  View Report
+                  <ExternalLink size={16} />
+                </a>
 
                 </div>
               ))}
@@ -227,14 +238,14 @@ const PatientHistory = () => {
         <section>
 
           <div className="mb-4 flex items-center gap-2">
-            <Pill className="text-green-600" />
-            <h2 className="text-xl font-semibold text-gray-800">
+            <Pill className="text-green-600 dark:text-green-400" />
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
               Prescriptions
             </h2>
           </div>
 
           {prescriptions.length === 0 ? (
-            <div className="rounded-xl border bg-white p-6 text-center text-gray-500">
+            <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 text-center text-gray-500 dark:text-gray-400">
               No prescriptions available.
             </div>
           ) : (
@@ -243,18 +254,18 @@ const PatientHistory = () => {
               {prescriptions.map((prescription) => (
                 <div
                   key={prescription._id}
-                  className="rounded-xl border bg-white p-6 shadow-sm"
+                  className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm"
                 >
 
                   {/* PRESCRIPTION HEADER */}
                   <div className="mb-5 flex flex-col justify-between gap-3 md:flex-row md:items-center">
 
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-800">
+                      <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
                         Prescription
                       </h3>
 
-                      <div className="mt-1 flex flex-wrap gap-4 text-sm text-gray-500">
+                      <div className="mt-1 flex flex-wrap gap-4 text-sm text-gray-500 dark:text-gray-400">
 
                         <span className="flex items-center gap-1">
                           <Calendar size={15} />
@@ -273,7 +284,7 @@ const PatientHistory = () => {
                       </div>
                     </div>
 
-                    <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700">
+                    <span className="rounded-full bg-blue-100 dark:bg-blue-900/30 px-3 py-1 text-xs font-medium text-blue-700 dark:text-blue-400">
                       Prescription
                     </span>
 
@@ -282,8 +293,8 @@ const PatientHistory = () => {
                   {/* COMPLAINTS + DIAGNOSIS */}
                   <div className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-2">
 
-                    <div className="rounded-lg bg-gray-50 p-4">
-                      <h4 className="mb-2 font-medium text-gray-700">
+                    <div className="rounded-lg bg-gray-50 dark:bg-gray-800/60 p-4">
+                      <h4 className="mb-2 font-medium text-gray-700 dark:text-gray-200">
                         Complaints
                       </h4>
 
@@ -292,7 +303,7 @@ const PatientHistory = () => {
                           (complaint, index) => (
                             <span
                               key={index}
-                              className="rounded-full bg-red-100 px-3 py-1 text-sm text-red-700"
+                              className="rounded-full bg-red-100 dark:bg-red-900/30 px-3 py-1 text-sm text-red-700 dark:text-red-400"
                             >
                               {complaint}
                             </span>
@@ -301,8 +312,8 @@ const PatientHistory = () => {
                       </div>
                     </div>
 
-                    <div className="rounded-lg bg-gray-50 p-4">
-                      <h4 className="mb-2 font-medium text-gray-700">
+                    <div className="rounded-lg bg-gray-50 dark:bg-gray-800/60 p-4">
+                      <h4 className="mb-2 font-medium text-gray-700 dark:text-gray-200">
                         Diagnosis
                       </h4>
 
@@ -311,7 +322,7 @@ const PatientHistory = () => {
                           (diagnosis, index) => (
                             <span
                               key={index}
-                              className="rounded-full bg-purple-100 px-3 py-1 text-sm text-purple-700"
+                              className="rounded-full bg-purple-100 dark:bg-purple-900/30 px-3 py-1 text-sm text-purple-700 dark:text-purple-400"
                             >
                               {diagnosis}
                             </span>
@@ -325,7 +336,7 @@ const PatientHistory = () => {
                   {/* MEDICINES */}
                   <div className="mb-5">
 
-                    <h4 className="mb-3 font-semibold text-gray-700">
+                    <h4 className="mb-3 font-semibold text-gray-700 dark:text-gray-200">
                       Medicines
                     </h4>
 
@@ -333,24 +344,24 @@ const PatientHistory = () => {
                       <table className="w-full min-w-[700px] border-collapse">
 
                         <thead>
-                          <tr className="border-b bg-gray-50 text-left">
-                            <th className="p-3 text-sm font-semibold text-gray-600">
+                          <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 text-left">
+                            <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">
                               Medicine
                             </th>
 
-                            <th className="p-3 text-sm font-semibold text-gray-600">
+                            <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">
                               Dosage
                             </th>
 
-                            <th className="p-3 text-sm font-semibold text-gray-600">
+                            <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">
                               Frequency
                             </th>
 
-                            <th className="p-3 text-sm font-semibold text-gray-600">
+                            <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">
                               Duration
                             </th>
 
-                            <th className="p-3 text-sm font-semibold text-gray-600">
+                            <th className="p-3 text-sm font-semibold text-gray-600 dark:text-gray-300">
                               Instructions
                             </th>
                           </tr>
@@ -362,25 +373,25 @@ const PatientHistory = () => {
                             (medicine, index) => (
                               <tr
                                 key={medicine._id || index}
-                                className="border-b last:border-0"
+                                className="border-b border-gray-200 dark:border-gray-800 last:border-0"
                               >
-                                <td className="p-3 font-medium text-gray-800">
+                                <td className="p-3 font-medium text-gray-800 dark:text-white">
                                   {medicine.name}
                                 </td>
 
-                                <td className="p-3 text-gray-600">
+                                <td className="p-3 text-gray-600 dark:text-gray-300">
                                   {medicine.dosage}
                                 </td>
 
-                                <td className="p-3 text-gray-600">
+                                <td className="p-3 text-gray-600 dark:text-gray-300">
                                   {medicine.frequency}
                                 </td>
 
-                                <td className="p-3 text-gray-600">
+                                <td className="p-3 text-gray-600 dark:text-gray-300">
                                   {medicine.duration}
                                 </td>
 
-                                <td className="p-3 text-gray-600">
+                                <td className="p-3 text-gray-600 dark:text-gray-300">
                                   {medicine.instructions}
                                 </td>
                               </tr>
@@ -397,7 +408,7 @@ const PatientHistory = () => {
                   {/* TESTS */}
                   <div className="mb-5">
 
-                    <h4 className="mb-2 font-semibold text-gray-700">
+                    <h4 className="mb-2 font-semibold text-gray-700 dark:text-gray-200">
                       Tests
                     </h4>
 
@@ -407,7 +418,7 @@ const PatientHistory = () => {
                         (test, index) => (
                           <span
                             key={index}
-                            className="rounded-full bg-yellow-100 px-3 py-1 text-sm text-yellow-700"
+                            className="rounded-full bg-yellow-100 dark:bg-yellow-900/30 px-3 py-1 text-sm text-yellow-700 dark:text-yellow-400"
                           >
                             {test}
                           </span>
@@ -420,12 +431,12 @@ const PatientHistory = () => {
 
                   {/* ADVICE */}
                   {prescription.advice && (
-                    <div className="mb-5 rounded-lg bg-blue-50 p-4">
-                      <h4 className="mb-1 font-semibold text-blue-800">
+                    <div className="mb-5 rounded-lg bg-blue-50 dark:bg-blue-900/20 p-4">
+                      <h4 className="mb-1 font-semibold text-blue-800 dark:text-blue-300">
                         Advice
                       </h4>
 
-                      <p className="text-sm text-blue-700">
+                      <p className="text-sm text-blue-700 dark:text-blue-400">
                         {prescription.advice}
                       </p>
                     </div>
@@ -433,7 +444,7 @@ const PatientHistory = () => {
 
                   {/* FOLLOW UP */}
                   {prescription.followUpDate && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                       <Calendar size={16} />
 
                       <span className="font-medium">
@@ -462,4 +473,3 @@ const PatientHistory = () => {
 };
 
 export default PatientHistory;
-
