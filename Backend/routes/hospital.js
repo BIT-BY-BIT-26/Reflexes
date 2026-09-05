@@ -4,6 +4,10 @@ const { getHospitalStates, getHospitalCities, getHospitals, registerHospital, up
 const { hospitalUpload, upload } = require('../middleware/uploadCloud.js');
 const auth = require('../middleware/auth.js');
 const { updateDoctorOpdSchedule, uploadReportForPatient } = require('../controllers/adminController.js');
+<<<<<<< HEAD
+=======
+const { getAllHospitalSearch } = require('../controllers/hospitalController.js');
+>>>>>>> b9e6f0f6bf88485b03619677651207f148e9f35e
 const authorize = require('../middleware/authorize.js');
 const { ROLE } = require('../config/role.js');
 
@@ -17,6 +21,10 @@ route.get('/hospitals/states',getHospitalStates);
 route.get('/hospitals/cities',getHospitalCities);
 route.get('/hospitals',getHospitals)
 route.get('/all-hospitals',getAllHospitals)
+<<<<<<< HEAD
+=======
+route.get('/search-hospitals',getAllHospitalSearch);
+>>>>>>> b9e6f0f6bf88485b03619677651207f148e9f35e
 route.post('/hospitals',registerHospital)
 route.post("/route-to-hospital",getRouteToHospital);
 route.patch('/profile',auth, hospitalUpload.fields([{name:"logo",maxCount:1},

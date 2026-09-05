@@ -7,6 +7,7 @@ pharmacyRouter.post("/signup",registerPharmacy);
 pharmacyRouter.post("/login",loginPharmacy);
 pharmacyRouter.post("/add-medicine",auth, addMedicine);
 module.exports = pharmacyRouter;
+<<<<<<< HEAD
 
 // Added pharmacy analytics endpoint. Existing pharmacy routes above are unchanged.
 pharmacyRouter.get(
@@ -14,3 +15,5 @@ pharmacyRouter.get(
   auth,
   require("../controllers/pharmacyDashboardController").getPharmacyDashboard
 );
+=======
+>>>>>>> b9e6f0f6bf88485b03619677651207f148e9f35e

@@ -78,6 +78,7 @@ module.exports = (io, onlineDoctors, onlinePatients) => {
 
 
     // Patient
+<<<<<<< HEAD
     socket.on("patient-join", ({ patientId }) => {
 
       onlinePatients.set(patientId, socket.id);
@@ -87,6 +88,23 @@ module.exports = (io, onlineDoctors, onlinePatients) => {
       console.log("Patient connected:", patientId);
     });
 
+=======
+socket.on("patient-join", ({ patientId }) => {
+
+  onlinePatients.set(patientId, socket.id);
+
+  socket.join(`patient_${patientId}`);
+
+  console.log("Patient connected:", patientId);
+  console.log("Patient socket ID:", socket.id);
+
+  // Doctor ko patient ka socket ID bhejna
+  io.emit("patient-online", {
+    patientId,
+    socketId: socket.id,
+  });
+});
+>>>>>>> b9e6f0f6bf88485b03619677651207f148e9f35e
 
     // Disconnect
     socket.on("disconnect", async () => {
@@ -127,6 +145,33 @@ module.exports = (io, onlineDoctors, onlinePatients) => {
 
       console.log("🔴 Disconnected:", socket.id);
     });
+<<<<<<< HEAD
+=======
+    socket.on("call-user", ({ targetSocketId, offer }) => {
+      console.log("📞 Call request");
+      console.log("From:", socket.id);
+      console.log("To:", targetSocketId);
+
+      io.to(targetSocketId).emit("incoming-call", {
+        callerSocketId: socket.id,
+        offer,
+      });
+    });
+
+    socket.on("answer-call", ({ targetSocketId, answer }) => {
+      console.log("📲 Call answer");
+
+      io.to(targetSocketId).emit("call-accepted", {
+        answer,
+      });
+    });
+
+    socket.on("ice-candidate", ({ targetSocketId, candidate }) => {
+      io.to(targetSocketId).emit("ice-candidate", {
+        candidate,
+      });
+    });
+>>>>>>> b9e6f0f6bf88485b03619677651207f148e9f35e
 
   });
 

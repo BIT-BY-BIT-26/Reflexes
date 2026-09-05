@@ -25,6 +25,10 @@ const {redisClient} = require("./config/redisClient.js");
 const medicineRouter = require("./routes/medicine.js");
 const startMedicineExpiryCron = require("./cron/MedicineExpiryCron.js");
 const emergencyRoute = require("./routes/emergencyRoute.js");
+<<<<<<< HEAD
+=======
+const referralRoute = require("./routes/referral.js");
+>>>>>>> b9e6f0f6bf88485b03619677651207f148e9f35e
 
 const app = express();
 app.use(express.json());
@@ -71,7 +75,12 @@ app.use("/api",reviewRouter);
 app.use("/api/consultation", consultationRouter);
 app.use("/api/pharmacy", pharmacyRouter);
 app.use("/api/medicine",medicineRouter);
+<<<<<<< HEAD
 app.use("/api/emergency",emergencyRoute);
+=======
+app.use("/api/emergency",emergencyRoute)
+app.use("/api/referral",referralRoute)
+>>>>>>> b9e6f0f6bf88485b03619677651207f148e9f35e
 
 server.listen(process.env.PORT, () => {
   console.log(`Listening to port ${process.env.PORT}`);

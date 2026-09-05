@@ -302,6 +302,40 @@ const getAllHospitals = async(req,res)=>{
   }
 }
 
+<<<<<<< HEAD
+=======
+const getAllHospitalSearch = async (req, res) => {
+  try {
+    const { search } = req.query;
+
+    let hospitals;
+
+    if (search && search.trim() !== "") {
+      hospitals = await HospitalModel.find({
+        name: {
+          $regex: `^${search.trim()}`,
+          $options: "i"
+        }
+      });
+    } else {
+      hospitals = await HospitalModel.find();
+    }
+
+    res.status(200).json({
+      success: true,
+      data: hospitals
+    });
+
+  } catch (e) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch hospitals",
+      error: e.message
+    });
+  }
+};
+
+>>>>>>> b9e6f0f6bf88485b03619677651207f148e9f35e
 const getHospitalsQuery = async (req, res) => {
     try {
         const { status } = req.query;
@@ -432,7 +466,10 @@ const getHospitals = async (req, res) => {
   }
 };
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> b9e6f0f6bf88485b03619677651207f148e9f35e
 const getHospitalStates = async (req, res) => {
   try {
     const cacheKey="hospital:states";
@@ -1004,5 +1041,9 @@ const updateEmergencyStatus = async (req, res) => {
   }
 };
 
+<<<<<<< HEAD
 
 module.exports= { registerHospital,updateEmergencyStatus,getHospitalPatients,searchHospitalPatients,getHospitalById,updateHospitalProfile,getHospitalProfile, getStats, approveHospital,getAllHospitals,getHospitalsQuery, getHospitals, getHospitalCities, getHospitalStates, getAllPharmacies,updatePharmacyStatus,togglePharmacyActive};
+=======
+module.exports= { registerHospital,updateEmergencyStatus,getHospitalPatients,getAllHospitalSearch,searchHospitalPatients,getHospitalById,updateHospitalProfile,getHospitalProfile, getStats, approveHospital,getAllHospitals,getHospitalsQuery, getHospitals, getHospitalCities, getHospitalStates, getAllPharmacies,updatePharmacyStatus,togglePharmacyActive};
+>>>>>>> b9e6f0f6bf88485b03619677651207f148e9f35e
