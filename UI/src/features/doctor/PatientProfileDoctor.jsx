@@ -95,12 +95,6 @@ const PatientProfileAdmin = () => {
       formData.append("type", type);
       formData.append("file", file);
 
-      console.log("Uploading report:");
-      console.log("patientId:", id);
-      console.log("title:", title);
-      console.log("type:", type);
-      console.log("file:", file);
-
       const res = await addPatientReport(formData);
 
       if (res.data.success) {
@@ -164,10 +158,26 @@ const PatientProfileAdmin = () => {
             disabled={summaryLoading}
             className="p-3 bg-blue-800 text-white rounded-md disabled:opacity-50"
           >
-            {summaryLoading ? "Generating..." : "see medical summary"}
+            {summaryLoading ? "Generating..." : "See Medical Summary"}
           </button>
-          <button onClick={() =>navigate(`/doctor-dashboard/patients/${id}/history`)} className="p-3 bg-blue-800 text-white rounded-md">previous reports and prescription</button>
-          <button className="p-3 bg-blue-800 text-white rounded-md">shared reports and prescription</button>
+
+          <button
+            onClick={() =>
+              navigate(`/doctor-dashboard/patients/${id}/history`)
+            }
+            className="p-3 bg-blue-800 text-white rounded-md"
+          >
+            Previous Reports and Prescription
+          </button>
+
+          <button
+            onClick={() =>
+              navigate(`/doctor-dashboard/patients/${id}/shared-data`)
+            }
+            className="p-3 bg-blue-800 text-white rounded-md"
+          >
+            Shared Reports and Prescription
+          </button>
         </div>
 
         {summaryLoading && (

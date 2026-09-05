@@ -687,9 +687,7 @@ const uploadDoctorPhoto = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-// ============================================================
-// Helper: consistent "today" date range (reused everywhere)
-// ============================================================
+
 const getTodayRange = () => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);

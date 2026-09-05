@@ -25,6 +25,7 @@ const {redisClient} = require("./config/redisClient.js");
 const medicineRouter = require("./routes/medicine.js");
 const startMedicineExpiryCron = require("./cron/MedicineExpiryCron.js");
 const emergencyRoute = require("./routes/emergencyRoute.js");
+const referralRoute = require("./routes/referral.js");
 
 const app = express();
 app.use(express.json());
@@ -39,7 +40,7 @@ mongoose
 
 // Root
 app.get("/", (req, res) => {
-  res.send("Server is running 🚀");
+  res.send("Server is running  here🚀");
 });
 
 // HTTP + Socket.IO
@@ -71,7 +72,8 @@ app.use("/api",reviewRouter);
 app.use("/api/consultation", consultationRouter);
 app.use("/api/pharmacy", pharmacyRouter);
 app.use("/api/medicine",medicineRouter);
-app.use("/api/emergency",emergencyRoute);
+app.use("/api/emergency",emergencyRoute)
+app.use("/api/referral",referralRoute)
 
 server.listen(process.env.PORT, () => {
   console.log(`Listening to port ${process.env.PORT}`);
