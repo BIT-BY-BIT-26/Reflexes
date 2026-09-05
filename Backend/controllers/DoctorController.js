@@ -3,6 +3,7 @@ const HospitalModel = require("../models/HospitalModel");
 const Appointment = require("../models/appointmentModel");
 const patientModel = require("../models/patientModel");
 const { redisClient } = require("../config/redisClient");
+const { summaryCacheKey } = require("./medicalSummaryController");
 const departmentModel = require("../models/departmentModel");
 /* ================= GET DOCTORS ================= */
 
@@ -1286,6 +1287,9 @@ const advanceQueue = async ({ doctor, io, closeStatus, socketEventName, closingM
     if (closeStatus === "SKIPPED") currentAppointment.skippedAt = new Date();
     if (closeStatus === "COMPLETED") currentAppointment.consultationEndedAt = new Date();
     await currentAppointment.save();
+
+    // Closing an appointment changes the timeline the AI summary is built from.
+    await redisClient.del(summaryCacheKey(currentAppointment.patient));
   }
 
   const nextAppointment = await Appointment.findOneAndUpdate(

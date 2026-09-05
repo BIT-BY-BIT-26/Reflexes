@@ -1,6 +1,8 @@
 const patientModel = require("../models/patientModel");
 const prescriptionModel = require("../models/prescriptionModel");
 const reportModel = require("../models/reportModel");
+const { redisClient } = require("../config/redisClient");
+const { summaryCacheKey } = require("./medicalSummaryController");
 
 
 exports.uploadReport = async(req,res)=>{
@@ -19,6 +21,10 @@ exports.uploadReport = async(req,res)=>{
             filePublicId:req.file.filename,
             fileType
         });
+
+        // A new report changes the record the AI summary is built from.
+        await redisClient.del(summaryCacheKey(patient._id));
+
         res.status(200).json({
             message:"Report uploaded successfully",
             report
