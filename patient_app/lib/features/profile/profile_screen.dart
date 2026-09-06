@@ -6,6 +6,7 @@ import 'package:patient_app/features/auth/provider/auth_provider.dart';
 import 'package:patient_app/features/reports/reports_screen.dart';
 import 'package:patient_app/models/patient_model.dart';
 import 'package:patient_app/features/profile/provider/patient_profile_provider.dart';
+import 'package:patient_app/features/voice_assistant/voice_assistant_screen.dart';
 import 'package:patient_app/utils/constants.dart';
 import 'package:provider/provider.dart';
 
@@ -759,6 +760,16 @@ Widget _profileCard(PatientModel patient) {
           color: Colors.green,
           onTap: () {
             Navigator.pushNamed(context, "/my-prescriptions");
+          },
+        ),
+        const SizedBox(height: 12),
+        _ActionTile(
+          icon: Icons.mic,
+          title: "AI Health Assistant",
+          subtitle: "Talk through your symptoms",
+          color: Colors.purple,
+          onTap: () {
+            Navigator.of(context).push(VoiceAssistantScreen.route());
           },
         ),
       ],

@@ -6,6 +6,7 @@ import 'package:patient_app/features/home/components/quick_access_card.dart';
 import 'package:patient_app/features/hospitals/hospital_profile_page.dart';
 import 'package:patient_app/features/hospitals/hospital_screen.dart';
 import 'package:patient_app/features/hospitals/provider/hospital_provider.dart';
+import 'package:patient_app/features/voice_assistant/voice_assistant_screen.dart';
 import 'package:patient_app/utils/constants.dart';
 import 'package:provider/provider.dart';
 
@@ -168,6 +169,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       size: 25,
                       iconPath: FontAwesomeIcons.pills,
                       text: "Pharmacy",
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(context, VoiceAssistantScreen.route());
+                      },
+                      child: QuickAccessCard(
+                        size: 25,
+                        iconPath: FontAwesomeIcons.microphone,
+                        text: "AI Assistant",
+                      ),
                     ),
                   ]
                   
