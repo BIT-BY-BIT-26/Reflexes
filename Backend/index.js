@@ -27,6 +27,8 @@ const startMedicineExpiryCron = require("./cron/MedicineExpiryCron.js");
 const emergencyRoute = require("./routes/emergencyRoute.js");
 const aiRouter = require("./routes/aiRoute.js");
 
+const referralRoute = require("./routes/referral.js");
+const doctorAnalyticsRouter = require("./routes/doctorAnalytics.js");
 const app = express();
 app.use(express.json());
 app.use(cors());
@@ -40,7 +42,7 @@ mongoose
 
 // Root
 app.get("/", (req, res) => {
-  res.send("Server is running 🚀");
+  res.send("Server is running  here🚀");
 });
 
 // HTTP + Socket.IO
@@ -74,6 +76,8 @@ app.use("/api/pharmacy", pharmacyRouter);
 app.use("/api/medicine",medicineRouter);
 app.use("/api/emergency",emergencyRoute);
 app.use("/api/ai", aiRouter);
+app.use("/api/referral",referralRoute)
+app.use("/api/doctor-analytics", doctorAnalyticsRouter);
 
 server.listen(process.env.PORT,'0.0.0.0', () => {
   console.log(`Listening to port ${process.env.PORT}`);

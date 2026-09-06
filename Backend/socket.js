@@ -119,6 +119,30 @@ module.exports = (io, onlineDoctors, onlinePatients) => {
       }
       console.log("🔴 Disconnected:", socket.id);
     });
+    socket.on("call-user", ({ targetSocketId, offer }) => {
+      console.log("📞 Call request");
+      console.log("From:", socket.id);
+      console.log("To:", targetSocketId);
+
+      io.to(targetSocketId).emit("incoming-call", {
+        callerSocketId: socket.id,
+        offer,
+      });
+    });
+
+    socket.on("answer-call", ({ targetSocketId, answer }) => {
+      console.log("📲 Call answer");
+
+      io.to(targetSocketId).emit("call-accepted", {
+        answer,
+      });
+    });
+
+    socket.on("ice-candidate", ({ targetSocketId, candidate }) => {
+      io.to(targetSocketId).emit("ice-candidate", {
+        candidate,
+      });
+    });
 
   });
 

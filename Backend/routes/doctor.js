@@ -7,6 +7,7 @@ const { getDoctorByHospital, submitProfile, getDoctorsByDepartment ,getMyProfile
 const { addDoctor  } = require("../controllers/adminController");
 const { upload } = require("../middleware/uploadCloud");
 const { getSharedMedicalHistory } = require("../controllers/medicalHistoryController");
+const { getPatientMedicalSummary } = require("../controllers/medicalSummaryController");
 const doctorRouter = express.Router();
 
 /* ================= ADMIN ROUTES ================= */
@@ -71,5 +72,11 @@ doctorRouter.get("/online",getOnlineDoctorsByDepartment);
 doctorRouter.get('/all-unique',auth,getUniquePatients);
 doctorRouter.get('/all-data',auth,getDoctorDashboard);
 doctorRouter.get('/patient-history/:patientId',auth,getSharedMedicalHistory);
+doctorRouter.get(
+  "/patient-summary/:patientId",
+  auth,
+  authorize(ROLE.doctor),
+  getPatientMedicalSummary
+);
 
 module.exports = doctorRouter;

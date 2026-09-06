@@ -85,11 +85,15 @@ const CurrentPatient = ({ appointment, onComplete, onSkip, onCallNext }) => {
           </button>
 
           <button
-            onClick={() => runAction(onSkip)}
+            onClick={() =>
+              navigate(
+                `/doctor-dashboard/patients/${appointment.patient._id}/prescription?appointmentId=${appointment._id}`
+              )
+            }
             disabled={loading}
             className="flex items-center justify-center gap-2 rounded-xl bg-amber-500 py-3 font-semibold text-white transition hover:bg-amber-600 disabled:opacity-50"
           >
-            <SkipForward size={18} /> Skip Patient
+            <SkipForward size={18} /> Add Prescription
           </button>
 
           <button

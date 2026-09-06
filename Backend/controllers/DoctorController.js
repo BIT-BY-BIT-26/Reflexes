@@ -1,10 +1,9 @@
-
-
 const docterModel = require("../models/docterModel");
 const HospitalModel = require("../models/HospitalModel");
 const Appointment = require("../models/appointmentModel");
 const patientModel = require("../models/patientModel");
 const { redisClient } = require("../config/redisClient");
+const { summaryCacheKey } = require("./medicalSummaryController");
 const departmentModel = require("../models/departmentModel");
 const { getUtcDayRange } = require("../utils/utcday");
 const DEPARTMENTS = require("../constants/departments");
@@ -1041,7 +1040,6 @@ const getMyProfile = async (req, res) => {
   }
 };
 
-
 const getCompletedAppointments = async (req, res) => {
   try {
     const doctor = await docterModel.findOne({
@@ -1317,9 +1315,7 @@ const uploadDoctorPhoto = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-// ============================================================
-// Helper: consistent "today" date range (reused everywhere)
-// ============================================================
+
 const getTodayRange = () => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -1481,10 +1477,7 @@ const startConsultation = async (req, res) => {
   }
 };
 
-// ============================================================
-// 3. getCurrentPatient
-// Read-only. Returns today's CURRENT appointment, if any.
-// ============================================================
+
 const getCurrentPatient = async (req, res) => {
   try {
     const doctor = await docterModel.findOne({ userId: req.user.id });
@@ -1533,71 +1526,6 @@ const getCurrentPatient = async (req, res) => {
     });
   }
 };
-
-// ============================================================
-// 4. stopConsultation
-// Stops OPD fully. Blocked if a consultation is CURRENT.
-// Added the missing today/tomorrow date filter for consistency.
-// ============================================================
-// const stopConsultation = async (req, res) => {
-//   try {
-//     const io = req.app.get("io");
-
-//     const doctor = await docterModel.findOne({ userId: req.user.id });
-//     if (!doctor) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Doctor not found"
-//       });
-//     }
-
-//     if (!doctor.opdStarted) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "OPD is already stopped"
-//       });
-//     }
-
-//     const { today, tomorrow } = getTodayRange();
-
-//     const currentAppointment = await Appointment.findOne({
-//       doctor: doctor._id,
-//       status: "CURRENT",
-//       date: { $gte: today, $lt: tomorrow }
-//     }).populate({ path: "patient", populate: { path: "userId", select: "name email" } });
-
-//     if (currentAppointment) {
-//       return res.status(400).json({
-//         success: false,
-//         message:
-//           "Cannot stop OPD while a consultation is in progress. Complete the current consultation first.",
-//         currentAppointment
-//       });
-//     }
-
-//     doctor.opdStarted = false;
-//     doctor.opdPaused = false;
-//     await doctor.save();
-
-//     io.to(`doctor_${doctor._id}`).emit("opdStopped", {
-//       status: "STOPPED",
-//       message: "OPD stopped successfully"
-//     });
-
-//     return res.status(200).json({
-//       success: true,
-//       message: "OPD stopped successfully",
-//       opdStarted: doctor.opdStarted,
-//       opdPaused: doctor.opdPaused
-//     });
-//   } catch (error) {
-//     console.error("STOP OPD ERROR:", error);
-//     return res.status(500).json({
-//       success: false,
-//       message: error.message
-//     });
-//   }
-// };
 
 const stopConsultation = async (req, res) => {
   try {
@@ -1987,6 +1915,9 @@ const advanceQueue = async ({ doctor, io, closeStatus, socketEventName, closingM
     if (closeStatus === "SKIPPED") currentAppointment.skippedAt = new Date();
     if (closeStatus === "COMPLETED") currentAppointment.consultationEndedAt = new Date();
     await currentAppointment.save();
+
+    // Closing an appointment changes the timeline the AI summary is built from.
+    await redisClient.del(summaryCacheKey(currentAppointment.patient));
   }
 
   const nextAppointment = await Appointment.findOneAndUpdate(

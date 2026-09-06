@@ -9,6 +9,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import WebcamMedicineOCR from "./WebcamMedicineOCR";
+import api from "../../api/axiosInstance";
 
 const initialMedicine = {
   name: "",
@@ -84,23 +85,27 @@ const AddMedicine = () => {
     try {
       setSaving(true);
 
-      /*
-        Connect your MediReach API here.
+      const response = await api.post("/pharmacy/add-medicine", {
+        medicineName: medicine.name.trim(),
+        strength: medicine.strength.trim(),
+        batchNumber: medicine.batchNumber.trim(),
+        manufacturingDate: medicine.manufacturingDate.trim(),
+        expiryDate: medicine.expiryDate.trim(),
+        price: Number(medicine.sellingPrice || medicine.mrp || medicine.purchasePrice || 0),
+        stock: Number(medicine.quantity),
+        manufacturer: medicine.manufacturer.trim(),
+        description: medicine.genericName.trim(),
+        addedVia: method === "ocr" ? "OCR" : "MANUAL",
+      });
 
-        Example:
-
-        await axios.post(
-          "/api/pharmacy/medicines",
-          medicine
-        );
-      */
-
-      console.log("MEDICINE TO SAVE:", medicine);
+      if (!response.data?.success) {
+        throw new Error(response.data?.msg || "Failed to add medicine");
+      }
 
       alert("Medicine added successfully.");
-
       setMedicine(initialMedicine);
       setMethod(null);
+      navigate("/pharmacy-dashboard");
 
     } catch (error) {
       console.error(error);

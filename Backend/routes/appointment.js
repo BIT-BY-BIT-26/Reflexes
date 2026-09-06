@@ -42,5 +42,7 @@ appointmentRouter.get("/appointments/:id", auth, getAppointmentById);
 appointmentRouter.post("/appointments/book-earliest",auth,bookEarliestAvailable);
 appointmentRouter.patch("/appointments/:id/complete",auth, completeConsultation);
 
+
+
 module.exports = appointmentRouter;
 
