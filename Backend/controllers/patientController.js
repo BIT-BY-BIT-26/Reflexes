@@ -599,6 +599,8 @@ const createEmergency = async (req, res) => {
 
     const hospital = await HospitalModel.findOne({
       _id: hospitalId,
+       isActive: true,
+       isEmergencyAvailable: true,
     });
 
     if (!hospital) {
@@ -719,5 +721,289 @@ const createEmergency = async (req, res) => {
   }
 };
 
+const getActiveEmergency = async (req, res) => {
+  try {
+    const patientId = req.user._id;
 
-module.exports = {registerPatient,getActiveQueueStatus,getMyProfile,createWalkInPatient,getPatientAppointments,getPatientProfile ,getPatientReportForDoctor, updatePatientProfile,getMyReports,createEmergency};
+    const emergency = await EmergencyModel.findOne({
+      patient: patientId,
+
+      status: {
+        $in: [
+          "REQUESTED",
+          "ACKNOWLEDGED",
+          "AMBULANCE_ASSIGNED",
+          "ON_THE_WAY",
+          "ARRIVED",
+          "PATIENT_PICKED",
+        ],
+      },
+    })
+      .populate(
+        "hospital",
+        "name phone_number city state location"
+      )
+      .populate(
+        "patient",
+        "name email phone_number"
+      )
+      .populate(
+        "acknowledgedBy",
+        "name email phone_number role"
+      )
+      .populate(
+        "assignedBy",
+        "name email phone_number role"
+      );
+
+    return res.status(200).json({
+      success: true,
+
+      // Agar active emergency nahi hai
+      // to null return hoga
+      emergency: emergency || null,
+    });
+
+  } catch (error) {
+    console.error(
+      "GET ACTIVE EMERGENCY ERROR:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch active emergency",
+    });
+  }
+};
+
+
+const getEmergencyById = async (req, res) => {
+  try {
+    const { emergencyId } = req.params;
+
+    const patientId = req.user._id;
+
+    const emergency =
+      await EmergencyModel.findById(emergencyId)
+        .populate(
+          "hospital",
+          "name phone_number city state location"
+        )
+        .populate(
+          "patient",
+          "name email phone_number"
+        )
+        .populate(
+          "acknowledgedBy",
+          "name email phone_number role"
+        )
+        .populate(
+          "assignedBy",
+          "name email phone_number role"
+        )
+        .populate(
+          "cancelledBy",
+          "name email phone_number role"
+        );
+
+    if (!emergency) {
+      return res.status(404).json({
+        success: false,
+        message: "Emergency not found",
+      });
+    }
+
+    // Patient sirf apni emergency dekh sakta hai
+    if (
+      emergency.patient._id.toString() !==
+      patientId.toString()
+    ) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "You are not allowed to view this emergency",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      emergency,
+    });
+
+  } catch (error) {
+    console.error(
+      "GET EMERGENCY ERROR:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch emergency",
+    });
+  }
+};
+
+
+const cancelEmergency = async (req, res) => {
+  try {
+    const io = req.app.get("io");
+
+    const { emergencyId } = req.params;
+
+    const patientId = req.user._id;
+
+
+    // =====================================================
+    // FIND EMERGENCY
+    // =====================================================
+
+    const emergency =
+      await EmergencyModel.findById(emergencyId);
+
+    if (!emergency) {
+      return res.status(404).json({
+        success: false,
+        message: "Emergency request not found",
+      });
+    }
+
+
+    // =====================================================
+    // CHECK OWNERSHIP
+    // =====================================================
+
+    if (
+      emergency.patient.toString() !==
+      patientId.toString()
+    ) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "You are not allowed to cancel this emergency",
+      });
+    }
+
+
+    // =====================================================
+    // ALREADY COMPLETED
+    // =====================================================
+
+    if (emergency.status === "COMPLETED") {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Completed emergency cannot be cancelled",
+      });
+    }
+
+
+    // =====================================================
+    // ALREADY CANCELLED
+    // =====================================================
+
+    if (emergency.status === "CANCELLED") {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Emergency is already cancelled",
+      });
+    }
+
+
+    // =====================================================
+    // AMBULANCE PROCESS ALREADY STARTED
+    // =====================================================
+
+    if (
+      emergency.status === "AMBULANCE_ASSIGNED" ||
+      emergency.status === "ON_THE_WAY" ||
+      emergency.status === "ARRIVED" ||
+      emergency.status === "PATIENT_PICKED"
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Ambulance process has already started. Please contact the hospital.",
+      });
+    }
+
+
+    // =====================================================
+    // CANCEL
+    // =====================================================
+
+    emergency.status = "CANCELLED";
+
+    emergency.cancelledAt = new Date();
+
+    emergency.cancelledBy = patientId;
+
+
+    await emergency.save();
+
+
+    // =====================================================
+    // POPULATE UPDATED EMERGENCY
+    // =====================================================
+
+    const populatedEmergency =
+      await EmergencyModel.findById(
+        emergency._id
+      )
+        .populate(
+          "patient",
+          "name email phone_number"
+        )
+        .populate(
+          "hospital",
+          "name phone_number city state location"
+        )
+        .populate(
+          "cancelledBy",
+          "name email phone_number role"
+        );
+
+
+    // =====================================================
+    // SOCKET → HOSPITAL
+    // =====================================================
+
+    if (io) {
+      io.to(
+        `hospital_${emergency.hospital.toString()}`
+      ).emit(
+        "emergency-cancelled",
+        populatedEmergency
+      );
+    }
+
+
+    // =====================================================
+    // RESPONSE
+    // =====================================================
+
+    return res.status(200).json({
+      success: true,
+      message:
+        "Emergency request cancelled",
+      emergency: populatedEmergency,
+    });
+
+  } catch (error) {
+    console.error(
+      "CANCEL EMERGENCY ERROR:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message:
+        "Failed to cancel emergency",
+      error: error.message,
+    });
+  }
+};
+
+
+module.exports = {registerPatient,getActiveQueueStatus,getMyProfile,createWalkInPatient,getPatientAppointments,getPatientProfile ,getPatientReportForDoctor, updatePatientProfile,getMyReports,createEmergency,getActiveEmergency,getEmergencyById,cancelEmergency};

@@ -6,6 +6,10 @@ const Appointment = require("../models/appointmentModel");
 const patientModel = require("../models/patientModel");
 const { redisClient } = require("../config/redisClient");
 const departmentModel = require("../models/departmentModel");
+const { getUtcDayRange } = require("../utils/utcday");
+const DEPARTMENTS = require("../constants/departments");
+const { getDoctorOnlineSlots } = require("../services/onlineSlotService");
+//const appointmentModel = require("../models/appointmentModel");
 /* ================= GET DOCTORS ================= */
 
 const getDoctorsByDepartment = async (req, res) => {
@@ -150,7 +154,6 @@ const submitProfile = async (req, res) => {
       department,
       experience,
       specialisations,
-      onlineAvailability,
       registrationNumber,
       consultationFee,
       languages
@@ -197,58 +200,17 @@ const submitProfile = async (req, res) => {
       }
     }
 
-    let finalOnlineAvailability = {};
-
-    if (onlineAvailability) {
-
-      if (
-        typeof onlineAvailability !== "object" ||
-        onlineAvailability === null
-      ) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid online availability format"
-        });
-      }
-
-      const { from, to } = onlineAvailability;
-      if ((from && !to) || (!from && to)) {
-        return res.status(400).json({
-          success: false,
-          message: "Both online availability from and to times are required"
-        });
-      }
-
-      if (from && to) {
-        finalOnlineAvailability = {
-          from,
-          to
-        };
-      }
-    }
-
     const doctor = new docterModel({
       userId,
       hospital: hospitalId,
-
       position,
-
       profile_photo: profile_photo || "",
-
       department,
-
       experience: experience || 0,
-
       specialisations: specialisations || [],
-
-      onlineAvailability: finalOnlineAvailability,
-
       registrationNumber,
-
       consultationFee: consultationFee || 0,
-
       languages: languages || [],
-
       profileCompleted: true
     });
 
@@ -294,7 +256,6 @@ const updateProfile = async (req, res) => {
       experience,
       specialisations,
       availableDays,
-      onlineAvailability,
       registrationNumber,
       consultationFee
     } = req.body;
@@ -328,37 +289,6 @@ const updateProfile = async (req, res) => {
       doctor.consultationFee = consultationFee;
 
     // =========================
-    // Online consultation timing
-    // =========================
-
-    if (onlineAvailability !== undefined) {
-
-      if (
-        typeof onlineAvailability !== "object" ||
-        onlineAvailability === null
-      ) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid online availability format"
-        });
-      }
-
-      const { from, to } = onlineAvailability;
-
-      if (!from || !to) {
-        return res.status(400).json({
-          success: false,
-          message: "Online availability must contain from and to time"
-        });
-      }
-
-      doctor.onlineAvailability = {
-        from,
-        to
-      };
-    }
-
-    // =========================
     // Registration number
     // =========================
 
@@ -387,6 +317,704 @@ const updateProfile = async (req, res) => {
     });
   }
 };
+
+// ========================================================
+// UPDATE ONLINE AVAILABILITY
+// Doctor can update this daily
+// ========================================================
+
+const updateOnlineAvailability = async (req, res) => {
+  try {
+
+    const userId = req.user.id;
+
+    // ------------------------------------------------------
+    // 1. Find doctor
+    // ------------------------------------------------------
+
+    const doctor = await docterModel.findOne({ userId });
+
+    if (!doctor) {
+      return res.status(404).json({
+        success: false,
+        message: "Doctor profile not found"
+      });
+    }
+
+    // ------------------------------------------------------
+    // 2. Get data from body
+    // ------------------------------------------------------
+
+    const {
+      isAvailable,
+      from,
+      to,
+      consultationDuration,
+      bufferTime
+    } = req.body;
+
+    // ------------------------------------------------------
+    // 3. Validate isAvailable
+    // ------------------------------------------------------
+
+    if (typeof isAvailable !== "boolean") {
+      return res.status(400).json({
+        success: false,
+        message: "isAvailable must be true or false"
+      });
+    }
+
+    // ------------------------------------------------------
+    // 4. If doctor is disabling online consultation
+    // ------------------------------------------------------
+
+    if (!isAvailable) {
+      doctor.onlineAvailability = {
+        from: doctor.onlineAvailability?.from ?? null,
+        to: doctor.onlineAvailability?.to ?? null,
+
+        consultationDuration:
+          consultationDuration ??
+          doctor.onlineAvailability?.consultationDuration ??
+          20,
+
+        bufferTime:
+          bufferTime ??
+          doctor.onlineAvailability?.bufferTime ??
+          10,
+
+        isAvailable: false
+      };
+
+      await doctor.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Online consultation temporarily disabled",
+        onlineAvailability: doctor.onlineAvailability
+      });
+    }
+
+    // ------------------------------------------------------
+    // 5. If enabling, from and to are required
+    // ------------------------------------------------------
+
+    if (!from || !to) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "From and to time are required when online consultation is enabled"
+      });
+    }
+
+    // ------------------------------------------------------
+    // 6. Validate time format
+    // HH:mm
+    // ------------------------------------------------------
+
+    const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
+    if (!timeRegex.test(from) || !timeRegex.test(to)) {
+      return res.status(400).json({
+        success: false,
+        message: "Time must be in HH:mm format"
+      });
+    }
+
+    // ------------------------------------------------------
+    // 7. Convert time to minutes
+    // ------------------------------------------------------
+
+    const [fromHour, fromMinute] =
+      from.split(":").map(Number);
+
+    const [toHour, toMinute] =
+      to.split(":").map(Number);
+
+    const fromMinutes =
+      fromHour * 60 + fromMinute;
+
+    const toMinutes =
+      toHour * 60 + toMinute;
+
+    // ------------------------------------------------------
+    // 8. Validate time range
+    // ------------------------------------------------------
+
+    if (fromMinutes >= toMinutes) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Online availability 'from' time must be before 'to' time"
+      });
+    }
+
+    // ------------------------------------------------------
+    // 9. Consultation duration
+    // ------------------------------------------------------
+
+    const finalConsultationDuration =
+      consultationDuration ??
+      doctor.onlineAvailability?.consultationDuration ??
+      20;
+
+    if (
+      !Number.isInteger(finalConsultationDuration) ||
+      finalConsultationDuration <= 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Consultation duration must be a positive integer"
+      });
+    }
+
+    // ------------------------------------------------------
+    // 10. Buffer time
+    // ------------------------------------------------------
+
+    const finalBufferTime =
+      bufferTime ??
+      doctor.onlineAvailability?.bufferTime ??
+      10;
+
+    if (
+      !Number.isInteger(finalBufferTime) ||
+      finalBufferTime < 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Buffer time must be a non-negative integer"
+      });
+    }
+
+    // ------------------------------------------------------
+    // 11. Make sure at least one complete slot fits
+    // ------------------------------------------------------
+
+    const slotDuration =
+      finalConsultationDuration +
+      finalBufferTime;
+
+    if (
+      fromMinutes + slotDuration >
+      toMinutes
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Online availability is too short for one consultation slot"
+      });
+    }
+
+    // ------------------------------------------------------
+    // 12. Save online availability
+    // ------------------------------------------------------
+
+    doctor.onlineAvailability = {
+
+      from,
+
+      to,
+
+      consultationDuration:
+        finalConsultationDuration,
+
+      bufferTime:
+        finalBufferTime,
+
+      isAvailable: true
+
+    };
+
+    await doctor.save();
+
+    // ------------------------------------------------------
+    // 13. Response
+    // ------------------------------------------------------
+
+    return res.status(200).json({
+
+      success: true,
+
+      message:
+        "Online availability updated successfully",
+
+      onlineAvailability:
+        doctor.onlineAvailability
+
+    });
+
+  } catch (error) {
+
+    console.error(
+      "UPDATE ONLINE AVAILABILITY ERROR:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message:
+        "Failed to update online availability",
+      error: error.message
+    });
+  }
+};
+
+
+//=============================
+//get available online slots
+//=============================
+const getAvailableOnlineSlots = async (req, res) => {
+  try {
+    const { doctorId } = req.params;
+    const { date } = req.query;
+
+    // =========================================
+    // 1. Validate date
+    // =========================================
+
+    if (!date) {
+      return res.status(400).json({
+        success: false,
+        message: "Date is required"
+      });
+    }
+
+    const selectedDate = new Date(date);
+
+    if (isNaN(selectedDate.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid date"
+      });
+    }
+
+    // =========================================
+    // 2. Find doctor
+    // =========================================
+
+    const doctor = await docterModel.findById(doctorId);
+
+    if (!doctor) {
+      return res.status(404).json({
+        success: false,
+        message: "Doctor not found"
+      });
+    }
+
+    // =========================================
+    // 3. Check online availability
+    // =========================================
+
+    const availability = doctor.onlineAvailability;
+
+    if (
+      !availability ||
+      !availability.isAvailable ||
+      !availability.from ||
+      !availability.to
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Doctor is currently not available for online consultation."
+      });
+    }
+
+    // =========================================
+    // 4. Convert time → minutes
+    // =========================================
+
+    const [fromHour, fromMinute] =
+      availability.from.split(":").map(Number);
+
+    const [toHour, toMinute] =
+      availability.to.split(":").map(Number);
+
+    const fromMinutes =
+      fromHour * 60 + fromMinute;
+
+    const toMinutes =
+      toHour * 60 + toMinute;
+
+    const consultationDuration =
+      availability.consultationDuration || 20;
+
+    const bufferTime =
+      availability.bufferTime ?? 10;
+
+    const slotDuration =
+      consultationDuration + bufferTime;
+
+    // =========================================
+    // 5. Get today's date range
+    // =========================================
+
+    const { start, end } =getUtcDayRange(date)
+
+    // =========================================
+    // 6. Get already booked online appointments
+    // =========================================
+
+    const bookedAppointments =
+      await Appointment.find({
+        doctor: doctor._id,
+
+        appointmentType: "online",
+
+        date: {
+          $gte: start,
+          $lte: end
+        },
+
+        status: {
+          $in: [
+            "PENDING",
+            "CONFIRMED",
+            "CURRENT"
+          ]
+        }
+      }).select("date");
+
+    // =========================================
+    // 7. Create booked slot set
+    // =========================================
+
+    const bookedTimes = new Set(
+      bookedAppointments.map((appointment) => {
+        const d = new Date(appointment.date);
+
+        const hours = String(
+          d.getHours()
+        ).padStart(2, "0");
+
+        const minutes = String(
+          d.getMinutes()
+        ).padStart(2, "0");
+
+        return `${hours}:${minutes}`;
+      })
+    );
+
+    // =========================================
+    // 8. Generate slots
+    // =========================================
+
+    const slots = [];
+
+    for (
+      let currentMinutes = fromMinutes;
+      currentMinutes + slotDuration <= toMinutes;
+      currentMinutes += slotDuration
+    ) {
+
+      const hour =
+        Math.floor(currentMinutes / 60);
+
+      const minute =
+        currentMinutes % 60;
+
+      const time =
+        `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+
+      // =====================================
+      // Create actual slot date
+      // =====================================
+
+      const slotDate = new Date(selectedDate);
+
+      slotDate.setHours(
+        hour,
+        minute,
+        0,
+        0
+      );
+
+      const slotEnd = new Date(slotDate);
+
+      slotEnd.setMinutes(
+        slotEnd.getMinutes() +
+        consultationDuration
+      );
+
+      // =====================================
+      // Check whether slot is booked
+      // =====================================
+
+      const isBooked =
+        bookedTimes.has(time);
+
+      // =====================================
+      // If today → past slots unavailable
+      // =====================================
+
+      let isPast = false;
+
+      const now = new Date();
+
+      const today = new Date();
+
+      today.setHours(0, 0, 0, 0);
+
+      const slotDay = new Date(selectedDate);
+
+      slotDay.setHours(0, 0, 0, 0);
+
+      if (
+        slotDay.getTime() === today.getTime() &&
+        slotDate <= now
+      ) {
+        isPast = true;
+      }
+
+      slots.push({
+        time,
+
+        start: slotDate,
+
+        end: slotEnd,
+
+        consultationDuration,
+
+        bufferTime,
+
+        booked: isBooked,
+
+        available:
+          !isBooked && !isPast
+      });
+    }
+
+    // =========================================
+    // 9. Response
+    // =========================================
+
+    return res.status(200).json({
+      success: true,
+
+      doctorId: doctor._id,
+
+      date,
+
+      onlineAvailability: {
+        from: availability.from,
+        to: availability.to,
+        consultationDuration,
+        bufferTime
+      },
+
+      slots
+    });
+
+  } catch (error) {
+
+    console.error(
+      "GET AVAILABLE ONLINE SLOTS ERROR:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message:
+        "Failed to fetch available online slots",
+      error: error.message
+    });
+  }
+};
+
+
+const getOnlineDoctorsByDepartment = async (req, res) => {
+  try {
+    const { name, date } = req.query;
+
+    // --------------------------------------------------
+    // Validation
+    // --------------------------------------------------
+
+    if (!name) {
+      return res.status(400).json({
+        success: false,
+        message: "Department name is required",
+      });
+    }
+
+    if (!date) {
+      return res.status(400).json({
+        success: false,
+        message: "Date is required",
+      });
+    }
+
+    // Department must exist in our allowed list
+    if (!DEPARTMENTS.includes(name)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid department",
+      });
+    }
+
+    const selectedDate = new Date(date);
+
+    if (isNaN(selectedDate.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid date",
+      });
+    }
+
+    // --------------------------------------------------
+    // Find all department documents
+    // --------------------------------------------------
+    // Same department can exist in multiple hospitals.
+    //
+    // Example:
+    // Cardiology -> Hospital A
+    // Cardiology -> Hospital B
+    // Cardiology -> Hospital C
+    //
+    // So we cannot use one department ID.
+    // --------------------------------------------------
+
+    const departments = await departmentModel.find({
+      name: {
+        $regex: `^${name}$`,
+        $options: "i",
+      },
+
+      isActive: true,
+    }).select("_id hospital");
+
+    console.log("DEPARTMENT NAME:", name);
+
+console.log("DEPARTMENTS FOUND:", departments);
+
+    if (departments.length === 0) {
+      return res.status(200).json({
+        success: true,
+        department: name,
+        date,
+        doctors: [],
+      });
+    }
+
+    const departmentIds = departments.map(
+      (department) => department._id
+    );
+
+    // --------------------------------------------------
+    // Find online doctors
+    // --------------------------------------------------
+
+    const doctors = await docterModel
+      .find({
+        department: {
+          $in: departmentIds,
+        },
+
+        "onlineAvailability.isAvailable": true,
+
+        "onlineAvailability.from": {
+          $exists: true,
+          $ne: "",
+        },
+
+        "onlineAvailability.to": {
+          $exists: true,
+          $ne: "",
+        },
+      })
+      .populate("department", "name hospital")
+      .populate("hospital", "name")
+      .select(
+        "name profile_photo experience specialisations department hospital onlineAvailability"
+      );
+
+    // --------------------------------------------------
+    // Check available slots
+    // --------------------------------------------------
+
+    const availableDoctors = [];
+
+    for (const doctor of doctors) {
+      const slots = await getDoctorOnlineSlots(
+        doctor,
+        date
+      );
+
+      // Only slots which are actually available
+      const availableSlots = slots.filter(
+        (slot) => slot.available
+      );
+
+      // If no future/free slot -> don't show doctor
+      if (availableSlots.length === 0) {
+        continue;
+      }
+
+      // First available slot
+      const nextAvailableSlot = availableSlots[0];
+
+      availableDoctors.push({
+        doctorId: doctor._id,
+
+        name: doctor.name,
+
+        profile_photo: doctor.profile_photo,
+
+        experience: doctor.experience,
+
+        specialisations: doctor.specialisations,
+
+        department: doctor.department,
+
+        hospital: doctor.hospital,
+
+        onlineAvailability: {
+          from: doctor.onlineAvailability.from,
+          to: doctor.onlineAvailability.to,
+          consultationDuration:
+            doctor.onlineAvailability.consultationDuration ?? 20,
+          bufferTime:
+            doctor.onlineAvailability.bufferTime ?? 10,
+        },
+
+        nextAvailableSlot: {
+          time: nextAvailableSlot.time,
+          start: nextAvailableSlot.start,
+          end: nextAvailableSlot.end,
+        },
+
+        availableSlots: availableSlots.map((slot) => ({
+          time: slot.time,
+          start: slot.start,
+          end: slot.end,
+        })),
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      department: name,
+      date,
+      count: availableDoctors.length,
+      doctors: availableDoctors,
+    });
+  } catch (error) {
+    console.error(
+      "GET ONLINE DOCTORS BY DEPARTMENT ERROR:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch available online doctors",
+      error: error.message,
+    });
+  }
+};
+
 
 const getMyProfile = async (req, res) => {
   try {
@@ -1501,4 +2129,4 @@ const callNext = async (req, res) => {
 };
 
 
-module.exports={getDoctorDashboard,getCurrentPatient,completeConsultation,getUniquePatients,toggleOpd,getProfileStatus,submitProfile,getDoctorById, getDoctorByHospital, searchPatient,getDoctorsByDepartment,getMyProfile,getCompletedAppointments,updateProfile,uploadDoctorPhoto,callNext,skipPatient,pauseConsultation,resumeConsultation,stopConsultation,startConsultation};
+module.exports={getDoctorDashboard,getAvailableOnlineSlots,getOnlineDoctorsByDepartment,getCurrentPatient,completeConsultation,getUniquePatients,toggleOpd,getProfileStatus,submitProfile,getDoctorById, getDoctorByHospital, searchPatient,getDoctorsByDepartment,getMyProfile,getCompletedAppointments,updateProfile,uploadDoctorPhoto,callNext,skipPatient,pauseConsultation,resumeConsultation,stopConsultation,startConsultation,updateOnlineAvailability};

@@ -1,0 +1,64 @@
+{
+  "@@locale": "hi",
+
+  "appName": "MediReach",
+
+  "home": "होम",
+  "appointments": "अपॉइंटमेंट्स",
+  "profile": "प्रोफ़ाइल",
+  "queue": "कतार",
+
+  "nearbyHospitals": "पास के अस्पताल",
+  "searchHospitals": "अस्पताल खोजें",
+
+  "bookAppointment": "अपॉइंटमेंट बुक करें",
+  "myAppointments": "मेरी अपॉइंटमेंट्स",
+
+  "doctors": "डॉक्टर",
+  "departments": "विभाग",
+  "hospital": "अस्पताल",
+
+  "viewDetails": "विवरण देखें",
+  "selectDoctor": "डॉक्टर चुनें",
+  "selectDepartment": "विभाग चुनें",
+
+  "reasonForVisit": "विज़िट का कारण",
+  "description": "विवरण",
+
+  "confirmAppointment": "अपॉइंटमेंट की पुष्टि करें",
+  "cancelAppointment": "अपॉइंटमेंट रद्द करें",
+
+  "upcoming": "आगामी",
+  "past": "पिछली",
+
+  "profileSettings": "प्रोफ़ाइल सेटिंग्स",
+  "language": "भाषा",
+
+  "english": "अंग्रेज़ी",
+  "hindi": "हिंदी",
+  "marathi": "मराठी",
+
+  "save": "सेव करें",
+  "cancel": "रद्द करें",
+  "done": "हो गया",
+  "retry": "पुनः प्रयास करें",
+
+  "loading": "लोड हो रहा है...",
+  "noAppointments": "कोई अपॉइंटमेंट नहीं मिली",
+  "somethingWentWrong": "कुछ गलत हो गया",
+  "tryAgain": "पुनः प्रयास करें",
+  "welcomeBack": "वापसी पर स्वागत है",
+    "skipTheWait": "इंतज़ार से बचें",
+    "bookWithEase": "आसानी से बुक करें",
+    "bookAppointmentsQueue": "अपॉइंटमेंट बुक करें और\nकतार को रियल टाइम में देखें",
+    "quickAccess": "त्वरित पहुँच",
+    "findHospitals": "अस्पताल खोजें",
+    "topDoctors": "शीर्ष डॉक्टर",
+    "emergency": "आपातकाल",
+    "pharmacy": "फार्मेसी",
+    "viewAll": "सभी देखें",
+    "noHospitalsFoundNearby": "आस-पास कोई अस्पताल नहीं मिला",
+    "availableNow": "अभी उपलब्ध",
+    "currentlyUnavailable": "अभी उपलब्ध नहीं",
+    "kmAway": "{distance} किमी दूर"
+}

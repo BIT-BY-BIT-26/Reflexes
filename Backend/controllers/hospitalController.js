@@ -329,16 +329,22 @@ console.log("FILTER:", filter);
 
 const getHospitals = async (req, res) => {
   try {
-    const { state, city, lat, lng, radius = 10 } = req.query;
+    const { state, city, lat, lng, radius = 10,emergency } = req.query;
     // normal filter
     let matchStage = {};
 
-    if (state) {//         regex → case insensitive match// "bhagalpur" == "Bhagalpur"
+    if (state) {          // regex → case insensitive match// "bhagalpur" == "Bhagalpur"
       matchStage.state = { $regex: `^${state}$`, $options: "i" };
     }
 
     if (city) {
       matchStage.city = { $regex: `^${city}$`, $options: "i" };
+    }
+
+    // Emergency hospitals only
+    if (emergency === "true") {
+      matchStage.isActive = true;
+      matchStage.isEmergencyAvailable = true;
     }
 
     let cacheKey = "";
@@ -872,7 +878,8 @@ const updateEmergencyStatus = async (req, res) => {
         "COMPLETED"
       ],
 
-      COMPLETED: []
+      COMPLETED: [],
+      CANCELLED: [],
     };
 
 
@@ -967,7 +974,7 @@ const updateEmergencyStatus = async (req, res) => {
     if (io) {
 
       io.to(
-        `patient:${emergency.patient.toString()}`
+        `patient_${emergency.patient.toString()}`
       ).emit(
         "emergency-status-updated",
         updatedEmergency

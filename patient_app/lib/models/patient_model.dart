@@ -1,3 +1,4 @@
+import 'package:patient_app/models/patient_address_model.dart';
 import 'package:patient_app/models/user_model.dart';
 
 class PatientModel {
@@ -7,7 +8,7 @@ class PatientModel {
   final String? bloodGroup;
   final String? phone;
   final String? profileImage;
-
+  final PatientAddress? address;
   final UserModel user;
 
   PatientModel({
@@ -17,6 +18,7 @@ class PatientModel {
     this.bloodGroup,
     this.phone,
     this.profileImage,
+    this.address,
     required this.user,
   });
 
@@ -30,6 +32,7 @@ class PatientModel {
       bloodGroup: json['bloodGroup'],
       phone: json['phone_number']?.toString(),
       profileImage: json['profileImage'],
+      address: json['address'] != null ? PatientAddress.fromJson(json['address']) : null,
       user: UserModel(
         id: json['userId']['_id'].toString(),
         name: json['userId']['name'],

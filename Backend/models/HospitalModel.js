@@ -16,9 +16,10 @@ const HospitalSchema= new Mongoose.Schema({
         required: true,
         unique: true
     },
+
     phone_number: {
-    type: String,
-    required: true
+        type: String,
+        required: true
     },
     city:{
         type:String,
@@ -55,8 +56,8 @@ const HospitalSchema= new Mongoose.Schema({
         default:false
     },
     description:{
-    type:String,
-    default:""
+        type:String,
+        default:""
     },
 
     address:{
@@ -82,6 +83,11 @@ const HospitalSchema= new Mongoose.Schema({
     facilities:{
         type:[String],
         default:[]
+    },
+
+    isEmergencyAvailable: {
+        type: Boolean,
+        default: true
     },
 
     timings:{

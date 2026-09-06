@@ -1,9 +1,12 @@
 const { source } = require("../config/cloudinary");
 const { redisClient } = require("../config/redisClient");
+const DEPARTMENTS = require("../constants/departments");
 const appointmentModel = require("../models/appointmentModel");
+const departmentModel = require("../models/departmentModel");
 const docterModel = require("../models/docterModel");
 const PatientHospitalSchema = require("../models/PatientHospitalSchema");
 const patientModel = require("../models/patientModel");
+const { getDoctorOnlineSlots } = require("../services/onlineSlotService");
 const { getUtcDayRange } = require("../utils/utcday");
 
 exports.createAppointment = async (req, res) => {
@@ -87,15 +90,27 @@ exports.createAppointment = async (req, res) => {
     // =========================
     // 6. Maximum 30 days advance
     // =========================
-    const maxDate = new Date(today);
-    maxDate.setDate(maxDate.getDate() + 30);
+    if(appointmentType=="offline"){
+      const maxDate = new Date(today);
+      maxDate.setDate(maxDate.getDate() + 30);
 
-    if (selectedDate > maxDate) {
-      return res.status(400).json({
-        success: false,
-        message: "Appointments can only be booked up to 30 days in advance."
-      });
+      if (selectedDate > maxDate) {
+        return res.status(400).json({
+          success: false,
+          message: "Appointments can only be booked up to 30 days in advance."
+        });
+      }
     }
+
+    //online k liye current day booking
+    if (appointmentType === "online") {
+      if (selectedDate.getTime() !== today.getTime()) {
+          return res.status(400).json({
+              success: false,
+              message: "Online appointments can only be booked for today."
+          });
+      }
+  }
 
     // =========================
     // 7. Check doctor's OPD schedule
@@ -104,7 +119,8 @@ exports.createAppointment = async (req, res) => {
       weekday: "long",
       timeZone: "Asia/Kolkata"
     });
-
+    
+  if(appointmentType=="offline"){
     const schedule = doctorData.opdSchedule.find(
       (s) => s.day === dayName && s.isAvailable
     );
@@ -288,11 +304,244 @@ exports.createAppointment = async (req, res) => {
       message: `${appointmentType} appointment booked successfully`,
       appointment: populatedAppointment
     });
+  }
 
+    // ========================================================
+    // 10. ONLINE APPOINTMENT
+    // ========================================================
+
+    if (appointmentType == "online") {
+      const availability =
+        doctorData.onlineAvailability;
+      if (
+        !availability ||
+        !availability.isAvailable ||
+        !availability.from ||
+        !availability.to
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Doctor is currently not available for online consultation."
+
+        });
+      }
+
+      // ------------------------------------------------------
+      // Convert availability into minutes
+      // ------------------------------------------------------
+      const [fromHour, fromMinute] =
+        availability.from
+          .split(":")
+          .map(Number);
+      const [toHour, toMinute] =
+        availability.to
+          .split(":")
+          .map(Number);
+      const fromMinutes =
+        fromHour * 60 +
+        fromMinute;
+      const toMinutes =
+        toHour * 60 +
+        toMinute;
+
+      // ------------------------------------------------------
+      // Appointment time
+      // ------------------------------------------------------
+
+      const appointmentHour =
+        appointmentDate.getHours();
+      const appointmentMinute =
+        appointmentDate.getMinutes();
+      const appointmentMinutes =
+        appointmentHour * 60 +
+        appointmentMinute;
+
+      if (
+        appointmentMinutes < fromMinutes ||
+        appointmentMinutes >= toMinutes
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Selected time is outside doctor's online availability."
+        });
+      }
+      
+     const consultationDuration =
+        availability.consultationDuration || 20;
+    const bufferTime =
+        availability.bufferTime || 5;
+    const SLOT_DURATION =
+        consultationDuration + bufferTime;
+
+      if (
+        (appointmentMinutes - fromMinutes) %
+          SLOT_DURATION !== 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Invalid online consultation slot."
+        });
+      }
+
+      if (
+        appointmentMinutes +
+          SLOT_DURATION >
+        toMinutes
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Selected slot extends beyond doctor's availability."
+        });
+      }
+
+
+      // ------------------------------------------------------
+      // Same-day online booking
+      // Slot must be in future
+      // ------------------------------------------------------
+
+      const now = new Date();
+      if (
+        selectedDate.getTime() === today.getTime()
+      ) {
+        if (appointmentDate <= now) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "Past online slots cannot be booked."
+          });
+        }
+      }
+
+
+      const slotEnd =
+        new Date(
+          appointmentDate.getTime() +
+          SLOT_DURATION * 60 * 1000
+        );
+
+
+      const existingOnlineAppointment =
+        await appointmentModel.findOne({
+          doctor: doctorData._id,
+          appointmentType: "online",
+          date: {
+            $gte: appointmentDate,
+            $lt: slotEnd
+          },
+          status: {
+            $in: [
+              "PENDING",
+              "CONFIRMED",
+              "CURRENT"
+            ]
+          }
+        });
+
+
+      if (existingOnlineAppointment) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "This online slot is already booked."
+        });
+      }
+
+
+      // ------------------------------------------------------
+      // Create ONLINE appointment
+      // ------------------------------------------------------
+
+      const appointment =
+        await appointmentModel.create({
+          patient: patient._id,
+          doctor: doctorData._id,
+          hospital: doctorData.hospital,
+          department: doctorData.department,
+          date: appointmentDate,
+          appointmentType: "online",
+          token: null,
+          reason,
+          description,
+          status: "CONFIRMED"
+        });
+
+      // ------------------------------------------------------
+      // Patient-Hospital relation
+      // ------------------------------------------------------
+
+      await PatientHospitalSchema.findOneAndUpdate(
+        {
+          patientId: patient._id,
+          hospitalId: doctorData.hospital
+        },
+        {
+          $set: {
+            lastVisit: new Date(),
+            status: "ACTIVE"
+          },
+
+          $setOnInsert: {
+            firstVisit: new Date()
+          }
+        },
+        {
+          upsert: true,
+          new: true
+        }
+      );
+
+      const room =
+        `doctor_${doctorData._id.toString()}`;
+      io.to(room).emit(
+        "new-appointment",
+        {
+          message:
+            "New online appointment received",
+          appointmentId:
+            appointment._id,
+          patientId:
+            patient._id,
+          doctorId:
+            doctorData._id,
+          appointmentType:
+            "online",
+          token: null,
+          date:
+            appointmentDate,
+          reason
+        }
+      );
+
+      const populatedAppointment =
+        await appointmentModel
+          .findById(appointment._id)
+
+          .populate({
+            path: "patient",
+            populate: {
+              path: "userId",
+              select: "name email gender"
+            }
+          })
+          .populate("doctor")
+          .populate("hospital")
+          .populate("department");
+
+      return res.status(201).json({
+        success: true,
+        message:
+          "Online appointment booked successfully",
+        appointment:
+          populatedAppointment
+      });
+    }
   } catch (err) {
-
     console.error("CREATE APPOINTMENT ERROR:", err);
-
     return res.status(500).json({
       success: false,
       message: err.message
@@ -741,6 +990,281 @@ exports.getMyAppointmentsPatients = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: `Failed to fetch appointments: ${err.message}`,
+    });
+  }
+};
+
+
+//BOOK EARLIEST AVAILABLE ONLINE SLOT 
+exports.bookEarliestAvailable = async (req, res) => {
+  try {
+    const patientId = req.user.id;
+
+    const { department, date } = req.body;
+
+    // ============================================================
+    // 1. VALIDATION
+    // ============================================================
+
+    if (!department) {
+      return res.status(400).json({
+        success: false,
+        message: "Department is required",
+      });
+    }
+
+    if (!date) {
+      return res.status(400).json({
+        success: false,
+        message: "Date is required",
+      });
+    }
+
+    // Department must be one of our predefined departments
+    if (!DEPARTMENTS.includes(department)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid department",
+      });
+    }
+
+    const selectedDate = new Date(date);
+
+    if (isNaN(selectedDate.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid date",
+      });
+    }
+
+    // ============================================================
+    // 2. ONLINE CONSULTATION IS CURRENTLY SAME-DAY ONLY
+    // ============================================================
+
+    const now = new Date();
+
+    const { start, end } = getUtcDayRange(date);
+
+    if (selectedDate < start || selectedDate > end) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid appointment date",
+      });
+    }
+
+    // ============================================================
+    // 3. FIND DEPARTMENT DOCUMENTS ACROSS ALL HOSPITALS
+    // ============================================================
+
+    const departments = await departmentModel.find({
+      name: {
+        $regex: `^${department}$`,
+        $options: "i",
+      },
+      isActive: true,
+    }).select("_id hospital");
+
+    if (departments.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No active department found",
+      });
+    }
+
+    const departmentIds = departments.map(
+      (dept) => dept._id
+    );
+
+    // ============================================================
+    // 4. FIND ALL ONLINE DOCTORS
+    // ============================================================
+
+    const doctors = await docterModel
+      .find({
+        department: {
+          $in: departmentIds,
+        },
+
+        "onlineAvailability.isAvailable": true,
+
+        "onlineAvailability.from": {
+          $exists: true,
+          $ne: "",
+        },
+
+        "onlineAvailability.to": {
+          $exists: true,
+          $ne: "",
+        },
+      })
+      .populate("department", "name hospital")
+      .populate("hospital", "name")
+      .select(
+        "name profile_photo experience specialisations department hospital onlineAvailability"
+      );
+
+    if (doctors.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No online doctors found for this department",
+      });
+    }
+
+    // ============================================================
+    // 5. FIND EARLIEST AVAILABLE SLOT
+    // ============================================================
+
+    let earliestSlot = null;
+    let selectedDoctor = null;
+
+    for (const doctor of doctors) {
+
+      const slots = await getDoctorOnlineSlots(
+        doctor,
+        date
+      );
+
+      const availableSlots = slots.filter(
+        (slot) => slot.available
+      );
+
+      if (availableSlots.length === 0) {
+        continue;
+      }
+
+      // Slots already chronological hain,
+      // so first available slot is earliest for this doctor.
+      const doctorEarliestSlot = availableSlots[0];
+
+      // ========================================================
+      // Compare with globally earliest slot
+      // ========================================================
+
+      if (
+        !earliestSlot ||
+        doctorEarliestSlot.start < earliestSlot.start
+      ) {
+        earliestSlot = doctorEarliestSlot;
+        selectedDoctor = doctor;
+      }
+    }
+
+    // ============================================================
+    // 6. NO SLOT FOUND
+    // ============================================================
+
+    if (!earliestSlot || !selectedDoctor) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "No future online consultation slots are available for this department",
+      });
+    }
+
+    // ============================================================
+    // 7. FINAL AVAILABILITY CHECK
+    // ============================================================
+    // Important:
+    //
+    // Doctor list nikalne ke baad kisi aur patient ne
+    // same slot book kiya ho sakta hai.
+    //
+    // Isliye booking se pehle DB me dobara check karenge.
+    // ============================================================
+
+    const existingAppointment = await appointmentModel.findOne({
+      doctor: selectedDoctor._id,
+      appointmentType: "online",
+      date: earliestSlot.start,
+      status: {
+        $in: ["PENDING", "CONFIRMED", "CURRENT"],
+      },
+    });
+
+    if (existingAppointment) {
+
+      // Slot race condition ki wajah se unavailable ho gaya.
+      // Better hai client ko retry karne dena.
+
+      return res.status(409).json({
+        success: false,
+        message:
+          "The earliest slot was just booked. Please try again.",
+      });
+    }
+
+    // ============================================================
+    // 8. CREATE APPOINTMENT
+    // ============================================================
+
+    const appointment = await appointmentModel.create({
+      patient: patientId,
+
+      doctor: selectedDoctor._id,
+
+      department: selectedDoctor.department._id,
+
+      hospital: selectedDoctor.hospital,
+
+      appointmentType: "online",
+
+      date: earliestSlot.start,
+
+      status: "CONFIRMED",
+
+      token: null,
+    });
+
+    // ============================================================
+    // 9. RESPONSE
+    // ============================================================
+
+    return res.status(201).json({
+      success: true,
+
+      message: "Earliest available slot booked successfully",
+
+      appointment: {
+        appointmentId: appointment._id,
+
+        doctor: {
+          id: selectedDoctor._id,
+          name: selectedDoctor.name,
+          profile_photo: selectedDoctor.profile_photo,
+          experience: selectedDoctor.experience,
+          specialisations:
+            selectedDoctor.specialisations,
+        },
+
+        hospital: selectedDoctor.hospital,
+
+        department: selectedDoctor.department,
+
+        date: appointment.date,
+
+        slot: {
+          time: earliestSlot.time,
+          start: earliestSlot.start,
+          end: earliestSlot.end,
+        },
+
+        appointmentType: "online",
+
+        status: appointment.status,
+      },
+    });
+
+  } catch (error) {
+
+    console.error(
+      "BOOK EARLIEST AVAILABLE ERROR:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to book earliest available slot",
+      error: error.message,
     });
   }
 };

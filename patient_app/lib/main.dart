@@ -12,15 +12,24 @@ import 'package:patient_app/features/hospitals/hospital_profile_page.dart';
 import 'package:patient_app/features/hospitals/hospital_review.dart';
 import 'package:patient_app/features/hospitals/provider/hospital_provider.dart';
 import 'package:patient_app/features/hospitals/provider/review_provider.dart';
+import 'package:patient_app/features/pharmacy/medicine_provider.dart';
+import 'package:patient_app/features/pharmacy/pharmacy_provider.dart';
 import 'package:patient_app/features/queue/provider/queue_provider.dart';
 import 'package:patient_app/features/queue/queue_screen.dart';
 import 'package:patient_app/features/reports/provider/reports_provider.dart';
 import 'package:patient_app/features/profile/provider/patient_profile_provider.dart';
+import 'package:patient_app/providers/locale_provider.dart';
 import 'package:patient_app/splash_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'l10n/app_localizations.dart';
 
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized();
 
-void main() {
+  final localeProvider = LocaleProvider();
+
+  await localeProvider.loadLocale();
   runApp(
     MultiProvider(
       providers: [
@@ -34,6 +43,12 @@ void main() {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => HospitalProvider()),
         ChangeNotifierProvider(create: (_) => DepartmentProvider()),
+        ChangeNotifierProvider(create: (_) => MedicineProvider()),
+        ChangeNotifierProvider(create: (_) => PharmacyProvider()),
+        ChangeNotifierProvider.value(
+          value: localeProvider,
+        ),
+
       ],
       child: const MyApp(),
     ),
@@ -46,8 +61,13 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    final localeProvider = context.watch<LocaleProvider>();
     return MaterialApp(
       title: 'Flutter Demo',
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      locale: localeProvider.locale,
+
       theme: ThemeData(
         // This is the theme of your application.
         //

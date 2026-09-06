@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:patient_app/features/auth/provider/auth_provider.dart';
+import 'package:patient_app/features/profile/language_screen.dart';
 import 'package:patient_app/features/reports/reports_screen.dart';
 import 'package:patient_app/models/patient_model.dart';
 import 'package:patient_app/features/profile/provider/patient_profile_provider.dart';
@@ -465,18 +466,45 @@ class _PatientProfileScreenState extends State<PatientProfileScreen> {
          ),),
         elevation: 0,
         actions: [
-          Consumer<PatientProvider>(
-            builder: (context, provider, _) {
-              if (provider.patient == null) return const SizedBox();
-              return IconButton(
-                icon: const Icon(Icons.edit),
-                onPressed: () {
-                  _showEditProfileDialog(context, provider.patient!);
-                },
-              );
-            },
-          )
-        ],
+  // LANGUAGE BUTTON
+  IconButton(
+    icon: const Icon(
+      Icons.language,
+      color: Colors.white,
+    ),
+    tooltip: "Language",
+    onPressed: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const LanguageScreen(),
+        ),
+      );
+    },
+  ),
+
+  // EDIT PROFILE BUTTON
+  Consumer<PatientProvider>(
+    builder: (context, provider, _) {
+      if (provider.patient == null) {
+        return const SizedBox();
+      }
+
+      return IconButton(
+        icon: const Icon(
+          Icons.edit,
+          color: Colors.white,
+        ),
+        onPressed: () {
+          _showEditProfileDialog(
+            context,
+            provider.patient!,
+          );
+        },
+      );
+    },
+  ),
+],
       ),
       body: Consumer<PatientProvider>(
         builder: (context, provider, _) {
