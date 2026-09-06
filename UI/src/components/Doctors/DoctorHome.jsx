@@ -156,6 +156,7 @@ import IntroSection from "../Hospitals/IntroSection";
 import QueueList from "./QueueList";
 import CurrentPatient from "./CurrentPatient";
 import OPDControls from "./OPDControls";
+import DoctorAnalytics from "../../features/doctor/DoctorAnalytics";
 
 import {
   getConfirmedAppointments,
@@ -472,6 +473,8 @@ const DoctorHome = () => {
         refreshQueue={fetchQueue}
       />
 
+      
+
 
       {opdStarted && (
 
@@ -494,11 +497,13 @@ const DoctorHome = () => {
             <QueueList
               appointments={appointments}
             />
+          
 
           </div>
 
         </div>
       )}
+      <DoctorAnalytics />
 
     </div>
   );

@@ -1,10 +1,9 @@
 const express = require('express');
 const { getRouteToHospital } = require('../controllers/locationController.js');
-const { getHospitalStates, getHospitalCities, getHospitals, registerHospital, updateHospitalProfile, getHospitalProfile, getStats, getHospitalById, getAllPharmacies, updatePharmacyStatus, togglePharmacyActive, getHospitalPatients, searchHospitalPatients, getAllHospitals } = require('../controllers/hospitalController.js');
+const { getHospitalStates, getHospitalCities,getAllHospitalSearch, getHospitals, registerHospital, updateHospitalProfile, getHospitalProfile, getStats, getHospitalById, getAllPharmacies, updatePharmacyStatus, togglePharmacyActive, getHospitalPatients, searchHospitalPatients, getAllHospitals } = require('../controllers/hospitalController.js');
 const { hospitalUpload, upload } = require('../middleware/uploadCloud.js');
 const auth = require('../middleware/auth.js');
 const { updateDoctorOpdSchedule, uploadReportForPatient } = require('../controllers/adminController.js');
-const { getAllHospitalSearch } = require('../controllers/hospitalController.js');
 const authorize = require('../middleware/authorize.js');
 const { ROLE } = require('../config/role.js');
 
