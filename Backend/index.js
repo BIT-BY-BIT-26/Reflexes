@@ -21,7 +21,7 @@ const doctorRouter = require("./routes/doctor.js");
 const consultationRouter = require("./routes/consultationRoute.js");
 const platformOwnerRoute = require("./routes/platformOwnerRoute.js");
 const reviewRouter = require("./routes/reviewRoute.js");
-const {redisClient} = require("./config/redisClient.js");
+const { redisClient } = require("./config/redisClient.js");
 const medicineRouter = require("./routes/medicine.js");
 const startMedicineExpiryCron = require("./cron/MedicineExpiryCron.js");
 const emergencyRoute = require("./routes/emergencyRoute.js");
@@ -66,14 +66,14 @@ app.use("/api/prescription", prescriptionRoute);
 app.use("/api/departments", departmentRouter);
 app.use("/api/patients", patientRoute);
 app.use('/api/doctors', doctorRouter)
-app.use("/api",appointmentRouter);
-app.use("/api/reports",reportsRoute);
-app.use("/api",reviewRouter);
+app.use("/api", appointmentRouter);
+app.use("/api/reports", reportsRoute);
+app.use("/api", reviewRouter);
 app.use("/api/consultation", consultationRouter);
 app.use("/api/pharmacy", pharmacyRouter);
-app.use("/api/medicine",medicineRouter);
-app.use("/api/emergency",emergencyRoute)
-app.use("/api/referral",referralRoute)
+app.use("/api/medicine", medicineRouter);
+app.use("/api/emergency", emergencyRoute)
+app.use("/api/referral", referralRoute)
 app.use("/api/doctor-analytics", doctorAnalyticsRouter);
 
 server.listen(process.env.PORT, () => {
