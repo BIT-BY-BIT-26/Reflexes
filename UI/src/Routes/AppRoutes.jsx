@@ -34,6 +34,7 @@ import PatientHistory from '../features/doctor/PatientHistory'
 import AllHospitals from '../common/AllHospitals'
 import SharedMedicalData from '../features/doctor/SharedMedicalData'
 import VideoCallPage from '../features/doctor/VideoCallPage'
+import DoctorLayout from '../features/doctor/layout/DoctorLayout'
 
 
 const AppRoutes = () => {
@@ -82,13 +83,13 @@ const AppRoutes = () => {
 
 
         <Route path='/doctor-dashboard' element={<ProtectedRoutes allowedRoles={[ROLE.doctor]}>
-          <HospitalLayout />
+          <DoctorLayout />
         </ProtectedRoutes>}>
           
           <Route index element={<DoctorDashboard />} />
           <Route path='appointments' element={<Appointment />} />
           <Route path='notifications' element={<NotificationSection />}/>
-          <Route path='doctor-dashboard/video-call' element={<VideoCallPage />} />
+          <Route path='video-call' element={<VideoCallPage />} />
           <Route path='patients/:id' element={<PatientProfileDoctor />}/>
           <Route path='patients/:id/prescription' element={<PrescriptionOptions />}/>
           <Route path='patients/:id/history' element={<PatientHistory />}/>
@@ -126,6 +127,15 @@ const AppRoutes = () => {
           element={<AddMedicine />}
         />
       </Route>
+
+      <Route
+        path="*"
+        element={
+          <PublicRoute>
+            <LandingPage />
+          </PublicRoute>
+        }
+      />
     </Routes>
   )
 }

@@ -97,14 +97,14 @@ const AllCards = () => {
   const { data: stats, isLoading, isError, refetch } = useStats();
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div className="text-gray-600 dark:text-slate-300">Loading...</div>;
   }
 
   if (isError) {
     return (
-      <div className="flex items-center gap-3 text-white">
+      <div className="flex items-center gap-3 text-gray-900 dark:text-white">
         <span>Could not load stats.</span>
-        <button onClick={() => refetch()} className="underline text-blue-400">
+        <button onClick={() => refetch()} className="underline text-blue-600 dark:text-blue-400">
           Retry
         </button>
       </div>

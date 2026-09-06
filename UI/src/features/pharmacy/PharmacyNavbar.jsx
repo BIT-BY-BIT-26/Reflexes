@@ -3,12 +3,17 @@ import {
   Search,
   Bell,
   ChevronDown,
+  Sun,
+  Moon,
 } from "lucide-react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { toggleTheme } from "../../redux/slices/themeSlice";
 
 const PharmacyNavbar = () => {
 
+  const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
+  const mode = useSelector((state) => state.theme.mode);
 
   return (
     <header className="sticky top-0 z-30 h-[76px] border-b border-gray-200 bg-white/90 px-6 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/90">
@@ -44,6 +49,15 @@ const PharmacyNavbar = () => {
             />
 
           </div>
+
+          {/* Theme Toggle */}
+          <button
+            onClick={() => dispatch(toggleTheme())}
+            title={mode === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            className="rounded-full p-2.5 text-slate-600 transition hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-800"
+          >
+            {mode === "dark" ? <Sun size={21} /> : <Moon size={21} />}
+          </button>
 
           {/* Notification */}
           <button className="relative rounded-full p-2.5 text-slate-600 transition hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-800">

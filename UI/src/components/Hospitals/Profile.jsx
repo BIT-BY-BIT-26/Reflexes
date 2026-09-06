@@ -29,23 +29,23 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-[500px] text-white">
+      <div className="flex justify-center items-center h-[500px] text-gray-900 dark:text-white">
         Loading...
       </div>
     );
   }
 
   return (
-    <div className="bg-black min-h-screen ">
-      <div className="w-full bg-[#08275E]/50  border  border-gray-700/50 rounded-3xl p-6 shadow-2xl">
+    <div className="bg-gray-50 dark:bg-black min-h-screen ">
+      <div className="w-full bg-white dark:bg-[#08275E]/50  border  border-gray-200 dark:border-gray-700/50 rounded-3xl p-6 shadow-2xl">
 
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-white text-5xl mb-10 font-semibold">
+          <h2 className="text-gray-900 dark:text-white text-5xl mb-10 font-semibold">
             Hospital Profile Overview
           </h2>
 
-          <button className="border border-blue-500 text-white px-10 py-2 rounded-lg hover:bg-blue-600 transition">
+          <button className="border border-blue-500 text-blue-600 dark:text-white px-10 py-2 rounded-lg hover:bg-blue-600 hover:text-white transition">
             Edit Profile
           </button>
         </div> 
@@ -81,7 +81,7 @@ export default function Profile() {
                 bg-white
                 "
             />
-                <h1 className="text-3xl text-white font-bold">
+                <h1 className="text-3xl text-gray-900 dark:text-white font-bold">
                     {hospital.name}
                 </h1>
                 
@@ -93,7 +93,7 @@ export default function Profile() {
             </div>
 
             {/* Badge */}
-            <div className="inline-block mt-10 px-10 py-3 rounded-full bg-cyan-500/20 text-cyan-300 text-lg">
+            <div className="inline-block mt-10 px-10 py-3 rounded-full bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 text-lg">
               {hospital.description}
             </div>
 
@@ -105,54 +105,54 @@ export default function Profile() {
 
                 {/* Address Card */}
                 <div className="
-                  bg-white/[0.04]
+                  bg-gray-50 dark:bg-white/[0.04]
                   backdrop-blur-xl
-                  border border-white/[0.08]
+                  border border-gray-200 dark:border-white/[0.08]
                   rounded-2xl
                   p-6
                 ">
                   <div className="flex items-center gap-3 mb-4">
                     <MapPin className="text-cyan-400" size={24} />
-                    <h3 className="text-white text-xl font-semibold">
+                    <h3 className="text-gray-900 dark:text-white text-xl font-semibold">
                       Address
                     </h3>
                   </div>
 
-                  <p className="text-slate-300 leading-7">
+                  <p className="text-gray-600 dark:text-slate-300 leading-7">
                     {hospital.address}
                   </p>
                 </div>
 
                 {/* Contact Card */}
                 <div className="
-                  bg-white/[0.04]
+                  bg-gray-50 dark:bg-white/[0.04]
                   backdrop-blur-xl
-                  border border-white/[0.08]
+                  border border-gray-200 dark:border-white/[0.08]
                   rounded-2xl
                   p-6
                 ">
                   <div className="flex items-center gap-3 mb-4">
                     <Phone className="text-cyan-400" size={24} />
-                    <h3 className="text-white text-xl font-semibold">
+                    <h3 className="text-gray-900 dark:text-white text-xl font-semibold">
                       Contact Information
                     </h3>
                   </div>
 
                   <div className="space-y-3">
                     <div>
-                      <p className="text-slate-400 text-sm">
+                      <p className="text-gray-500 dark:text-slate-400 text-sm">
                         Phone Number
                       </p>
-                      <p className="text-white font-medium">
+                      <p className="text-gray-900 dark:text-white font-medium">
                         {hospital.phone_number}
                       </p>
                     </div>
 
                     <div>
-                      <p className="text-slate-400 text-sm">
+                      <p className="text-gray-500 dark:text-slate-400 text-sm">
                         Email Address
                       </p>
-                      <p className="text-white font-medium break-all">
+                      <p className="text-gray-900 dark:text-white font-medium break-all">
                         {hospital.email}
                       </p>
                     </div>
@@ -161,15 +161,15 @@ export default function Profile() {
 
                 {/* Timings Card */}
                 <div className="
-                  bg-white/[0.04]
+                  bg-gray-50 dark:bg-white/[0.04]
                   backdrop-blur-xl
-                  border border-white/[0.08]
+                  border border-gray-200 dark:border-white/[0.08]
                   rounded-2xl
                   p-6
                 ">
                   <div className="flex items-center gap-3 mb-4">
                     <Clock3 className="text-cyan-400" size={24} />
-                    <h3 className="text-white text-xl font-semibold">
+                    <h3 className="text-gray-900 dark:text-white text-xl font-semibold">
                       Working Hours
                     </h3>
                   </div>
@@ -179,13 +179,13 @@ export default function Profile() {
                       ([day, time]) => (
                         <div
                           key={day}
-                          className="flex justify-between border-b border-white/5 pb-2"
+                          className="flex justify-between border-b border-gray-200 dark:border-white/5 pb-2"
                         >
-                          <span className="capitalize text-slate-300">
+                          <span className="capitalize text-gray-600 dark:text-slate-300">
                             {day}
                           </span>
 
-                          <span className="text-white font-medium">
+                          <span className="text-gray-900 dark:text-white font-medium">
                             {time}
                           </span>
                         </div>
@@ -196,15 +196,15 @@ export default function Profile() {
 
                 {/* Facilities Card */}
                 <div className="
-                  bg-white/[0.04]
+                  bg-gray-50 dark:bg-white/[0.04]
                   backdrop-blur-xl
-                  border border-white/[0.08]
+                  border border-gray-200 dark:border-white/[0.08]
                   rounded-2xl
                   p-6
                 ">
                   <div className="flex items-center gap-3 mb-4">
                     <Building2 className="text-cyan-400" size={24} />
-                    <h3 className="text-white text-xl font-semibold">
+                    <h3 className="text-gray-900 dark:text-white text-xl font-semibold">
                       Facilities
                     </h3>
                   </div>
@@ -220,7 +220,7 @@ export default function Profile() {
                           bg-cyan-500/10
                           border
                           border-cyan-500/20
-                          text-cyan-300
+                          text-cyan-700 dark:text-cyan-300
                           text-sm
                           font-medium
                         "
@@ -238,7 +238,7 @@ export default function Profile() {
         </div>
           {/* Gallery */}
             <div className="mt-10">
-            <h3 className="text-white text-3xl font-semibold mb-4">
+            <h3 className="text-gray-900 dark:text-white text-3xl font-semibold mb-4">
                 Hospital Gallery
             </h3>
 

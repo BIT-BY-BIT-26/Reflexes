@@ -296,7 +296,7 @@ const PatientProfileAdmin = () => {
                           </span>
                         </div>
 
-                        <p className="text-xs text-gray-500 mt-2">
+                        <p className="text-xs text-gray-500 dark:text-slate-400 mt-2">
                           {(file.size / 1024 / 1024).toFixed(2)} MB
                         </p>
                       </>
@@ -306,7 +306,7 @@ const PatientProfileAdmin = () => {
                           Click to upload report
                         </p>
 
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">
                           JPG, PNG or PDF
                         </p>
                       </>

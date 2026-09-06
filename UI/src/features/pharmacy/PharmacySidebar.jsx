@@ -24,7 +24,7 @@ const PharmacySidebar = () => {
     `flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition ${
       isActive
         ? "bg-blue-600 text-white"
-        : "text-slate-200 hover:bg-white/10"
+        : "text-gray-600 hover:bg-gray-100 dark:text-slate-200 dark:hover:bg-white/10"
     }`;
 
   const handleLogout = () => {
@@ -32,17 +32,17 @@ const PharmacySidebar = () => {
   };
 
   return (
-    <aside className="fixed left-0 top-0 z-40 h-screen w-[236px] bg-gradient-to-b from-[#082957] to-[#061d3d] text-white">
+    <aside className="fixed left-0 top-0 z-40 h-screen w-[236px] border-r border-gray-200 bg-white text-gray-900 dark:border-transparent dark:bg-gradient-to-b dark:from-[#082957] dark:to-[#061d3d] dark:text-white">
 
       {/* Pharmacy Info */}
-      <div className="border-b border-white/10 px-5 py-5">
+      <div className="border-b border-gray-200 px-5 py-5 dark:border-white/10">
 
         <div className="flex items-center gap-3">
 
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 dark:bg-white">
             <Cross
               size={24}
-              className="text-blue-600"
+              className="text-white dark:text-blue-600"
               strokeWidth={3}
             />
           </div>
@@ -52,7 +52,7 @@ const PharmacySidebar = () => {
               Swasth Pharmacy
             </h2>
 
-            <p className="text-[11px] text-slate-300">
+            <p className="text-[11px] text-gray-500 dark:text-slate-300">
               Main Road, Bhagalpur
             </p>
           </div>
@@ -79,7 +79,7 @@ const PharmacySidebar = () => {
           {/* Inventory */}
           <div className="mt-7">
 
-            <p className="mb-2 px-4 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+            <p className="mb-2 px-4 text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-slate-400">
               Inventory
             </p>
 
@@ -124,7 +124,7 @@ const PharmacySidebar = () => {
           {/* Orders */}
           <div className="mt-7">
 
-            <p className="mb-2 px-4 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+            <p className="mb-2 px-4 text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-slate-400">
               Orders
             </p>
 
@@ -153,7 +153,7 @@ const PharmacySidebar = () => {
           {/* Pharmacy */}
           <div className="mt-7">
 
-            <p className="mb-2 px-4 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+            <p className="mb-2 px-4 text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-slate-400">
               Pharmacy
             </p>
 
@@ -190,11 +190,11 @@ const PharmacySidebar = () => {
         </div>
 
         {/* Logout */}
-        <div className="border-t border-white/10 p-3">
+        <div className="border-t border-gray-200 p-3 dark:border-white/10">
 
           <button
             onClick={handleLogout}
-            className="flex w-full items-center gap-3 rounded-lg bg-white/5 px-4 py-3 text-sm font-medium text-slate-200 transition hover:bg-white/10"
+            className="flex w-full items-center gap-3 rounded-lg bg-gray-100 px-4 py-3 text-sm font-medium text-gray-600 transition hover:bg-gray-200 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10"
           >
             <LogOut size={19} />
             <span>Logout</span>

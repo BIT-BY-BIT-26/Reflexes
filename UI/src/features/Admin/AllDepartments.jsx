@@ -25,9 +25,9 @@ const AllDepartments = () => {
   const departments = data?.departments ?? [];
 
    return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-slate-950 to-blue-950 p-10">
+    <div className="min-h-screen bg-gray-50 dark:bg-gradient-to-br dark:from-black dark:via-slate-950 dark:to-blue-950 p-10">
       
-      <h1 className="text-3xl font-bold text-center text-white mb-10 uppercase tracking-wide">
+      <h1 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-10 uppercase tracking-wide">
         Departments Overview
       </h1>
 
@@ -36,7 +36,7 @@ const AllDepartments = () => {
         {departments.map((dept) => (
           <div
             key={dept._id}
-            className="relative group bg-slate-900/60 border border-slate-700 rounded-2xl p-5 shadow-lg hover:shadow-blue-500/20 hover:border-blue-500 transition-all duration-300"
+            className="relative group bg-white dark:bg-slate-900/60 border border-gray-200 dark:border-slate-700 rounded-2xl p-5 shadow-lg hover:shadow-blue-500/20 hover:border-blue-500 transition-all duration-300"
           >
             
             {/* Glow effect */}
@@ -44,17 +44,17 @@ const AllDepartments = () => {
 
             {/* Header */}
             <div className="flex justify-between items-center mb-3">
-              <h2 className="text-xl font-bold text-blue-300 uppercase tracking-wide">
+              <h2 className="text-xl font-bold text-blue-700 dark:text-blue-300 uppercase tracking-wide">
                 {dept.name}
               </h2>
 
-              <span className="px-3 py-1 text-xs rounded-full bg-green-500/20 text-green-300 border border-green-500">
+              <span className="px-3 py-1 text-xs rounded-full bg-green-500/20 text-green-700 dark:text-green-300 border border-green-500">
                 {dept.status}
               </span>
             </div>
 
             {/* Description */}
-            <p className="text-slate-400 text-sm mb-4 line-clamp-2">
+            <p className="text-gray-500 dark:text-slate-400 text-sm mb-4 line-clamp-2">
               {dept.description}
             </p>
 
@@ -62,15 +62,15 @@ const AllDepartments = () => {
             <div className="flex items-center justify-between mt-4">
               
               <div className="text-center">
-                <p className="text-slate-400 text-xs">Doctors</p>
-                <p className="text-2xl font-bold text-white">
+                <p className="text-gray-500 dark:text-slate-400 text-xs">Doctors</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {dept.totalDoctors}
                 </p>
               </div>
 
               <div className="text-center">
-                <p className="text-slate-400 text-xs">Created</p>
-                <p className="text-sm text-blue-200">
+                <p className="text-gray-500 dark:text-slate-400 text-xs">Created</p>
+                <p className="text-sm text-blue-700 dark:text-blue-200">
                   {new Date(dept.createdAt).toLocaleDateString()}
                 </p>
               </div>
@@ -78,7 +78,7 @@ const AllDepartments = () => {
             </div>
 
             {/* Bottom accent bar */}
-            <div className="mt-4 h-1 w-full bg-slate-800 rounded-full overflow-hidden">
+            <div className="mt-4 h-1 w-full bg-gray-200 dark:bg-slate-800 rounded-full overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-blue-500 to-cyan-400"
                 style={{ width: `${Math.min(dept.totalDoctors * 20, 100)}%` }}

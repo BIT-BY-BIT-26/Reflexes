@@ -15,14 +15,11 @@ import { ROLE } from "../constants/Role";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleTheme } from "../redux/slices/themeSlice";
 import { logout } from "../redux/slices/authSlice";
-import { markAllRead } from "../redux/slices/notificationSlice";
 
-export default function Navbar() {
-  const [open, setOpen] = useState(false);
+export default function Navbar({ onMenuClick }) {
   const [query, setQuery] = useState("");
   const [logo,setLogo] = useState("");
   const [profileOpen,setProfileOpen] = useState(false);
-  const [notificationOpen, setNotificationOpen] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
@@ -30,9 +27,6 @@ export default function Navbar() {
   const dispatch = useDispatch();
   const mode = useSelector((state) => state.theme.mode);
   const role = useSelector((state) => state.auth.role);
-  const notifications = useSelector(
-    (state)=> state.notification.notifications
-  );
   const unreadCount = useSelector(
     (state)=> state.notification.unreadCount
   );
@@ -92,14 +86,17 @@ useEffect(() => {
 
         {/* Left - Hamburger + Brand */}
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => {
-                setOpen(!open)
-            }}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition"
-          >
-            <Menu size={22} />
-          </button>
+          {/* Only rendered by a shell that owns a sidebar, and only while the
+              sidebar is not pinned open (below lg). */}
+          {onMenuClick && (
+            <button
+              onClick={onMenuClick}
+              aria-label="Toggle navigation"
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 transition lg:hidden"
+            >
+              <Menu size={22} />
+            </button>
+          )}
 
           <div className="flex items-center gap-4">
             <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-transparent flex items-center justify-center font-bold text-black">
@@ -227,39 +224,45 @@ useEffect(() => {
           </button>
 
           {/* Profile */}
-          <button
-    onClick={() => setProfileOpen(!profileOpen)}
-    className="flex items-center gap-2 p-1 pr-3 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 transition"
-  >
-    <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-slate-700 flex items-center justify-center">
-      <User size={24} />
-    </div>
-    {role === ROLE.doctor ? <span className="text-lg hidden md:block">Doctor</span> : <span className="text-lg hidden md:block">Admin</span>}
-    
-  </button>
+          <div className="relative">
+            <button
+              onClick={() => setProfileOpen(!profileOpen)}
+              className="flex items-center gap-2 p-1 pr-3 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800 transition"
+            >
+              <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-slate-700 flex items-center justify-center">
+                <User size={24} />
+              </div>
+              {role === ROLE.doctor ? <span className="text-lg hidden md:block">Doctor</span> : <span className="text-lg hidden md:block">Admin</span>}
+            </button>
 
-    {profileOpen && (
-      <div className="absolute right-0 mt-40 w-48 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-lg overflow-hidden">
-        <button
-          onClick={() => {
-            navigate("/hospital-dashboard/hospital-profile");
-            setProfileOpen(false);
-          }}
-          className="w-full flex items-center gap-2 px-4 py-3 text-left text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-slate-700 transition"
-        >
-          <User size={18} />
-          See Profile
-        </button>
+            {profileOpen && (
+              <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-lg overflow-hidden z-50">
 
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center gap-2 px-4 py-3 text-left text-gray-900 dark:text-white hover:bg-red-100 dark:hover:bg-red-500/20 hover:text-red-500 dark:hover:text-red-400 transition"
-        >
-          <LogOut size={18} />
-          Logout
-        </button>
-      </div>
-    )}
+                {/* /hospital-dashboard/hospital-profile is gated on HOSPITAL_ADMIN,
+                    so a doctor clicking this would just be bounced back. */}
+                {role !== ROLE.doctor && (
+                  <button
+                    onClick={() => {
+                      navigate("/hospital-dashboard/hospital-profile");
+                      setProfileOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2 px-4 py-3 text-left text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-slate-700 transition"
+                  >
+                    <User size={18} />
+                    See Profile
+                  </button>
+                )}
+
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-2 px-4 py-3 text-left text-gray-900 dark:text-white hover:bg-red-100 dark:hover:bg-red-500/20 hover:text-red-500 dark:hover:text-red-400 transition"
+                >
+                  <LogOut size={18} />
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -277,21 +280,6 @@ useEffect(() => {
           />
         </div>
       </div>
-
-      {/* Mobile Menu */}
-      {open && (
-        <div className="absolute left-0 top-20 rounded-md text-gray-900 dark:text-white bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-lg">
-            <button
-                onClick={() => {
-                navigate("/hospital-dashboard/profile");
-                setOpen(false);
-                }}
-                className="text-left p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-600/20 hover:text-blue-600 dark:hover:text-blue-400"
-            >
-                Complete Profile
-            </button>
-        </div>
-      )}
     </header>
   );
 }

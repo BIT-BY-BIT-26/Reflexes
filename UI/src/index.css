@@ -7,3 +7,14 @@ html, body {
   padding: 0;
   height: 100%;
 }
+
+/* Native controls (input, select, textarea, scrollbars) paint themselves from
+   color-scheme, not from Tailwind classes - without this a select or a bare
+   input keeps a white UA background in dark mode. */
+html {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
