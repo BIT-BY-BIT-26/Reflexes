@@ -269,39 +269,32 @@ exports.addMedicine = async (req, res) => {
   }
 };
 
-// Inventory for the logged-in pharmacy only.
-// medicineController.getAllMedicine returns every pharmacy's batches and has no
-// auth, so the pharmacy dashboard reads this instead.
-exports.getMyInventory = async (req, res) => {
+exports.getAvailablePharmacies = async (req, res) => {
   try {
-    const pharmacy = await PharmacyModel.findOne({ userId: req.user.id })
-      .select("shopName ownerName phone address city state pincode licenseNumber approvalStatus isActive")
-      .lean();
-
-    if (!pharmacy) {
-      return res.status(404).json({
-        success: false,
-        msg: "Pharmacy not found",
-      });
-    }
-
-    // Batch documents - the same medicine appears once per batchNumber.
-    const medicines = await MedicineModel.find({ pharmacyId: pharmacy._id })
-      .sort({ createdAt: -1 })
+    const pharmacies = await PharmacyModel.find({
+      approvalStatus: "APPROVED",
+      isActive: true,
+    })
+      .select(
+        "shopName ownerName phone address city state pincode location"
+      )
+      .sort({ shopName: 1 })
       .lean();
 
     return res.status(200).json({
       success: true,
-      count: medicines.length,
-      pharmacy,
-      medicines,
+      count: pharmacies.length,
+      pharmacies,
     });
   } catch (error) {
-    console.error("Get pharmacy inventory error:", error);
+    console.error(
+      "Get available pharmacies error:",
+      error
+    );
 
     return res.status(500).json({
       success: false,
-      msg: "Failed to fetch inventory",
+      message: "Failed to fetch pharmacies",
       error: error.message,
     });
   }

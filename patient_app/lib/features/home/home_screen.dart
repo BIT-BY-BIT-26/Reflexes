@@ -6,8 +6,10 @@ import 'package:patient_app/features/home/components/quick_access_card.dart';
 import 'package:patient_app/features/hospitals/hospital_profile_page.dart';
 import 'package:patient_app/features/hospitals/hospital_screen.dart';
 import 'package:patient_app/features/hospitals/provider/hospital_provider.dart';
+import 'package:patient_app/features/pharmacy/pharmacy_screen.dart';
 import 'package:patient_app/utils/constants.dart';
 import 'package:provider/provider.dart';
+import 'package:patient_app/l10n/app_localizations.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -33,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -164,10 +167,19 @@ class _HomeScreenState extends State<HomeScreen> {
                       iconPath: FontAwesomeIcons.truckMedical,
                       text: "Emergency",
                     ),
-                    QuickAccessCard(
-                      size: 25,
-                      iconPath: FontAwesomeIcons.pills,
-                      text: "Pharmacy",
+                    GestureDetector(
+                      onTap: () {
+                        // Navigate to the desired screen when the card is tapped
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => PharmacyScreen()),
+                        );
+                      },
+                      child: QuickAccessCard(
+                        size: 25,
+                        iconPath: FontAwesomeIcons.pills,
+                        text: "Pharmacy",
+                      ),
                     ),
                   ]
                   
@@ -178,7 +190,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Expanded(
                     child: Text(
-                      "Nearby Hospitals",
+                      l10n.nearbyHospitals,
                       style: GoogleFonts.inter(
                         fontSize: 16,
                         color: Colors.white,

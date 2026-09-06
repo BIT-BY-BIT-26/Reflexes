@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:patient_app/features/auth/provider/auth_provider.dart';
 import 'package:patient_app/features/queue/provider/queue_provider.dart';
+import 'package:patient_app/features/teleconsultation/videocall_screen.dart';
+import 'package:patient_app/features/video_call.dart';
 import 'package:patient_app/socket.dart';
 import 'package:patient_app/utils/constants.dart';
 import 'package:provider/provider.dart';
@@ -15,92 +17,174 @@ class QueueScreen extends StatefulWidget {
 class _QueueScreenState extends State<QueueScreen> {
 
   SocketService? socketService; 
+  void _showIncomingCallDialog(
+  Map<String, dynamic> data,
+) {
+  if (!mounted) return;
+
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) {
+      return AlertDialog(
+        title: const Text(
+          "Incoming Video Call",
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.videocam,
+              size: 60,
+              color: Colors.blue,
+            ),
+            SizedBox(height: 20),
+            Text(
+              "Doctor is calling you",
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              // Reject
+              Navigator.pop(context);
+
+              print("❌ CALL REJECTED");
+            },
+            child: const Text(
+              "Reject",
+              style: TextStyle(
+                color: Colors.red,
+              ),
+            ),
+          ),
+
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+
+              print("✅ CALL ACCEPTED");
+
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => VideoCall(
+                    callerSocketId: data["callerSocketId"],
+                    offer: data["offer"],
+                  ),
+                ),
+              );
+            },
+            child: const Text("Accept"),
+          ),
+        ],
+      );
+    },
+  );
+}
   
 
-  @override
-  void initState() {
-    super.initState();
-    Future.microtask(() async {
-      final queueProvider =
-          Provider.of<QueueProvider>(
-            context,
-            listen: false,
-          );
-      final authProvider =
-          Provider.of<AuthProvider>(
-            context,
-            listen: false,
-          );
-      await queueProvider.loadQueue(
-        authProvider.token!,
-      );
-      final queue = queueProvider.queue;
-      if (queue == null ||
-          !queue.hasActiveQueue) {
-        return;
-      }
-      _connectSocket(
-        queue.doctorId!,
-      );
-    });
-  }
+@override
+void initState() {
+  super.initState();
 
-void _connectSocket(
-    String doctorId,
-  ) {
-    socketService = SocketService();
+  Future.microtask(() async {
+    final queueProvider = Provider.of<QueueProvider>(
+      context,
+      listen: false,
+    );
 
-    socketService?.connect(
-      baseUrl:baseUrl,
+    final authProvider = Provider.of<AuthProvider>(
+      context,
+      listen: false,
+    );
 
-      onQueueUpdate: (data) {
-      final queueProvider =
-          Provider.of<QueueProvider>(
+    final token = authProvider.token;
+
+    if (token == null) {
+      print("❌ No auth token available");
+      return;
+    }
+
+    await queueProvider.loadQueue(token);
+
+    final queue = queueProvider.queue;
+
+    if (queue == null || !queue.hasActiveQueue) {
+      print("ℹ️ No active queue");
+      return;
+    }
+
+    // 👇 Patient ID
+    final patientId = authProvider.patientId;
+
+    if (patientId == null) {
+      print("❌ Patient ID is null");
+      return;
+    }
+
+    _connectPatientSocket(
+      patientId,
+      token,
+    );
+  });
+}
+
+void _connectPatientSocket(
+  String patientId,
+  String token,
+) {
+  socketService = SocketService();
+
+  socketService!.connectPatient(
+    baseUrl: socketUrl,
+    token: token,
+    patientId: patientId,
+
+    onQueueUpdate: (data) {
+      final queueProvider = Provider.of<QueueProvider>(
         context,
         listen: false,
       );
-      final token =
-          data["currentToken"];
-      if (token != null) {
-        queueProvider.updateCurrentToken(
-          token,
-        );
+
+      final currentToken = data["currentToken"];
+
+      if (currentToken != null) {
+        queueProvider.updateCurrentToken(currentToken);
       }
     },
 
-      onPaused: (data) {
-        Provider.of<QueueProvider>(
-          context,
-          listen: false,
-        ).pauseQueue();
-      },
+    onPaused: (data) {
+      Provider.of<QueueProvider>(
+        context,
+        listen: false,
+      ).pauseQueue();
+    },
+    onIncomingCall: (data) {
+    _showIncomingCallDialog(data);
+  },
 
-      onResumed: (data) {
-      final queueProvider =
-          Provider.of<QueueProvider>(
+    onResumed: (data) {
+      final queueProvider = Provider.of<QueueProvider>(
         context,
         listen: false,
       );
-      final token =
-          data["currentToken"] ?? 0;
-      queueProvider.resumeQueue(
-        token,
-      );
+
+      final currentToken = data["currentToken"] ?? 0;
+
+      queueProvider.resumeQueue(currentToken);
     },
 
-
-      onStopped: (data) {
-        Provider.of<QueueProvider>(
-          context,
-          listen: false,
-        ).stopQueue();
-      },
-    );
-
-    socketService?.joinDoctorRoom(
-      doctorId,
-    );
-  }
+    onStopped: (data) {
+      Provider.of<QueueProvider>(
+        context,
+        listen: false,
+      ).stopQueue();
+    },
+  );
+}
   
   @override
   void dispose() {

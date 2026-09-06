@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 const baseUrl = "http://localhost:3000/api";
+const socketUrl = "http://localhost:3000";
 class AppColors {
   static const Color background = Color(0xFF05070D);
   static const Color card = Color(0xFF101827);

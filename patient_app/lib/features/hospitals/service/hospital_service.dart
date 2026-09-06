@@ -55,6 +55,7 @@ class HospitalService {
     double? lat,
     double? lng,
     double radius = 5,
+    bool emergency = false,
   }) async {
     String url = "$baseUrl/hospitals";
     List<String> query = [];
@@ -73,6 +74,10 @@ class HospitalService {
 
     if (query.isNotEmpty) {
       url += "?${query.join("&")}";
+    }
+
+    if (emergency) {
+      query.add("emergency=true");
     }
 
     final response = await http.get(Uri.parse(url));
