@@ -1,13 +1,12 @@
 import React, { useState } from "react";
 import { FilePlus, Upload, X, FileText } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { addPatientReport } from "../../api/backend";
 import PatientProfile from "../../components/PatientProfile";
 
 
 const PatientProfileAdmin = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
 
   const [showReportForm, setShowReportForm] = useState(false);
 
@@ -374,18 +373,6 @@ const PatientProfileAdmin = () => {
             </div>
           )}
 
-          <button
-            onClick={() =>
-              navigate("/hospital-dashboard/all-hospitals", {
-                state: {
-                  patientId: id,
-                },
-              })
-            }
-            className="p-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium transition"
-          >
-            Refer this Patient
-        </button>
         </div>
 
       </div>

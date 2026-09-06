@@ -200,10 +200,6 @@ export const getPatientMedicalSummary = (patientId) => {
   return api.get(`/doctors/patient-summary/${patientId}`, { timeout: 90000 });
 };
 
-export const getAllHospitals = () => {
-  return api.get(`/all-hospitals`);
-};
-
 export const HospitalSearch = (searchTerm) => {
   return api.get(`/search-hospitals`, {
     params: {
@@ -212,10 +208,6 @@ export const HospitalSearch = (searchTerm) => {
   });
 };
 
-
-export const createReferral = (referralData) => {
-  return api.post("/referral/create", referralData);
-};
 
 export const getSharedMedicalData = async (patientId) => {
   return api.get(`/doctors/patient-history/${patientId}`);

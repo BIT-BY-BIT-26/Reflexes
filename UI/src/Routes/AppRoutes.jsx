@@ -31,7 +31,6 @@ import PatientProfileAdmin from '../features/Admin/PatientProfileAdmin'
 import PatientProfileDoctor from '../features/doctor/PatientProfileDoctor'
 import PrescriptionOptions from '../features/doctor/PrescritionOptions'
 import PatientHistory from '../features/doctor/PatientHistory'
-import AllHospitals from '../common/AllHospitals'
 import SharedMedicalData from '../features/doctor/SharedMedicalData'
 import VideoCallPage from '../features/doctor/VideoCallPage'
 import DoctorLayout from '../features/doctor/layout/DoctorLayout'
@@ -77,7 +76,6 @@ const AppRoutes = () => {
           <Route path='doctor/opd-schedule/:doctorId' element={<OpdSchedule />}/>
           <Route path='patients/:id' element={<PatientProfileAdmin />}/>
           <Route path='patient-report/:id' element={<PatientReport />}/>
-          <Route path='all-hospitals' element={<AllHospitals />}/>
           
         </Route>
 

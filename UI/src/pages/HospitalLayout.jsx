@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import {
   Building2,
-  Hospital,
   LayoutDashboard,
   PlusCircle,
   UserPlus,
@@ -28,7 +27,6 @@ const navItems = [
   { to: "/hospital-dashboard/departments/add", label: "Add Department", icon: PlusCircle },
   { to: "/hospital-dashboard/doctors", end: true, label: "Doctors", icon: Users },
   { to: "/hospital-dashboard/doctors/add", label: "Add Doctor", icon: UserPlus },
-  { to: "/hospital-dashboard/all-hospitals", label: "All Hospitals", icon: Hospital },
 ];
 
 /* Read-only identity block; `user` is whatever loginUser returned. */
