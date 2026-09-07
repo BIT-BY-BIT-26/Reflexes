@@ -383,6 +383,7 @@ const ocrPrescription = async (req, res) => {
 
     const aiResponse = await axios.post(
       "https://prescription-ai-service.onrender.com/api/prescription/ocr",
+      
       formData,
       {
         timeout: 120000,

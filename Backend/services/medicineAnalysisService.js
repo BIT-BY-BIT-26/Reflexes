@@ -2,8 +2,7 @@ const axios = require("axios");
 const FormData = require("form-data");
 
 const MEDICINE_ANALYSIS_URL =
-  "https://medical-image-analysis-rh8u.onrender.com/analyze-medicine";
-
+  "https://medical-image-analysis-pfl2.onrender.com/analyze-medicine";
 
 const MEDICINE_QUESTION = `
 Analyze this medicine image and return ONLY valid JSON.

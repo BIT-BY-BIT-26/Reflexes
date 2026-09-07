@@ -2,7 +2,7 @@ const express = require("express");
 const auth = require("../middleware/auth");
 const authorize = require("../middleware/authorize");
 const { createEmergency } = require("../controllers/patientController");
-const { updateEmergencyStatus } = require("../controllers/hospitalController");
+const { updateEmergencyStatus,seeRequestedEmergencyAmbulance } = require("../controllers/hospitalController");
 
 const emergencyRoute = express.Router();
 emergencyRoute.post(
@@ -17,5 +17,10 @@ emergencyRoute.patch(
   updateEmergencyStatus
 );
 
+emergencyRoute.get(
+  "/requested",
+  auth,
+  seeRequestedEmergencyAmbulance
+);
 
 module.exports=emergencyRoute;

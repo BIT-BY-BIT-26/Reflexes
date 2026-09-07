@@ -215,3 +215,14 @@ export const createReferral = (referralData) => {
 export const getSharedMedicalData = async (patientId) => {
   return api.get(`/doctors/patient-history/${patientId}`);
 };
+
+export const getRequestedEmergencies = () => {
+  return api.get("/emergency/requested");
+};
+
+export const updateEmergencyStatus = (emergencyId, status, ambulance) => {
+  return api.patch(`/emergency/${emergencyId}/status`, {
+    status,
+    ...(ambulance && { ambulance }),
+  });
+};
