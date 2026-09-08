@@ -116,12 +116,12 @@ const PatientProfileAdmin = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black p-6">
-      <div className="max-w-5xl mx-auto flex gap-6">
+      <div className="max-w-5xl mx-auto flex  flex-col  gap-6">
 
         {/* Patient Profile */}
         <PatientProfile />
         {/* Add Report Section */}
-        <div className="mt-6 ">
+        <div className="mt-6 flex flex-col gap-6">
           {!showReportForm ? (
             <button
               onClick={() => {
