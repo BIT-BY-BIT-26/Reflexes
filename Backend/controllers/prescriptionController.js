@@ -1,6 +1,8 @@
 const appointmentModel = require("../models/appointmentModel");
 const docterModel = require("../models/docterModel");
 const prescriptionModel = require("../models/prescriptionModel");
+const { redisClient } = require("../config/redisClient");
+const { summaryCacheKey } = require("./medicalSummaryController");
 const axios = require("axios");
 
 const createPrescription = async (req, res) => {
@@ -73,6 +75,9 @@ const createPrescription = async (req, res) => {
       attachments,
       followUpDate
     });
+
+    // A new prescription changes the record the AI summary is built from.
+    await redisClient.del(summaryCacheKey(patientId));
 
     return res.status(201).json({
       success: true,

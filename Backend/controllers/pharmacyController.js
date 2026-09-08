@@ -268,3 +268,34 @@ exports.addMedicine = async (req, res) => {
     });
   }
 };
+
+exports.getAvailablePharmacies = async (req, res) => {
+  try {
+    const pharmacies = await PharmacyModel.find({
+      approvalStatus: "APPROVED",
+      isActive: true,
+    })
+      .select(
+        "shopName ownerName phone address city state pincode location"
+      )
+      .sort({ shopName: 1 })
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      count: pharmacies.length,
+      pharmacies,
+    });
+  } catch (error) {
+    console.error(
+      "Get available pharmacies error:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch pharmacies",
+      error: error.message,
+    });
+  }
+};

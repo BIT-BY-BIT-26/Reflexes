@@ -31,8 +31,8 @@ function App() {
         draggable
         theme="dark"
       />
-                <Routes>
-                <Route
+      <Routes>
+        <Route
           path="/register"
           element={
             <PublicRoute>
@@ -41,8 +41,8 @@ function App() {
           }
         />
         <Route path="/register-role" element={<RegisterRole />} />
-      <Route path="/register-pharmacy" element={<RegisterPharmacy />} />
-      <Route path="/pharmacy-dashboard" element={<PharmacyDashboard />} />
+        <Route path="/register-pharmacy" element={<RegisterPharmacy />} />
+        <Route path="/pharmacy-dashboard" element={<PharmacyDashboard />} />
         <Route
           path="/login"
           element={
@@ -53,10 +53,10 @@ function App() {
         />
 
         {/* <Route path="/forgot-password" element={<ForgotPassword />} /> */}
-    <Route path="/admin-dashboard" element={
+        <Route path="/admin-dashboard" element={
           <ProtectedRoute allowedRoles={[ROLE.admin]}>
-              <AdminDashboard />
-        </ProtectedRoute>} />
+            <AdminDashboard />
+          </ProtectedRoute>} />
 
         <Route
           path="/doctor-dashboard"
@@ -66,40 +66,40 @@ function App() {
             </ProtectedRoute>
           }
         >
-        <Route path="patient/:id" element={<PatientProfile />}/>
+          <Route path="patient/:id" element={<PatientProfile />} />
+          <Route
+            path="patient-details/:id"
+            element={<MoreDetails />}
+          />
+        </Route>
         <Route
-          path="patient-details/:id"
-          element={<MoreDetails />}
+          path="/doctor/profile"
+          element={
+            <ProtectedRoute allowedRoles={[ROLE.doctor]}>
+              <DoctorProfile />
+            </ProtectedRoute>
+          }
+        ></Route>
+        <Route
+          path="/doctor/complete-profile"
+          element={
+            <ProtectedRoute allowedRoles={[ROLE.doctor]}>
+              <CompleteProfile />
+            </ProtectedRoute>
+          }
         />
-    </Route> 
-      <Route
-        path="/doctor/profile"
-        element={
-          <ProtectedRoute allowedRoles={[ROLE.doctor]}>
-            <DoctorProfile />
-          </ProtectedRoute>
-        }
-      ></Route>
-       <Route
-        path="/doctor/complete-profile"
-        element={
-          <ProtectedRoute allowedRoles={[ROLE.doctor]}>
-            <CompleteProfile />
-          </ProtectedRoute>
-        }
-      />
 
-      <Route path="/chatbot" element={<MedicalChatbot />} />
-      <Route
-      path="/online-assessment"
-      element={
-        <ProtectedRoute allowedRoles={[ROLE.doctor]}>
-          <Dashboard />
-        </ProtectedRoute>
-      }
-    />
-    </Routes>
-    
+        <Route path="/chatbot" element={<MedicalChatbot />} />
+        <Route
+          path="/online-assessment"
+          element={
+            <ProtectedRoute allowedRoles={[ROLE.doctor]}>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+
     </BrowserRouter>
   );
 }

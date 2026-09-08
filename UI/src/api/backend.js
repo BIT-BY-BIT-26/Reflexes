@@ -194,6 +194,11 @@ export const getPatientHistory = (patientId) => {
   return api.get(`/doctors/patient-history/${patientId}`);
 };
 
+// AI-generated recap of the patient's record. Slow by nature (Gemini call on a
+// cache miss), so it carries its own timeout - axiosInstance sets none globally.
+export const getPatientMedicalSummary = (patientId) => {
+  return api.get(`/doctors/patient-summary/${patientId}`, { timeout: 90000 });
+};
 
 export const getAllHospitals = () => {
   return api.get(`/all-hospitals`);

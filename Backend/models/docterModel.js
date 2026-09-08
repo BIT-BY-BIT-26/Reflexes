@@ -64,9 +64,27 @@ const doctorSchema = new mongoose.Schema({
     }
   ],
 
-  onlineAvailability:{
-    from:{type:String},
-    to:{type:String}
+  onlineAvailability: {
+    from: {
+      type: String,
+      default: null
+    },
+    to: {
+      type: String,
+      default: null
+    },
+    consultationDuration: {
+      type: Number,
+      default: 20
+    },
+    bufferTime: {
+      type: Number,
+      default: 10
+    },
+    isAvailable: {
+      type: Boolean,
+      default: false
+    }
   },
 
   registrationNumber:{

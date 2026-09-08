@@ -228,7 +228,6 @@ exports.getAllUniqueMedicines = async (req, res) => {
   }
 };
 
-
 exports.getAllMedicine = async (req, res) => {
   try {
     const medicines = await Medicine.find()
@@ -246,6 +245,41 @@ exports.getAllMedicine = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to fetch medicines",
+      error: error.message,
+    });
+  }
+};
+
+exports.getMedicinesByPharmacy = async (req, res) => {
+  try {
+    const { pharmacyId } = req.params;
+
+    const medicines = await Medicine.find({
+      pharmacyId: pharmacyId,
+      status: { $ne: "EXPIRED" },
+      stock: { $gt: 0 },
+      expiryDate: { $gte: new Date() },
+    })
+      .select(
+        "medicineName strength batchNumber manufacturingDate expiryDate price stock category manufacturer description addedVia"
+      )
+      .sort({ medicineName: 1 })
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      count: medicines.length,
+      medicines,
+    });
+  } catch (error) {
+    console.error(
+      "Get pharmacy medicines error:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch pharmacy medicines",
       error: error.message,
     });
   }

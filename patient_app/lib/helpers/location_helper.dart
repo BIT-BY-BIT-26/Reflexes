@@ -26,4 +26,21 @@ class LocationHelper {
       desiredAccuracy: LocationAccuracy.high,
     );
   }
+
+  // static Future<Placemark> getAddressFromCoordinates(
+  //   double latitude,
+  //   double longitude,
+  // ) async {
+  //   final placemarks =
+  //       await placemarkFromCoordinates(
+  //     latitude,
+  //     longitude,
+  //   );
+
+  //   if (placemarks.isEmpty) {
+  //     throw Exception("Address not found");
+  //   }
+
+  //   return placemarks.first;
+  // }
 }

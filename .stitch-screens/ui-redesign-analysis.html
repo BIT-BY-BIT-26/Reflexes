@@ -1,0 +1,525 @@
+<title>MediReach UI Rewire Audit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --ground: #f7f9f8;
+    --panel: #ffffff;
+    --panel-2: #eef3f1;
+    --ink: #131b2e;
+    --ink-soft: #4d5f5c;
+    --ink-faint: #7b8a87;
+    --line: #d6e0dc;
+    --line-soft: #e6eeeb;
+    --accent: #00685f;
+    --accent-soft: #00685f14;
+    --indigo: #4648d4;
+    --indigo-soft: #4648d414;
+    --danger: #ba1a1a;
+    --danger-soft: #ba1a1a14;
+    --warn: #8a5a12;
+    --warn-soft: #8a5a1214;
+    --ok: #00685f;
+    --shadow: 0 1px 2px rgba(19,27,46,.05), 0 10px 26px -18px rgba(19,27,46,.5);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0d1614;
+      --panel: #141f1d;
+      --panel-2: #1b2725;
+      --ink: #e3ebe8;
+      --ink-soft: #9db0ab;
+      --ink-faint: #7e908c;
+      --line: #26332f;
+      --line-soft: #1e2b28;
+      --accent: #6bd8cb;
+      --accent-soft: #6bd8cb1c;
+      --indigo: #c0c1ff;
+      --indigo-soft: #c0c1ff1c;
+      --danger: #ff9f9a;
+      --danger-soft: #ff9f9a1c;
+      --warn: #e0b25a;
+      --warn-soft: #e0b25a1c;
+      --ok: #6bd8cb;
+      --shadow: 0 1px 2px rgba(0,0,0,.5), 0 12px 30px -20px rgba(0,0,0,.9);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0d1614;
+    --panel: #141f1d;
+    --panel-2: #1b2725;
+    --ink: #e3ebe8;
+    --ink-soft: #9db0ab;
+    --ink-faint: #7e908c;
+    --line: #26332f;
+    --line-soft: #1e2b28;
+    --accent: #6bd8cb;
+    --accent-soft: #6bd8cb1c;
+    --indigo: #c0c1ff;
+    --indigo-soft: #c0c1ff1c;
+    --danger: #ff9f9a;
+    --danger-soft: #ff9f9a1c;
+    --warn: #e0b25a;
+    --warn-soft: #e0b25a1c;
+    --ok: #6bd8cb;
+    --shadow: 0 1px 2px rgba(0,0,0,.5), 0 12px 30px -20px rgba(0,0,0,.9);
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 44px 24px 96px; }
+
+  h1, h2, h3 { font-family: "Plus Jakarta Sans", Inter, sans-serif; letter-spacing: -.015em; text-wrap: balance; }
+  h1 { font-size: clamp(30px, 4.4vw, 42px); line-height: 1.08; font-weight: 700; margin: 0; }
+  h2 {
+    font-size: 21px; font-weight: 600; margin: 0;
+  }
+  h3 { font-size: 16px; font-weight: 600; margin: 0; }
+  p { margin: 0; }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: .86em; }
+  code { background: var(--panel-2); padding: 1px 5px; border-radius: 4px; color: var(--ink); }
+
+  .eyebrow {
+    font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 8px;
+  }
+  header.head { border-bottom: 1px solid var(--line); padding-bottom: 26px; }
+  header.head .lede { color: var(--ink-soft); max-width: 68ch; margin-top: 12px; font-size: 16px; }
+
+  .scope {
+    margin-top: 22px; display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+  .ask {
+    border-left: 3px solid var(--indigo); background: var(--indigo-soft);
+    padding: 12px 16px; border-radius: 0 8px 8px 0;
+  }
+  .ask h3 { font-size: 14px; margin-bottom: 3px; }
+  .ask p { font-size: 13.5px; color: var(--ink-soft); }
+
+  section { margin-top: 52px; }
+  .sec-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px; }
+  .sec-num {
+    font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--accent);
+    border: 1px solid var(--line); border-radius: 999px; padding: 1px 9px; flex: none;
+  }
+  .sec-note { color: var(--ink-soft); font-size: 14px; margin: 0 0 18px; max-width: 72ch; }
+
+  .tbl-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+  table { border-collapse: collapse; width: 100%; min-width: 760px; font-size: 13.5px; }
+  caption {
+    caption-side: top; text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line-soft);
+    font-family: "Plus Jakarta Sans", sans-serif; font-weight: 600; font-size: 14px;
+  }
+  caption .role {
+    font-family: "JetBrains Mono", monospace; font-size: 10.5px; letter-spacing: .06em;
+    background: var(--accent-soft); color: var(--accent); padding: 2px 7px; border-radius: 999px;
+    margin-left: 8px; text-transform: uppercase;
+  }
+  th {
+    text-align: left; font-weight: 600; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--ink-faint); padding: 9px 14px; border-bottom: 1px solid var(--line-soft); white-space: nowrap;
+  }
+  td { padding: 9px 14px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: none; }
+  td.mono, th.mono { font-family: "JetBrains Mono", monospace; font-size: 12px; }
+  td .what { display: block; font-weight: 500; }
+  td .sub { display: block; color: var(--ink-soft); font-size: 12.5px; }
+
+  .keep { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+  .keep-item {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px;
+  }
+  .keep-item h3 { font-size: 13.5px; margin-bottom: 4px; }
+  .keep-item .files { font-family: "JetBrains Mono", monospace; font-size: 11.5px; color: var(--accent); }
+  .keep-item p { font-size: 13px; color: var(--ink-soft); margin-top: 6px; }
+
+  .plan { display: flex; flex-direction: column; gap: 0; }
+  .step {
+    display: grid; grid-template-columns: 76px 1fr; gap: 20px;
+    padding: 18px 0; border-top: 1px solid var(--line-soft);
+  }
+  .step:first-child { border-top: none; }
+  .step .idx {
+    font-family: "JetBrains Mono", monospace; font-size: 12px; color: var(--ink-faint);
+    padding-top: 2px;
+  }
+  .step h3 { margin-bottom: 5px; }
+  .step p { font-size: 13.5px; color: var(--ink-soft); }
+  .step .files { margin-top: 7px; font-family: "JetBrains Mono", monospace; font-size: 11.5px; color: var(--accent); overflow-wrap: anywhere; }
+
+  .tokens { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .swatch {
+    display: flex; align-items: center; gap: 7px; border: 1px solid var(--line);
+    border-radius: 8px; padding: 5px 10px 5px 6px; background: var(--panel);
+    font-family: "JetBrains Mono", monospace; font-size: 11px; color: var(--ink-soft);
+  }
+  .swatch i { width: 18px; height: 18px; border-radius: 4px; display: block; border: 1px solid rgba(0,0,0,.12); }
+
+  .risks { display: grid; gap: 12px; }
+  .risk {
+    display: grid; grid-template-columns: 8px 1fr; gap: 0; background: var(--panel);
+    border: 1px solid var(--line); border-radius: 10px; overflow: hidden;
+  }
+  .risk .stripe { background: var(--warn); }
+  .risk.high .stripe { background: var(--danger); }
+  .risk.low .stripe { background: var(--accent); }
+  .risk .body { padding: 13px 16px; }
+  .risk h3 { font-size: 14px; display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
+  .risk .sev {
+    font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: .07em; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 999px; background: var(--warn-soft); color: var(--warn);
+  }
+  .risk.high .sev { background: var(--danger-soft); color: var(--danger); }
+  .risk.low .sev { background: var(--accent-soft); color: var(--accent); }
+  .risk p { font-size: 13.5px; color: var(--ink-soft); margin-top: 5px; }
+  .risk .fix { margin-top: 7px; font-size: 13px; }
+  .risk .fix b { font-weight: 600; color: var(--ink); }
+
+  .gaps { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--panel); }
+  .gap-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border-top: 1px solid var(--line-soft); }
+  .gap-row:first-of-type { border-top: none; }
+  .gap-row > div { padding: 11px 16px; font-size: 13.5px; }
+  .gap-row > div:first-child { border-right: 1px solid var(--line-soft); font-weight: 500; }
+  .gap-row .verdict { color: var(--ink-soft); }
+  .gap-row .verdict b { color: var(--danger); font-weight: 600; }
+  .gap-row .verdict b.ok { color: var(--accent); }
+  .gap-head > div { font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-faint); font-weight: 600; }
+
+  footer.end {
+    margin-top: 56px; padding-top: 22px; border-top: 1px solid var(--line);
+    color: var(--ink-soft); font-size: 14px;
+  }
+  footer.end h2 { margin-bottom: 10px; }
+  footer.end ol { margin: 0; padding-left: 20px; }
+  footer.end li { margin-bottom: 6px; }
+
+  @media (max-width: 640px) {
+    .wrap { padding: 28px 16px 64px; }
+    .gap-row { grid-template-columns: 1fr; }
+    .gap-row > div:first-child { border-right: none; }
+    .step { grid-template-columns: 1fr; gap: 6px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="head">
+    <p class="eyebrow">Pre-implementation audit &middot; no code changed</p>
+    <h1>MediReach UI Rewire Audit</h1>
+    <p class="lede">What every control in <code>UI/</code> does today, which layer the new Stitch-styled screens must plug into, and where the redesign would break behaviour if built carelessly. Nothing has been modified — this is the map I would work from.</p>
+
+    <div class="scope">
+      <div class="ask">
+        <h3>Which app is being redesigned?</h3>
+        <p>This audit covers <code>UI/</code> (React Query + RTK, Tailwind 4) — the newer of the two live frontends. <code>Frontend/</code> is a separate parallel app that still receives commits and holds the video call, chatbot and forgot-password screens. I assumed <code>UI/</code>; say the word if you meant both.</p>
+      </div>
+      <div class="ask">
+        <h3>New folder, or in place?</h3>
+        <p>&ldquo;new_UI&rdquo; reads as a new sibling directory. A copy diverges from <code>UI/</code> the moment someone commits to either. Redesigning inside <code>UI/</code> on a branch keeps one source of truth — my recommendation unless you want the old UI running side by side.</p>
+      </div>
+    </div>
+  </header>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>Current structure</h2></div>
+    <p class="sec-note">Routes come from <code>UI/src/Routes/AppRoutes.jsx</code>. Two guards wrap everything: <code>PublicRoute</code> bounces a logged-in user to their own dashboard, <code>ProtectedRoutes</code> bounces a wrong-role user the same way. Both read <code>state.auth</code>, which hydrates from <code>localStorage</code> at store creation.</p>
+
+    <div class="tbl-scroll">
+      <table>
+        <caption>Route map<span class="role">all roles</span></caption>
+        <thead>
+          <tr><th class="mono">Path</th><th>Component</th><th>Guard</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="mono">/</td><td>LandingPage</td><td>PublicRoute</td><td>Static marketing + theme toggle</td></tr>
+          <tr><td class="mono">/login</td><td>Login</td><td>PublicRoute</td><td>Only real login for 4 roles</td></tr>
+          <tr><td class="mono">/signup</td><td>SelectRole</td><td>—</td><td>Cards linking to signup routes</td></tr>
+          <tr><td class="mono">/signup/hospital</td><td>HospitalSignup</td><td>—</td><td>Writes token itself, skips Redux</td></tr>
+          <tr><td class="mono">/signup/pharmacy</td><td>PharmacySignup</td><td>—</td><td>Renders the literal text &ldquo;PharmacySignup&rdquo;; the real 386-line form <code>SignupPharmacy.jsx</code> is imported but never routed</td></tr>
+          <tr><td class="mono">/admin/login</td><td>LoginPlatformAdmin</td><td>—</td><td>Separate <code>/platform/login</code> endpoint</td></tr>
+          <tr><td class="mono">/platform-dashboard</td><td>PlatFormDashboard</td><td>PLATFORM_ADMIN</td><td>Entirely hardcoded mock — zero API calls</td></tr>
+          <tr><td class="mono">/hospital-dashboard</td><td>HospitalLayout → HospitalDashboard</td><td>HOSPITAL_ADMIN</td><td>Index: intro + stat cards + live doctor status</td></tr>
+          <tr><td class="mono">…/departments · /departments/add</td><td>AllDepartments · AddDepartment</td><td>HOSPITAL_ADMIN</td><td></td></tr>
+          <tr><td class="mono">…/doctors · /doctors/add</td><td>AllDoctor · AddDoctor</td><td>HOSPITAL_ADMIN</td><td></td></tr>
+          <tr><td class="mono">…/doctor/opd-schedule/:doctorId</td><td>OpdSchedule</td><td>HOSPITAL_ADMIN</td><td>Weekly availability editor</td></tr>
+          <tr><td class="mono">…/patients/:id · /patient-report/:id</td><td>PatientProfileAdmin</td><td>HOSPITAL_ADMIN</td><td>Both paths render the same component</td></tr>
+          <tr><td class="mono">…/profile · /hospital-profile</td><td>CompleteProfile · Profile</td><td>HOSPITAL_ADMIN</td><td>Outside the layout — no navbar</td></tr>
+          <tr><td class="mono">/doctor-dashboard</td><td>HospitalLayout → DoctorDashboard</td><td>DOCTOR</td><td>Gates on <code>profileCompleted</code>: locked-feature wall or full OPD home</td></tr>
+          <tr><td class="mono">…/appointments</td><td>Appointment</td><td>DOCTOR</td><td>Today's list + confirm</td></tr>
+          <tr><td class="mono">…/notifications</td><td>NotificationSection</td><td>DOCTOR</td><td>Reads socket-fed Redux list</td></tr>
+          <tr><td class="mono">…/patients/:id · /:id/prescription · /:id/history</td><td>PatientProfileDoctor · PrescriptionOptions · PatientHistory</td><td>DOCTOR</td><td></td></tr>
+          <tr><td class="mono">/pharmacy-dashboard</td><td>PharmacyLayout → PharmacyDashboard</td><td>PHARMACY</td><td>Index renders a second sidebar copy — visible bug</td></tr>
+          <tr><td class="mono">…/add-medicine</td><td>AddMedicine</td><td>PHARMACY</td><td>Manual form or webcam OCR</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="sec-note" style="margin-top:12px">The pharmacy sidebar also links to <code>/medicines</code>, <code>/categories</code>, <code>/stock-alerts</code>, <code>/orders</code>, <code>/prescriptions</code>, <code>/profile</code>, <code>/reports</code> and <code>/settings</code> — none of these routes exist, so every one renders a blank page today.</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>Interaction inventory</h2></div>
+    <p class="sec-note">Every control that does something, traced control → handler → API → state → result. This is the contract the new UI has to keep. Anything not listed here is presentational.</p>
+
+    <div class="tbl-scroll" style="margin-bottom:20px">
+      <table>
+        <caption>Auth &amp; shell<span class="role">all roles</span></caption>
+        <thead><tr><th>Control</th><th>Handler</th><th class="mono">API</th><th>State / result</th></tr></thead>
+        <tbody>
+          <tr><td><span class="what">Login submit</span><span class="sub">Login.jsx</span></td><td class="mono">handleSubmit</td><td class="mono">POST /auth/login</td><td>dispatch <code>loginSuccess</code> → token/role/user to localStorage → switch on role → navigate</td></tr>
+          <tr><td><span class="what">Platform admin submit</span></td><td class="mono">handleSubmit</td><td class="mono">POST /platform/login</td><td>Same <code>loginSuccess</code>, navigates <code>/platform-dashboard</code></td></tr>
+          <tr><td><span class="what">Hospital signup submit</span></td><td class="mono">handleSubmit</td><td class="mono">POST /hospitals</td><td>Writes <code>token/role/user</code> to localStorage <em>directly</em>, then navigates — Redux never learns until reload</td></tr>
+          <tr><td><span class="what">Use my location</span><span class="sub">HospitalSignup</span></td><td class="mono">handleGeoLocation</td><td class="mono">geolocation + reverse geocode</td><td>Fills address fields, sets <code>locationFetched</code></td></tr>
+          <tr><td><span class="what">Navbar patient search</span></td><td class="mono">debounced 500&nbsp;ms effect</td><td class="mono">GET /search-patients?search=</td><td>Result click → <code>{basePath}/patients/:id</code> where basePath depends on role</td></tr>
+          <tr><td><span class="what">Theme toggle</span></td><td class="mono">dispatch(toggleTheme)</td><td>—</td><td>Persists to localStorage; <code>useThemeSync</code> toggles <code>.dark</code> on <code>&lt;html&gt;</code></td></tr>
+          <tr><td><span class="what">Bell icon</span></td><td class="mono">handleNotificationClick</td><td>—</td><td>Always navigates to the <em>doctor</em> notifications route, badge from <code>state.notification.unreadCount</code></td></tr>
+          <tr><td><span class="what">Logout</span></td><td class="mono">dispatch(logout)</td><td>—</td><td><code>localStorage.clear()</code> → navigate <code>/login</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tbl-scroll" style="margin-bottom:20px">
+      <table>
+        <caption>OPD queue — the subsystem that must not move<span class="role">doctor</span></caption>
+        <thead><tr><th>Control</th><th>Handler</th><th class="mono">API</th><th>State / result</th></tr></thead>
+        <tbody>
+          <tr><td><span class="what">Start / Stop OPD</span><span class="sub">OPDControls</span></td><td class="mono">handleOPDToggle</td><td class="mono">PATCH /doctors/toggle-opd<br>PATCH /consultation/stop-consultation/:id</td><td>Start → <code>setOpdStarted(true)</code>. Stop → clears started, paused and current appointment</td></tr>
+          <tr><td><span class="what">Start Consultation</span><span class="sub">only when no current patient</span></td><td class="mono">handleStartConsultation</td><td class="mono">PATCH /consultation/start-consultation</td><td><code>setCurrentAppointment(res.data.currentAppointment)</code>, unpause, <code>refreshQueue()</code></td></tr>
+          <tr><td><span class="what">Pause / Resume</span></td><td class="mono">handlePause… / handleResume…</td><td class="mono">PATCH /consultation/pause-consultation/:id<br>…/resume-consultation/:id</td><td>Flips <code>opdPaused</code> only</td></tr>
+          <tr><td><span class="what">Complete Appointment</span><span class="sub">CurrentPatient</span></td><td class="mono">onComplete → DoctorHome.handleComplete</td><td class="mono">PATCH /appointments/:id/complete</td><td>Promotes returned <code>currentAppointment</code>, or clears it and flips OPD off when the reply says &ldquo;opd ended&rdquo;; then refetches queue</td></tr>
+          <tr><td><span class="what">Call Next</span></td><td class="mono">handleCallNext</td><td class="mono">PATCH /consultation/call-next</td><td>Same promote-or-end branch</td></tr>
+          <tr><td><span class="what">Skip</span><span class="sub">wired in DoctorHome, no button rendered today</span></td><td class="mono">handleSkip</td><td class="mono">PATCH /consultation/skip-patient</td><td>Same branch — a redesign should surface this control</td></tr>
+          <tr><td><span class="what">See Profile / Add Prescription</span></td><td class="mono">navigate</td><td>—</td><td><code>/doctor-dashboard/patients/:patientId</code> and <code>…/prescription?appointmentId=</code> — the query param is what the prescription screen submits against</td></tr>
+          <tr><td><span class="what">Queue search box</span><span class="sub">QueueList</span></td><td class="mono">local useState</td><td>—</td><td>Client-side filter on <code>patient.userId.name</code></td></tr>
+          <tr><td><span class="what">Queue item &ldquo;View&rdquo;</span></td><td>—</td><td>—</td><td>Renders but has no onClick — dead control today</td></tr>
+          <tr><td><span class="what">Confirm appointment</span><span class="sub">Appointment.jsx</span></td><td class="mono">useConfirmAppointment</td><td class="mono">PATCH /appointments/:id/confirm</td><td>Optimistic cache patch → rollback on error → invalidates <code>todaysAppointments</code> + <code>doctorDashboard</code></td></tr>
+          <tr><td><span class="what">Complete profile modal</span><span class="sub">AccessFeatures</span></td><td class="mono">handleSubmit</td><td class="mono">GET /departments<br>POST /doctors/submit-profile</td><td>On success the parent refetches <code>/doctors/profile-status</code>, which swaps the whole dashboard from locked wall to OPD home</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tbl-scroll" style="margin-bottom:20px">
+      <table>
+        <caption>Hospital admin<span class="role">hospital_admin</span></caption>
+        <thead><tr><th>Control</th><th>Handler / hook</th><th class="mono">API</th><th>State / result</th></tr></thead>
+        <tbody>
+          <tr><td><span class="what">Stat cards</span><span class="sub">AllCards</span></td><td class="mono">useStats</td><td class="mono">GET /statistics</td><td>React Query, 15&nbsp;s stale; retry button calls <code>refetch()</code></td></tr>
+          <tr><td><span class="what">Doctor status board</span><span class="sub">DoctorStatus</span></td><td class="mono">own <code>io()</code> instance</td><td class="mono">GET /doctors/get-doctors</td><td>Listens to <code>initial-doctor-status</code>, <code>doctor-online</code>, <code>doctor-offline</code> and patches local state — <em>not</em> the shared <code>socket.js</code> client</td></tr>
+          <tr><td><span class="what">Add department</span></td><td class="mono">handleSubmit</td><td class="mono">GET /departments/list<br>POST /departments</td><td>Toast → reset form → navigate <code>/hospital-dashboard</code></td></tr>
+          <tr><td><span class="what">Add doctor</span></td><td class="mono">handleSubmit</td><td class="mono">POST /doctors/add-doctor</td><td>Toast → navigate <code>…/doctors</code></td></tr>
+          <tr><td><span class="what">Doctor card → Set OPD schedule</span></td><td class="mono">navigate</td><td>—</td><td><code>…/doctor/opd-schedule/:doctorId</code></td></tr>
+          <tr><td><span class="what">OPD schedule editor</span></td><td class="mono">handleAvailability · handleTime · saveSchedule</td><td class="mono">GET /admin/doctor/:id<br>PATCH (same, raw axios)</td><td>Validates each enabled day has from/to and end&nbsp;&gt;&nbsp;start before submitting; bypasses <code>axiosInstance</code> and reads the token by hand</td></tr>
+          <tr><td><span class="what">Upload patient report</span><span class="sub">PatientProfileAdmin</span></td><td class="mono">handleUploadReport</td><td class="mono">POST /upload-report</td><td>multipart FormData (title, type LAB/…, file) → success message</td></tr>
+          <tr><td><span class="what">Hospital profile form</span><span class="sub">CompleteProfile</span></td><td class="mono">handleSubmit</td><td class="mono">PATCH /profile</td><td>FormData with logo, cover, gallery; has its own local dark-mode toggle separate from the Redux theme</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tbl-scroll">
+      <table>
+        <caption>Patient records, prescriptions &amp; pharmacy<span class="role">doctor · pharmacy</span></caption>
+        <thead><tr><th>Control</th><th>Handler</th><th class="mono">API</th><th>State / result</th></tr></thead>
+        <tbody>
+          <tr><td><span class="what">Patient profile</span></td><td class="mono">fetchProfile</td><td class="mono">GET /patients/get-patient-profile/:id</td><td>Shared <code>PatientProfile</code> component under both admin and doctor routes</td></tr>
+          <tr><td><span class="what">Generate AI summary</span></td><td class="mono">handleGenerateSummary</td><td class="mono">GET /doctors/patient-summary/:id</td><td>90&nbsp;s timeout, own loading/error state; renders active meds + visit timeline</td></tr>
+          <tr><td><span class="what">Previous history</span></td><td class="mono">navigate → fetch</td><td class="mono">GET /doctors/patient-history/:id</td><td>Reports + prescriptions timeline</td></tr>
+          <tr><td><span class="what">Prescription: manual</span></td><td class="mono">handleManualSubmit</td><td class="mono">POST /prescription/create-prescription</td><td>Splits comma lists into arrays; medicine rows are add/remove local state</td></tr>
+          <tr><td><span class="what">Prescription: image</span></td><td class="mono">handleImageUpload</td><td class="mono">POST prescription-ai-service…/ocr</td><td>External OCR service → fills the editable draft</td></tr>
+          <tr><td><span class="what">Prescription: description</span></td><td class="mono">handleDescriptionParse</td><td class="mono">POST prescription-ai-service…/parse</td><td>Same draft shape</td></tr>
+          <tr><td><span class="what">Prescription: save draft</span></td><td class="mono">handleFinalSubmit</td><td class="mono">POST /prescription/create-prescription</td><td>The single write path for all three input methods</td></tr>
+          <tr><td><span class="what">Add medicine (manual)</span></td><td class="mono">handleSubmit</td><td class="mono">POST /pharmacy/add-medicine</td><td>Per-batch record: batchNumber, expiryDate, stock</td></tr>
+          <tr><td><span class="what">Scan medicine</span><span class="sub">WebcamMedicineOCR</span></td><td class="mono">startCamera · scanMedicine · handleContinue</td><td class="mono">Tesseract.js in-browser → POST /pharmacy/add-medicine</td><td>Camera stream refs, scan result → editable fields → save. The heaviest single component in the app (1,319 lines)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>Reuse layer — do not touch</h2></div>
+    <p class="sec-note">Every one of these is already the shared seam between UI and behaviour. The redesign imports them exactly as the current components do; no handler gets rewritten, no endpoint gets re-called from a new place.</p>
+    <div class="keep">
+      <div class="keep-item">
+        <h3>API surface</h3>
+        <p class="files">src/api/backend.js · axiosInstance.js</p>
+        <p>All 30+ endpoint functions plus the bearer-token interceptor. New components import the same functions.</p>
+      </div>
+      <div class="keep-item">
+        <h3>Query hooks</h3>
+        <p class="files">hooks/useStats · UseAllDcotors · UseAllDepartment · Usedoctordashboard · useTodaysAppointments · useConfirmAppointment</p>
+        <p>Including the optimistic confirm mutation and its rollback — reused as-is, keys unchanged.</p>
+      </div>
+      <div class="keep-item">
+        <h3>Redux slices</h3>
+        <p class="files">redux/slices/{auth,opd,notification,theme}.js · redux/store.js</p>
+        <p>The OPD slice is the queue's single source of truth. New controls dispatch the same actions.</p>
+      </div>
+      <div class="keep-item">
+        <h3>Socket client</h3>
+        <p class="files">src/socket.js</p>
+        <p>Manual connect after login, token from localStorage, <code>joinDoctor</code> emit, <code>new-appointment</code> listener.</p>
+      </div>
+      <div class="keep-item">
+        <h3>Route guards</h3>
+        <p class="files">Routes/protectedRoutes.jsx · PublicRoute.jsx · constants/Role.js</p>
+        <p>Role gating and redirect targets stay byte-identical; only what renders inside changes.</p>
+      </div>
+      <div class="keep-item">
+        <h3>Container logic</h3>
+        <p class="files">DoctorHome.jsx handlers · DoctorDashboard.jsx status gate</p>
+        <p>The promote-or-end branches move with the component, not rewritten — new presentational children receive the same props.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>What the Stitch screens actually cover</h2></div>
+    <p class="sec-note">Four of the seven map onto something that exists. Three imply features <code>UI/</code> does not have — building those is new functionality, not a redesign, so I would leave them out unless you say otherwise.</p>
+    <div class="gaps">
+      <div class="gap-row gap-head"><div>Stitch screen</div><div>Existing counterpart</div></div>
+      <div class="gap-row"><div>Unified Login &amp; Multi-Role Gateway</div><div class="verdict"><b class="ok">Maps</b> — Login.jsx + SelectRole.jsx</div></div>
+      <div class="gap-row"><div>Doctor Appointments &amp; Daily Schedule</div><div class="verdict"><b class="ok">Maps</b> — DoctorDashboard + Appointment + OPD queue</div></div>
+      <div class="gap-row"><div>Hospital Doctor Management &amp; Staff Directory</div><div class="verdict"><b class="ok">Maps</b> — AllDoctor + AddDoctor + DoctorStatus</div></div>
+      <div class="gap-row"><div>Hospital Central Appointments &amp; OPD Scheduling</div><div class="verdict"><b class="ok">Partly</b> — OpdSchedule per doctor exists; a hospital-wide appointment board does not</div></div>
+      <div class="gap-row"><div>Find Doctors &amp; Book Online OPD</div><div class="verdict"><b>No counterpart</b> — patients are served by the Flutter app; neither web frontend has a patient dashboard</div></div>
+      <div class="gap-row"><div>Patient Health Vault &amp; Prescription Upload</div><div class="verdict"><b>No counterpart</b> — the web app only has doctor/admin-facing report upload</div></div>
+      <div class="gap-row"><div>Live Online OPD Tele-Consultation Console</div><div class="verdict"><b>No counterpart in UI/</b> — WebRTC lives in <code>Frontend/src/onlineConsultation.jsx/LiveCall.jsx</code></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>Redesign plan</h2></div>
+    <p class="sec-note">Design tokens lifted straight from the Stitch output — the screens ship a Material-3 palette and a Plus Jakarta Sans / Inter pairing in their own Tailwind config, so the new look is defined, not invented.</p>
+
+    <div class="tokens">
+      <span class="swatch"><i style="background:#00685f"></i>primary #00685f</span>
+      <span class="swatch"><i style="background:#6bd8cb"></i>inverse-primary #6bd8cb</span>
+      <span class="swatch"><i style="background:#006398"></i>secondary #006398</span>
+      <span class="swatch"><i style="background:#4648d4"></i>tertiary #4648d4</span>
+      <span class="swatch"><i style="background:#faf8ff"></i>surface #faf8ff</span>
+      <span class="swatch"><i style="background:#131b2e"></i>on-surface #131b2e</span>
+      <span class="swatch"><i style="background:#ba1a1a"></i>error #ba1a1a</span>
+    </div>
+
+    <div class="plan" style="margin-top:22px">
+      <div class="step">
+        <div class="idx">Step 1</div>
+        <div>
+          <h3>Token layer</h3>
+          <p>Port the Stitch palette, type scale (display 44 / headline 32 / title 15 / body 14 / label-caps 11) and its tight radii into Tailwind 4 <code>@theme</code> variables. One file, no component changes — everything downstream reads semantic names instead of the current <code>bg-[#111827]</code> literals.</p>
+          <p class="files">UI/src/index.css</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="idx">Step 2</div>
+        <div>
+          <h3>App shell</h3>
+          <p>The Stitch screens use a persistent left rail (brand, section nav, station badge) plus a slim top bar (search, notifications, profile). Today <code>HospitalLayout</code> is a bare navbar over an <code>Outlet</code>. Rebuild the shell, keep the navbar's search debounce, theme toggle, bell and logout handlers wired to the same dispatches.</p>
+          <p class="files">pages/HospitalLayout.jsx · components/Navbar.jsx (→ Sidebar + Topbar)</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="idx">Step 3</div>
+        <div>
+          <h3>Doctor OPD screens</h3>
+          <p>The highest-value redesign and the riskiest. <code>DoctorHome</code> keeps its four handlers and stays the container; <code>OPDControls</code>, <code>CurrentPatient</code>, <code>QueueList</code>, <code>QueueItem</code> and <code>DoctorCards</code> become the Stitch roster layout — stat tiles, filter tabs, table-style queue. Same props in, same callbacks out. I would also give the already-wired <strong>Skip</strong> handler a button and make the dead <strong>View</strong> control navigate to the patient profile — both are behaviour additions, so only if you approve.</p>
+          <p class="files">components/Doctors/*</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="idx">Step 4</div>
+        <div>
+          <h3>Admin screens</h3>
+          <p>Directory cards → the Stitch staff-directory table with the online/offline chip fed by the same three socket events. Stat cards, department list, add-forms and the OPD schedule editor restyled against the tokens; validation and submit paths untouched.</p>
+          <p class="files">features/Admin/* · components/Hospitals/*</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="idx">Step 5</div>
+        <div>
+          <h3>Auth + pharmacy</h3>
+          <p>Login and role-select take the gateway layout; the pharmacy sidebar//navbar and both add-medicine paths take the shell and form styling. The OCR camera flow is restyled but its refs, scan loop and save call stay exactly where they are.</p>
+          <p class="files">pages/Login.jsx · pages/Auth/* · features/pharmacy/*</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-num">06</span><h2>Risks</h2></div>
+    <p class="sec-note">Ordered by what would actually cost you a working feature.</p>
+    <div class="risks">
+      <div class="risk high">
+        <div class="stripe"></div>
+        <div class="body">
+          <h3>The Stitch screens show data the API does not return <span class="sev">high</span></h3>
+          <p>The appointment roster renders MRN, chief complaint, live vitals (BP, HR, SpO₂), avg wait and slot times. <code>GET /appointments/today</code> returns only <code>{ token, appointmentId, patient(name/email/gender), status, bookedAt }</code>. Copying the design literally means inventing fields or shipping empty columns.</p>
+          <p class="fix"><b>Plan:</b> keep the Stitch layout and typography, drop columns with no backing data, and tell you which ones I removed rather than filling them with placeholders.</p>
+        </div>
+      </div>
+      <div class="risk high">
+        <div class="stripe"></div>
+        <div class="body">
+          <h3>The OPD state machine is easy to break from the view layer <span class="sev">high</span></h3>
+          <p>The backend enforces one <code>CURRENT</code> appointment per doctor per day and refuses to stop OPD while a consultation runs. The current buttons are conditionally rendered so the impossible transitions cannot be triggered. A redesign that shows all controls at once (as a toolbar-style layout invites) would start producing 409s and &ldquo;OPD not started&rdquo; errors.</p>
+          <p class="fix"><b>Plan:</b> carry the exact render conditions over — Start Consultation only when started &amp;&amp; !paused &amp;&amp; no current; Pause only with a current; Resume only when paused.</p>
+        </div>
+      </div>
+      <div class="risk">
+        <div class="stripe"></div>
+        <div class="body">
+          <h3>Two socket clients, two conventions <span class="sev">medium</span></h3>
+          <p><code>DoctorStatus</code> builds its own <code>io()</code> connection instead of the shared <code>socket.js</code>. Consolidating them during a visual pass looks tidy and would silently change connection lifetime and listener cleanup.</p>
+          <p class="fix"><b>Plan:</b> leave both as they are. Refactor separately if you want it.</p>
+        </div>
+      </div>
+      <div class="risk">
+        <div class="stripe"></div>
+        <div class="body">
+          <h3>Existing bugs that a rewrite would &ldquo;accidentally&rdquo; fix <span class="sev">medium</span></h3>
+          <p>Login switches on <code>ROLE.hospital_admin</code>, which is undefined — admins fall through to <code>navigate("/")</code> and only land on their dashboard because <code>PublicRoute</code> catches them. <code>/signup/pharmacy</code> renders a placeholder while the real form sits unrouted. The pharmacy index route renders a second sidebar. Silently repairing these changes behaviour you did not ask me to change.</p>
+          <p class="fix"><b>Plan:</b> preserve as-is by default; list them for you to green-light individually.</p>
+        </div>
+      </div>
+      <div class="risk">
+        <div class="stripe"></div>
+        <div class="body">
+          <h3>Hardcoded localhost and hand-rolled requests <span class="sev">medium</span></h3>
+          <p><code>OpdSchedule</code>, <code>DoctorStatus</code>, <code>AddMedicine</code> and <code>SignupPharmacy</code> call <code>http://localhost:3000</code> through raw axios with a manually attached token instead of <code>axiosInstance</code>. Moving them to the shared instance during the redesign would change header and error behaviour.</p>
+          <p class="fix"><b>Plan:</b> leave the call sites alone; only the markup around them changes.</p>
+        </div>
+      </div>
+      <div class="risk low">
+        <div class="stripe"></div>
+        <div class="body">
+          <h3>Dark mode is a class on <code>&lt;html&gt;</code> <span class="sev">low</span></h3>
+          <p><code>index.css</code> defines <code>@custom-variant dark (&amp;:where(.dark, .dark *))</code> and <code>useThemeSync</code> toggles that class. Several components hardcode dark-only colors (<code>bg-slate-900</code>, <code>bg-[#111827]</code>) and are unreadable in light mode already.</p>
+          <p class="fix"><b>Plan:</b> the token pass fixes this as a side effect — both themes get designed, which is a visual change, not a behavioural one.</p>
+        </div>
+      </div>
+      <div class="risk low">
+        <div class="stripe"></div>
+        <div class="body">
+          <h3>No tests, no safety net <span class="sev">low</span></h3>
+          <p>There is nothing to run that would catch a broken handler wire-up. Verification is manual.</p>
+          <p class="fix"><b>Plan:</b> redesign screen by screen, keeping each commit small enough to eyeball against this inventory.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="end">
+    <h2>What I need from you before writing code</h2>
+    <ol>
+      <li><strong>Target:</strong> redesign inside <code>UI/</code> on a branch (recommended), or scaffold a separate <code>new_UI/</code> copy?</li>
+      <li><strong>Scope:</strong> all five areas in the plan, or start with the doctor OPD screens and review before continuing?</li>
+      <li><strong>The three unbacked Stitch screens</strong> (patient booking, health vault, tele-consultation): leave out, or build as new features in a later pass?</li>
+      <li><strong>The bugs in risk 4:</strong> preserve exactly, or fix while I am in there?</li>
+    </ol>
+  </footer>
+</div>
