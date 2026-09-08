@@ -73,7 +73,8 @@ const EmergencyModel = new mongoose.Schema(
         "ON_THE_WAY",
         "ARRIVED",
         "PATIENT_PICKED",
-        "COMPLETED"
+        "COMPLETED",
+        "CANCELLED"
       ],
       default: "REQUESTED"
     },
@@ -97,6 +98,16 @@ const EmergencyModel = new mongoose.Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         default: null
+    },
+    cancelledAt: {
+      type: Date,
+      default: null,
+    },
+
+    cancelledBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
     },
 
     assignedAt: {

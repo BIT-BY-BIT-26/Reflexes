@@ -15,6 +15,7 @@
     "@mui/icons-material": "^7.3.8",
     "@mui/material": "^7.3.8",
     "@reduxjs/toolkit": "^2.11.2",
+    "@zegocloud/zego-uikit-prebuilt": "^2.18.3",
     "axios": "^1.13.5",
     "framer-motion": "^12.34.2",
     "lucide-react": "^0.575.0",

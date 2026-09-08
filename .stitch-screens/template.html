@@ -1,0 +1,209 @@
+<title>MediReach Screen Index</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --ground: #f2f5f4;
+    --panel: #ffffff;
+    --ink: #14211f;
+    --ink-soft: #556763;
+    --line: #d5deda;
+    --accent: #0f6b64;
+    --accent-soft: #0f6b6414;
+    --amber: #8a5a12;
+    --amber-soft: #8a5a1214;
+    --shadow: 0 1px 2px rgba(20,33,31,.06), 0 8px 24px -14px rgba(20,33,31,.35);
+    --radius: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0e1614;
+      --panel: #16211f;
+      --ink: #e6ede9;
+      --ink-soft: #97a9a4;
+      --line: #27342f;
+      --accent: #5fc8b8;
+      --accent-soft: #5fc8b81f;
+      --amber: #d9a441;
+      --amber-soft: #d9a4411f;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 28px -16px rgba(0,0,0,.8);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0e1614;
+    --panel: #16211f;
+    --ink: #e6ede9;
+    --ink-soft: #97a9a4;
+    --line: #27342f;
+    --accent: #5fc8b8;
+    --accent-soft: #5fc8b81f;
+    --amber: #d9a441;
+    --amber-soft: #d9a4411f;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 28px -16px rgba(0,0,0,.8);
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 40px 24px 72px; }
+
+  header.head {
+    display: flex; flex-wrap: wrap; align-items: flex-end; gap: 20px 40px;
+    padding-bottom: 20px; border-bottom: 1px solid var(--line); margin-bottom: 34px;
+  }
+  .eyebrow {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--accent); margin: 0 0 6px;
+  }
+  h1 {
+    font-family: Archivo, "Helvetica Neue", sans-serif;
+    font-weight: 700; font-size: clamp(28px, 4vw, 40px); line-height: 1.08;
+    letter-spacing: -.02em; margin: 0; text-wrap: balance;
+  }
+  .sub { color: var(--ink-soft); margin: 8px 0 0; max-width: 62ch; }
+  .facts {
+    display: grid; grid-template-columns: repeat(2, minmax(0, auto)); gap: 10px 28px;
+    margin: 0 0 0 auto; font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px;
+  }
+  .facts dt { color: var(--ink-soft); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
+  .facts dd { margin: 0; font-variant-numeric: tabular-nums; }
+
+  h2.sec {
+    font-family: Archivo, sans-serif; font-size: 13px; font-weight: 600;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--ink-soft);
+    margin: 0 0 16px; display: flex; align-items: baseline; gap: 10px;
+  }
+  h2.sec::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  h2.sec .count { font-family: "IBM Plex Mono", monospace; color: var(--accent); }
+  section + section { margin-top: 48px; }
+
+  .grid { display: grid; gap: 26px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+  .grid.assets { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); }
+
+  .card { margin: 0; display: flex; flex-direction: column; gap: 12px; }
+  .shot {
+    display: block; padding: 0; border: 1px solid var(--line); background: var(--panel);
+    border-radius: var(--radius); overflow: hidden; cursor: zoom-in; box-shadow: var(--shadow);
+    height: 250px; width: 100%;
+  }
+  .assets .shot { height: 168px; }
+  .shot img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+  .assets .shot img { object-fit: contain; padding: 10px; }
+  .shot:hover { border-color: var(--accent); }
+  .shot:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  .cap-top { display: flex; gap: 8px; align-items: baseline; }
+  .num {
+    font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  figcaption h3 {
+    font-family: Archivo, sans-serif; font-size: 15px; font-weight: 600;
+    margin: 0; line-height: 1.3; text-wrap: balance;
+  }
+  .prompt {
+    margin: 0; font-size: 12.5px; font-style: italic; color: var(--ink-soft);
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .chip {
+    font-family: "IBM Plex Mono", monospace; font-size: 10.5px; letter-spacing: .04em;
+    padding: 2px 7px; border-radius: 999px; white-space: nowrap;
+  }
+  .chip.role { background: var(--accent-soft); color: var(--accent); }
+  .chip.code { border: 1px solid var(--line); color: var(--ink-soft); }
+  .chip.img { background: var(--amber-soft); color: var(--amber); }
+  .dim {
+    margin-left: auto; font-family: "IBM Plex Mono", monospace; font-size: 11px;
+    color: var(--ink-soft); font-variant-numeric: tabular-nums;
+  }
+  .sid {
+    font-family: "IBM Plex Mono", monospace; font-size: 10.5px; color: var(--ink-soft);
+    opacity: .7; overflow-wrap: anywhere;
+  }
+
+  dialog.viewer {
+    border: none; padding: 0; background: var(--panel); color: var(--ink);
+    width: min(94vw, 1000px); max-width: 94vw; height: 92vh; max-height: 92vh;
+    border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden;
+  }
+  dialog.viewer::backdrop { background: rgba(8, 16, 15, .72); }
+  .viewer-bar {
+    display: flex; align-items: center; gap: 14px; padding: 10px 14px;
+    border-bottom: 1px solid var(--line); background: var(--panel);
+  }
+  .viewer-bar h4 { margin: 0; font-family: Archivo, sans-serif; font-size: 14px; font-weight: 600; }
+  .viewer-bar button {
+    margin-left: auto; font: inherit; font-size: 13px; cursor: pointer;
+    background: transparent; border: 1px solid var(--line); color: var(--ink);
+    border-radius: 6px; padding: 3px 12px;
+  }
+  .viewer-bar button:hover { border-color: var(--accent); color: var(--accent); }
+  .viewer-body { height: calc(92vh - 47px); overflow: auto; background: var(--ground); }
+  .viewer-body img { display: block; width: 100%; }
+
+  @media (max-width: 640px) {
+    .facts { margin-left: 0; }
+    .wrap { padding: 28px 16px 56px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="head">
+    <div>
+      <p class="eyebrow">Stitch project &middot; desktop &middot; text-to-UI Pro</p>
+      <h1>MediReach Screen Index</h1>
+      <p class="sub">Every screen generated in the <em>MediReach Healthcare Management System</em> project, grouped by the role that uses it. Click any thumbnail to read it at full length.</p>
+    </div>
+    <dl class="facts">
+      <div><dt>Screens</dt><dd>7</dd></div>
+      <div><dt>Assets</dt><dd>3</dd></div>
+      <div><dt>Updated</dt><dd>2026-09-03</dd></div>
+      <div><dt>Project</dt><dd>1065&hellip;3037</dd></div>
+    </dl>
+  </header>
+
+  <section>
+    <h2 class="sec">Screens <span class="count">7</span></h2>
+    <div class="grid">
+<!--SCREENS-->
+    </div>
+  </section>
+
+  <section>
+    <h2 class="sec">Generated assets <span class="count">3</span></h2>
+    <div class="grid assets">
+<!--ASSETS-->
+    </div>
+  </section>
+</div>
+
+<dialog class="viewer" id="viewer">
+  <div class="viewer-bar"><h4 id="viewer-title"></h4><button type="button" id="viewer-close">Close</button></div>
+  <div class="viewer-body"><img id="viewer-img" alt=""></div>
+</dialog>
+
+<script>
+  var dlg = document.getElementById("viewer");
+  var vimg = document.getElementById("viewer-img");
+  var vtitle = document.getElementById("viewer-title");
+  document.querySelectorAll(".shot").forEach(function (b) {
+    b.addEventListener("click", function () {
+      vimg.src = b.dataset.src;
+      vimg.alt = b.dataset.title;
+      vtitle.textContent = b.dataset.title;
+      dlg.querySelector(".viewer-body").scrollTop = 0;
+      dlg.showModal();
+    });
+  });
+  document.getElementById("viewer-close").addEventListener("click", function () { dlg.close(); });
+  dlg.addEventListener("click", function (e) { if (e.target === dlg) dlg.close(); });
+</script>

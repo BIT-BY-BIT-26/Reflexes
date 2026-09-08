@@ -16,6 +16,12 @@ const appointmentSchema = new mongoose.Schema({
     enum:["online","offline"],
     default:"offline"
   },
+
+  bookingSource: {
+    type: String,
+    enum: ["AI", "MANUAL"],
+    default: "MANUAL"
+  },
   
   department: {
     type: mongoose.Schema.Types.ObjectId,
@@ -69,6 +75,7 @@ const appointmentSchema = new mongoose.Schema({
         "Other",
       ],
       //required: true,
+      default:"General Consultation"
     },
 
     description: {

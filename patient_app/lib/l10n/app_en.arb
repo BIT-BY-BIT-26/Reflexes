@@ -1,0 +1,64 @@
+{
+  "@@locale": "en",
+
+  "appName": "MediReach",
+
+  "home": "Home",
+  "appointments": "Appointments",
+  "profile": "Profile",
+  "queue": "Queue",
+
+  "nearbyHospitals": "Nearby Hospitals",
+  "searchHospitals": "Search Hospitals",
+
+  "bookAppointment": "Book Appointment",
+  "myAppointments": "My Appointments",
+
+  "doctors": "Doctors",
+  "departments": "Departments",
+  "hospital": "Hospital",
+
+  "viewDetails": "View Details",
+  "selectDoctor": "Select Doctor",
+  "selectDepartment": "Select Department",
+
+  "reasonForVisit": "Reason for Visit",
+  "description": "Description",
+
+  "confirmAppointment": "Confirm Appointment",
+  "cancelAppointment": "Cancel Appointment",
+
+  "upcoming": "Upcoming",
+  "past": "Past",
+
+  "profileSettings": "Profile Settings",
+  "language": "Language",
+
+  "english": "English",
+  "hindi": "Hindi",
+  "marathi": "Marathi",
+
+  "save": "Save",
+  "cancel": "Cancel",
+  "done": "Done",
+  "retry": "Retry",
+
+  "loading": "Loading...",
+  "noAppointments": "No appointments found",
+  "somethingWentWrong": "Something went wrong",
+  "tryAgain": "Try Again",
+  "welcomeBack": "Welcome Back",
+    "skipTheWait": "Skip the Wait",
+    "bookWithEase": "Book with Ease",
+    "bookAppointmentsQueue": "Book appointments and\nmonitor queue in real time",
+    "quickAccess": "Quick access",
+    "findHospitals": "Find Hospitals",
+    "topDoctors": "Top Doctors",
+    "emergency": "Emergency",
+    "pharmacy": "Pharmacy",
+    "viewAll": "View All",
+    "noHospitalsFoundNearby": "No hospitals found nearby",
+    "availableNow": "Available Now",
+    "currentlyUnavailable": "Currently Unavailable",
+    "kmAway": "{distance} km away"
+}

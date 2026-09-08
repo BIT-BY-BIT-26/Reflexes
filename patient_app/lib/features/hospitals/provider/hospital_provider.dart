@@ -176,7 +176,7 @@ class HospitalProvider extends ChangeNotifier {
       nearbyHospitals = await service.getHospitals(
         lat: position.latitude,
         lng: position.longitude,
-        radius: 5000,
+        radius: 8,
       );
 
       error = null;

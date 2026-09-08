@@ -59,7 +59,11 @@ const DoctorStatus = () => {
     fetchDoctors();
 
     // Create socket
-    const socket = io("http://localhost:3000", {
+    const socket = io(
+      import.meta.env.VITE_SOCKET_URL
+      // Development:
+      // "http://localhost:3000"
+    , {
       auth: {
         token,
       },
