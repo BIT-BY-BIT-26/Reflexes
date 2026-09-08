@@ -1,15 +1,22 @@
-
 import React, { useState } from "react";
 import axios from "axios";
-import { addPrescriptionImage, ManualPrescription, PrescriptionDescription } from "../../api/backend";
+import { useDispatch, useSelector } from "react-redux";
+import { toggleTheme } from "../../redux/slices/themeSlice";
+import {
+  addPrescriptionImage,
+  ManualPrescription,
+  PrescriptionDescription,
+} from "../../api/backend";
 import { useParams, useSearchParams } from "react-router-dom";
 
 const PrescriptionOptions = () => {
-  const {id:patientId} = useParams();
+  const dispatch = useDispatch();
+  const mode = useSelector((state) => state.theme.mode);
+
+  const { id: patientId } = useParams();
   const [searchParams] = useSearchParams();
   const appointmentId = searchParams.get("appointmentId");
-  console.log("Patient ID:", patientId);
-  console.log("Appointment ID:", appointmentId);
+
   const [method, setMethod] = useState(null);
 
   const [loading, setLoading] = useState(false);
@@ -25,7 +32,6 @@ const PrescriptionOptions = () => {
     attachments: [],
     followUpDate: "",
   });
-
 
   const [complaints, setComplaints] = useState("");
   const [diagnosis, setDiagnosis] = useState("");
@@ -45,11 +51,10 @@ const PrescriptionOptions = () => {
   const [description, setDescription] = useState("");
 
   const [image, setImage] = useState(null);
+
   const handleMedicineChange = (index, field, value) => {
-    const updatedMedicines = [...medicines]; //Ye medicines array ki copy banata hai.
-
+    const updatedMedicines = [...medicines];
     updatedMedicines[index][field] = value;
-
     setMedicines(updatedMedicines);
   };
 
@@ -68,22 +73,99 @@ const PrescriptionOptions = () => {
 
   const removeMedicine = (index) => {
     if (medicines.length === 1) return;
-
     setMedicines(medicines.filter((_, i) => i !== index));
   };
 
-
-
   ///manual submit
-const handleManualSubmit = async (e) => {
-  e.preventDefault();
+  const handleManualSubmit = async (e) => {
+    e.preventDefault();
 
-  try {
-    setLoading(true);
-    setMessage("");
+    try {
+      setLoading(true);
+      setMessage("");
 
-    if (!patientId) {
-      setMessage("Patient ID is missing.");
+      if (!patientId) {
+        setMessage("Patient ID is missing.");
+        return;
+      }
+
+      if (!appointmentId) {
+        setMessage("Appointment ID is missing.");
+        return;
+      }
+
+      const formData = new FormData();
+
+      formData.append("patientId", patientId);
+      formData.append("appointmentId", appointmentId);
+
+      formData.append(
+        "complaints",
+        JSON.stringify(
+          complaints
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean)
+        )
+      );
+
+      formData.append(
+        "diagnosis",
+        JSON.stringify(
+          diagnosis
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean)
+        )
+      );
+
+      formData.append("medicines", JSON.stringify(medicines));
+
+      formData.append(
+        "tests",
+        JSON.stringify(
+          tests
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean)
+        )
+      );
+
+      formData.append("advice", advice);
+      formData.append("followUpDate", followUpDate);
+
+      const response = await ManualPrescription(formData);
+      setMessage("Prescription created successfully!");
+
+      setComplaints("");
+      setDiagnosis("");
+      setTests("");
+      setAdvice("");
+      setFollowUpDate("");
+
+      setMedicines([
+        {
+          name: "",
+          dosage: "",
+          frequency: "",
+          duration: "",
+          instructions: "",
+        },
+      ]);
+    } catch (error) {
+      setMessage(
+        error.response?.data?.message ||
+          error.response?.data?.error ||
+          "Failed to create prescription."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleImageUpload = async () => {
+    if (!image) {
+      setMessage("Please select a prescription image.");
       return;
     }
 
@@ -92,283 +174,144 @@ const handleManualSubmit = async (e) => {
       return;
     }
 
-    const formData = new FormData();
+    try {
+      setLoading(true);
+      setMessage("");
 
-    // IDs
-    formData.append("patientId", patientId);
-    formData.append("appointmentId", appointmentId);
+      const formData = new FormData();
+      formData.append("file", image);
+      formData.append("appointmentId", appointmentId);
 
-    // Arrays
-    formData.append(
-      "complaints",
-      JSON.stringify(
-        complaints
-          .split(",")
-          .map((item) => item.trim())
-          .filter(Boolean)
-      )
-    );
+      const response = await addPrescriptionImage(formData);
 
-    formData.append(
-      "diagnosis",
-      JSON.stringify(
-        diagnosis
-          .split(",")
-          .map((item) => item.trim())
-          .filter(Boolean)
-      )
-    );
+      if (response.data.success) {
+        const prescriptionData = response.data.prescription;
 
-    formData.append(
-      "medicines",
-      JSON.stringify(medicines)
-    );
+        setPrescription({
+          appointmentId: prescriptionData.appointmentId,
+          complaints: prescriptionData.complaints || [],
+          diagnosis: prescriptionData.diagnosis || [],
+          medicines: prescriptionData.medicines || [],
+          tests: prescriptionData.tests || [],
+          advice: prescriptionData.advice || "",
+          attachments: prescriptionData.attachments || [],
+          followUpDate: prescriptionData.followUpDate || "",
+        });
 
-    formData.append(
-      "tests",
-      JSON.stringify(
-        tests
-          .split(",")
-          .map((item) => item.trim())
-          .filter(Boolean)
-      )
-    );
-
-    // Normal fields
-    formData.append("advice", advice);
-    formData.append("followUpDate", followUpDate);
-    const response = await ManualPrescription(formData);
-    setMessage("Prescription created successfully!");
-
-    // Clear form
-    setComplaints("");
-    setDiagnosis("");
-    setTests("");
-    setAdvice("");
-    setFollowUpDate("");
-
-    setMedicines([
-      {
-        name: "",
-        dosage: "",
-        frequency: "",
-        duration: "",
-        instructions: "",
-      },
-    ]);
-
-  } catch (error) {
-
-
-    setMessage(
-      error.response?.data?.message ||
-      error.response?.data?.error ||
-      "Failed to create prescription."
-    );
-
-  } finally {
-    setLoading(false);
-  }
-};
-
-const handleImageUpload = async () => {
-  if (!image) {
-    setMessage("Please select a prescription image.");
-    return;
-  }
-
-  if (!appointmentId) {
-    setMessage("Appointment ID is missing.");
-    return;
-  }
-
-  try {
-    setLoading(true);
-    setMessage("");
-
-    const formData = new FormData();
-
-    formData.append("file", image);
-    formData.append("appointmentId", appointmentId);
-
-    console.log("Sending prescription to MediReach backend...");
-
-    const response = await addPrescriptionImage(formData);
-
-    console.log("Prescription Response:", response.data);
-
-    if (response.data.success) {
-
-      const prescriptionData = response.data.prescription;
-
-      setPrescription({
-        appointmentId: prescriptionData.appointmentId,
-
-        complaints: prescriptionData.complaints || [],
-        diagnosis: prescriptionData.diagnosis || [],
-        medicines: prescriptionData.medicines || [],
-        tests: prescriptionData.tests || [],
-        advice: prescriptionData.advice || "",
-        attachments: prescriptionData.attachments || [],
-        followUpDate: prescriptionData.followUpDate || "",
-      });
-
+        setMessage("Prescription extracted and saved successfully.");
+      }
+    } catch (error) {
+      console.error("Prescription Error:", error);
       setMessage(
-        "Prescription extracted and saved successfully."
+        error.response?.data?.message || "Failed to process prescription."
       );
+    } finally {
+      setLoading(false);
     }
-
-  } catch (error) {
-    console.error("Prescription Error:", error);
-
-    setMessage(
-      error.response?.data?.message ||
-      "Failed to process prescription."
-    );
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   // -----------------------------
   // DESCRIPTION / AI PARSE
   // -----------------------------
 
- const handleDescriptionParse = async () => {
-  if (!description.trim()) {
-    setMessage("Please enter prescription description.");
-    return;
-  }
+  const handleDescriptionParse = async () => {
+    if (!description.trim()) {
+      setMessage("Please enter prescription description.");
+      return;
+    }
 
-  try {
-    setLoading(true);
-    setMessage("");
+    try {
+      setLoading(true);
+      setMessage("");
 
-    const response = await PrescriptionDescription({
-      appointmentId,
-      prescriptionText: description,
-    });
+      const response = await PrescriptionDescription({
+        appointmentId,
+        prescriptionText: description,
+      });
 
-    console.log("========== AI PARSE RESPONSE ==========");
-    console.log(response.data);
+      const extracted =
+        response.data?.data || response.data?.result || response.data;
 
-    const extracted =
-      response.data?.data ||
-      response.data?.result ||
-      response.data;
+      setComplaints(
+        Array.isArray(extracted.complaints)
+          ? extracted.complaints.join(", ")
+          : extracted.complaints || ""
+      );
 
-    console.log("Extracted Data:", extracted);
+      setDiagnosis(
+        Array.isArray(extracted.diagnosis)
+          ? extracted.diagnosis.join(", ")
+          : extracted.diagnosis || ""
+      );
 
-    // -----------------------------------
-    // AI DATA -> MANUAL FORM STATES
-    // -----------------------------------
+      setTests(
+        Array.isArray(extracted.tests)
+          ? extracted.tests.join(", ")
+          : extracted.tests || ""
+      );
 
-    setComplaints(
-      Array.isArray(extracted.complaints)
-        ? extracted.complaints.join(", ")
-        : extracted.complaints || ""
-    );
+      setAdvice(extracted.advice || "");
 
-    setDiagnosis(
-      Array.isArray(extracted.diagnosis)
-        ? extracted.diagnosis.join(", ")
-        : extracted.diagnosis || ""
-    );
+      setFollowUpDate(
+        extracted.followUpDate ? extracted.followUpDate.split("T")[0] : ""
+      );
 
-    setTests(
-      Array.isArray(extracted.tests)
-        ? extracted.tests.join(", ")
-        : extracted.tests || ""
-    );
+      const aiMedicines = Array.isArray(extracted.medicines)
+        ? extracted.medicines
+        : [];
 
-    setAdvice(extracted.advice || "");
+      const formattedMedicines = aiMedicines.map((medicine) => ({
+        name: medicine.name || "",
+        dosage: medicine.dosage || medicine.strength || "",
+        frequency: medicine.frequency || "",
+        duration: medicine.duration
+          ? String(medicine.duration).includes("day")
+            ? String(medicine.duration)
+            : `${medicine.duration} days`
+          : "",
+        instructions: medicine.instructions || "",
+      }));
 
-    setFollowUpDate(
-      extracted.followUpDate
-        ? extracted.followUpDate.split("T")[0]
-        : ""
-    );
+      setMedicines(
+        formattedMedicines.length > 0
+          ? formattedMedicines
+          : [
+              {
+                name: "",
+                dosage: "",
+                frequency: "",
+                duration: "",
+                instructions: "",
+              },
+            ]
+      );
 
-    // -----------------------------------
-    // MEDICINES
-    // -----------------------------------
+      setPrescription({
+        appointmentId,
+        complaints: extracted.complaints || [],
+        diagnosis: extracted.diagnosis || [],
+        medicines: formattedMedicines,
+        tests: extracted.tests || [],
+        advice: extracted.advice || "",
+        attachments: extracted.attachments || [],
+        followUpDate: extracted.followUpDate || "",
+      });
 
-    const aiMedicines = Array.isArray(extracted.medicines)
-      ? extracted.medicines
-      : [];
+      setMethod("manual");
 
-    const formattedMedicines = aiMedicines.map((medicine) => ({
-      name: medicine.name || "",
-      dosage:
-        medicine.dosage ||
-        medicine.strength ||
-        "",
-      frequency: medicine.frequency || "",
-      duration: medicine.duration
-        ? String(medicine.duration).includes("day")
-          ? String(medicine.duration)
-          : `${medicine.duration} days`
-        : "",
-      instructions:
-        medicine.instructions ||
-        "",
-    }));
+      setMessage(
+        "AI prescription generated. Please review and edit the form before saving."
+      );
+    } catch (error) {
+      console.error("Parse Error:", error);
+      setMessage(
+        error.response?.data?.message || "Failed to generate prescription."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    setMedicines(
-      formattedMedicines.length > 0
-        ? formattedMedicines
-        : [
-            {
-              name: "",
-              dosage: "",
-              frequency: "",
-              duration: "",
-              instructions: "",
-            },
-          ]
-    );
-
-    // -----------------------------------
-    // prescription state bhi update karo
-    // -----------------------------------
-
-    setPrescription({
-      appointmentId,
-
-      complaints: extracted.complaints || [],
-
-      diagnosis: extracted.diagnosis || [],
-
-      medicines: formattedMedicines,
-
-      tests: extracted.tests || [],
-
-      advice: extracted.advice || "",
-
-      attachments: extracted.attachments || [],
-
-      followUpDate: extracted.followUpDate || "",
-    });
-
-    // IMPORTANT:
-    // AI generate hone ke baad manual form dikhao
-    setMethod("manual");
-
-    setMessage(
-      "AI prescription generated. Please review and edit the form before saving."
-    );
-
-  } catch (error) {
-    console.error("Parse Error:", error);
-
-    setMessage(
-      error.response?.data?.message ||
-        "Failed to generate prescription."
-    );
-  } finally {
-    setLoading(false);
-  }
-};
   // -----------------------------
   // FINAL SUBMIT OCR / AI
   // -----------------------------
@@ -377,11 +320,6 @@ const handleImageUpload = async () => {
     try {
       setLoading(true);
       setMessage("");
-
-      console.log(
-        "Final Prescription:",
-        prescription
-      );
 
       const response = await axios.post(
         CREATE_PRESCRIPTION_API,
@@ -393,19 +331,11 @@ const handleImageUpload = async () => {
         }
       );
 
-      console.log(
-        "Prescription Saved:",
-        response.data
-      );
-
       setMessage("Prescription saved successfully!");
-
     } catch (error) {
       console.error(error);
-
       setMessage(
-        error.response?.data?.message ||
-          "Failed to save prescription."
+        error.response?.data?.message || "Failed to save prescription."
       );
     } finally {
       setLoading(false);
@@ -418,362 +348,264 @@ const handleImageUpload = async () => {
 
   const PrescriptionPreview = () => {
     return (
-      <div className="mt-6 rounded-xl border bg-white p-6 shadow-sm">
-
-        <h2 className="mb-5 text-xl font-semibold text-gray-800">
+      <div className="mt-6 rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-[#0B1220] p-6 shadow-sm dark:shadow-none">
+        <h2 className="mb-5 text-xl font-semibold text-slate-800 dark:text-gray-100">
           Prescription Preview
         </h2>
 
-        {/* Complaints */}
-
         <div className="mb-4">
-          <h3 className="font-semibold text-gray-700">
+          <h3 className="font-semibold text-slate-700 dark:text-gray-300 text-sm">
             Complaints
           </h3>
-
-          <p className="text-gray-600">
+          <p className="text-slate-600 dark:text-gray-400 mt-1">
             {prescription.complaints?.length
               ? prescription.complaints.join(", ")
               : "No complaints"}
           </p>
         </div>
 
-        {/* Diagnosis */}
-
         <div className="mb-4">
-          <h3 className="font-semibold text-gray-700">
+          <h3 className="font-semibold text-slate-700 dark:text-gray-300 text-sm">
             Diagnosis
           </h3>
-
-          <p className="text-gray-600">
+          <p className="text-slate-600 dark:text-gray-400 mt-1">
             {prescription.diagnosis?.length
               ? prescription.diagnosis.join(", ")
               : "No diagnosis"}
           </p>
         </div>
 
-        {/* Medicines */}
-
         <div className="mb-4">
-
-          <h3 className="mb-2 font-semibold text-gray-700">
+          <h3 className="mb-2 font-semibold text-slate-700 dark:text-gray-300 text-sm">
             Medicines
           </h3>
 
           <div className="space-y-3">
-
-            {prescription.medicines?.map(
-              (medicine, index) => (
-                <div
-                  key={index}
-                  className="rounded-lg bg-gray-50 p-4"
-                >
-
-                  <p className="font-medium">
-                    {medicine.name}
-                  </p>
-
-                  <p className="text-sm text-gray-600">
-                    {medicine.dosage} •{" "}
-                    {medicine.frequency} •{" "}
-                    {medicine.duration}
-                  </p>
-
-                  <p className="text-sm text-gray-500">
-                    {medicine.instructions}
-                  </p>
-
-                </div>
-              )
-            )}
-
+            {prescription.medicines?.map((medicine, index) => (
+              <div
+                key={index}
+                className="rounded-xl bg-slate-50 dark:bg-gray-800/40 p-4"
+              >
+                <p className="font-medium text-slate-800 dark:text-gray-100">
+                  {medicine.name}
+                </p>
+                <p className="text-sm text-slate-600 dark:text-gray-400">
+                  {medicine.dosage} • {medicine.frequency} •{" "}
+                  {medicine.duration}
+                </p>
+                <p className="text-sm text-slate-500 dark:text-gray-500">
+                  {medicine.instructions}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Tests */}
-
         <div className="mb-4">
-
-          <h3 className="font-semibold text-gray-700">
+          <h3 className="font-semibold text-slate-700 dark:text-gray-300 text-sm">
             Tests
           </h3>
-
-          <p className="text-gray-600">
+          <p className="text-slate-600 dark:text-gray-400 mt-1">
             {prescription.tests?.length
               ? prescription.tests.join(", ")
               : "No tests"}
           </p>
-
         </div>
-
-        {/* Advice */}
 
         <div className="mb-4">
-
-          <h3 className="font-semibold text-gray-700">
+          <h3 className="font-semibold text-slate-700 dark:text-gray-300 text-sm">
             Advice
           </h3>
-
-          <p className="text-gray-600">
+          <p className="text-slate-600 dark:text-gray-400 mt-1">
             {prescription.advice || "No advice"}
           </p>
-
         </div>
 
-        {/* Follow Up */}
-
         <div className="mb-5">
-
-          <h3 className="font-semibold text-gray-700">
+          <h3 className="font-semibold text-slate-700 dark:text-gray-300 text-sm">
             Follow-up Date
           </h3>
-
-          <p className="text-gray-600">
-            {prescription.followUpDate ||
-              "Not specified"}
+          <p className="text-slate-600 dark:text-gray-400 mt-1">
+            {prescription.followUpDate || "Not specified"}
           </p>
-
         </div>
 
         <button
           onClick={handleFinalSubmit}
           disabled={loading}
-          className="rounded-lg bg-blue-600 px-5 py-2.5 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          className="rounded-lg bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-500 px-5 py-2.5 font-medium text-white transition disabled:opacity-50"
         >
-          {loading
-            ? "Saving..."
-            : "Confirm & Save Prescription"}
+          {loading ? "Saving..." : "Confirm & Save Prescription"}
         </button>
-
       </div>
     );
   };
+
+  // -----------------------------
+  // METHOD CARD (shared style)
+  // -----------------------------
+
+  const inputClass =
+    "w-full rounded-lg border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-slate-900 dark:text-gray-100 placeholder:text-slate-400 dark:placeholder:text-gray-500 p-3 outline-none focus:ring-2 focus:ring-teal-600 dark:focus:ring-teal-500/70 focus:border-teal-600";
+
+  const MethodCard = ({ id, icon, title, text }) => (
+    <button
+      type="button"
+      onClick={() => setMethod(id)}
+      className={`rounded-xl border p-6 text-left transition hover:border-teal-600 hover:shadow-md dark:hover:shadow-none ${
+        method === id
+          ? "border-teal-600 bg-teal-50 dark:bg-teal-900/20 dark:border-teal-500"
+          : "border-slate-200 dark:border-gray-800 bg-white dark:bg-[#0B1220]"
+      }`}
+    >
+      <div className="mb-3 text-3xl">{icon}</div>
+      <h2 className="text-lg font-semibold text-slate-900 dark:text-gray-100">
+        {title}
+      </h2>
+      <p className="mt-1 text-sm text-slate-500 dark:text-gray-400">{text}</p>
+    </button>
+  );
 
   // -----------------------------
   // MAIN UI
   // -----------------------------
 
   return (
-    <div className="mx-auto max-w-5xl p-6">
+    <div className="min-h-screen bg-slate-50 dark:bg-black">
+      <div className="mx-auto max-w-6xl p-6">
+        {/* HEADER */}
+        <div className="flex items-start justify-between gap-4 mb-2">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-gray-100">
+              Create Prescription
+            </h1>
+            <p className="mt-1 text-slate-500 dark:text-gray-400">
+              Choose how you want to create the prescription.
+            </p>
+          </div>
 
-      <h1 className="mb-2 text-2xl font-bold text-gray-800">
-        Create Prescription
-      </h1>
-
-      <p className="mb-6 text-gray-500">
-        Choose how you want to create the prescription.
-      </p>
-
-      {/* MESSAGE */}
-
-      {message && (
-        <div className="mb-5 rounded-lg bg-blue-50 p-3 text-blue-700">
-          {message}
+          <button
+            onClick={() => dispatch(toggleTheme())}
+            className="px-3 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm font-medium whitespace-nowrap shrink-0"
+          >
+            {mode === "dark" ? "☀️ Light" : "🌙 Dark"}
+          </button>
         </div>
-      )}
 
-      {/* OPTIONS */}
-
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-
-        {/* MANUAL */}
-
-        <button
-          onClick={() => setMethod("manual")}
-          className={`rounded-xl border p-6 text-left transition hover:border-blue-500 hover:shadow-md ${
-            method === "manual"
-              ? "border-blue-500 bg-blue-50"
-              : "bg-white"
-          }`}
-        >
-
-          <div className="mb-3 text-3xl">
-            ✍️
+        {/* MESSAGE */}
+        {message && (
+          <div className="mb-5 mt-4 rounded-lg bg-teal-50 dark:bg-teal-900/20 border border-teal-100 dark:border-teal-900/40 p-3 text-teal-800 dark:text-teal-300 text-sm">
+            {message}
           </div>
+        )}
 
-          <h2 className="text-lg font-semibold">
-            Manual Prescription
-          </h2>
+        {/* OPTIONS */}
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-3 mt-6">
+          <MethodCard
+            id="manual"
+            icon="✍️"
+            title="Manual Prescription"
+            text="Enter complaints, diagnosis, medicines, tests and advice manually."
+          />
+          <MethodCard
+            id="image"
+            icon="📷"
+            title="Upload Prescription"
+            text="Upload an existing prescription image and extract its information using OCR."
+          />
+          <MethodCard
+            id="description"
+            icon="🤖"
+            title="Describe Prescription"
+            text="Describe the prescription in normal language and let AI structure it."
+          />
+        </div>
 
-          <p className="mt-1 text-sm text-gray-500">
-            Enter complaints, diagnosis, medicines,
-            tests and advice manually.
-          </p>
+        {/* ================================================= */}
+        {/* MANUAL FORM */}
+        {/* ================================================= */}
 
-        </button>
+        {method === "manual" && (
+          <form
+            onSubmit={handleManualSubmit}
+            className="mt-8 rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-[#0B1220] p-6 shadow-sm dark:shadow-none"
+          >
+            <h2 className="mb-6 text-xl font-semibold text-slate-900 dark:text-gray-100">
+              Manual Prescription
+            </h2>
 
-        {/* IMAGE */}
-
-        <button
-          onClick={() => setMethod("image")}
-          className={`rounded-xl border p-6 text-left transition hover:border-blue-500 hover:shadow-md ${
-            method === "image"
-              ? "border-blue-500 bg-blue-50"
-              : "bg-white"
-          }`}
-        >
-
-          <div className="mb-3 text-3xl">
-            📷
-          </div>
-
-          <h2 className="text-lg font-semibold">
-            Upload Prescription
-          </h2>
-
-          <p className="mt-1 text-sm text-gray-500">
-            Upload an existing prescription image
-            and extract its information using OCR.
-          </p>
-
-        </button>
-
-        {/* DESCRIPTION */}
-
-        <button
-          onClick={() => setMethod("description")}
-          className={`rounded-xl border p-6 text-left transition hover:border-blue-500 hover:shadow-md ${
-            method === "description"
-              ? "border-blue-500 bg-blue-50"
-              : "bg-white"
-          }`}
-        >
-
-          <div className="mb-3 text-3xl">
-            🤖
-          </div>
-
-          <h2 className="text-lg font-semibold">
-            Describe Prescription
-          </h2>
-
-          <p className="mt-1 text-sm text-gray-500">
-            Describe the prescription in normal language
-            and let AI structure it.
-          </p>
-
-        </button>
-
-      </div>
-
-      {/* ================================================= */}
-      {/* MANUAL FORM */}
-      {/* ================================================= */}
-
-      {method === "manual" && (
-
-        <form
-          onSubmit={handleManualSubmit}
-          className="mt-8 rounded-xl border bg-white p-6 shadow-sm"
-        >
-
-          <h2 className="mb-6 text-xl font-semibold">
-            Manual Prescription
-          </h2>
-
-          {/* Complaints */}
-
-          <div className="mb-5">
-
-            <label className="mb-2 block font-medium">
-              Complaints
-            </label>
-
-            <input
-              type="text"
-              value={complaints}
-              onChange={(e) =>
-                setComplaints(e.target.value)
-              }
-              placeholder="Fever, Headache"
-              className="w-full rounded-lg border p-3 outline-none focus:border-blue-500"
-            />
-
-          </div>
-
-          {/* Diagnosis */}
-
-          <div className="mb-5">
-
-            <label className="mb-2 block font-medium">
-              Diagnosis
-            </label>
-
-            <input
-              type="text"
-              value={diagnosis}
-              onChange={(e) =>
-                setDiagnosis(e.target.value)
-              }
-              placeholder="Viral Fever"
-              className="w-full rounded-lg border p-3 outline-none focus:border-blue-500"
-            />
-
-          </div>
-
-          {/* MEDICINES */}
-
-          <div className="mb-6">
-
-            <div className="mb-3 flex items-center justify-between">
-
-              <label className="font-medium">
-                Medicines
+            <div className="mb-5">
+              <label className="mb-2 block font-medium text-slate-700 dark:text-gray-300">
+                Complaints
               </label>
-
-              <button
-                type="button"
-                onClick={addMedicine}
-                className="rounded-lg bg-green-600 px-3 py-2 text-sm text-white"
-              >
-                + Add Medicine
-              </button>
-
+              <input
+                type="text"
+                value={complaints}
+                onChange={(e) => setComplaints(e.target.value)}
+                placeholder="Fever, Headache"
+                className={inputClass}
+              />
             </div>
 
-            <div className="space-y-4">
+            <div className="mb-5">
+              <label className="mb-2 block font-medium text-slate-700 dark:text-gray-300">
+                Diagnosis
+              </label>
+              <input
+                type="text"
+                value={diagnosis}
+                onChange={(e) => setDiagnosis(e.target.value)}
+                placeholder="Viral Fever"
+                className={inputClass}
+              />
+            </div>
 
-              {medicines.map(
-                (medicine, index) => (
+            {/* MEDICINES */}
+            <div className="mb-6">
+              <div className="mb-3 flex items-center justify-between">
+                <label className="font-medium text-slate-700 dark:text-gray-300">
+                  Medicines
+                </label>
 
+                <button
+                  type="button"
+                  onClick={addMedicine}
+                  className="rounded-lg bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500 px-3 py-2 text-sm text-white transition"
+                >
+                  + Add Medicine
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {medicines.map((medicine, index) => (
                   <div
                     key={index}
-                    className="rounded-lg border bg-gray-50 p-4"
+                    className="rounded-xl border border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-800/30 p-4"
                   >
-
                     <div className="mb-3 flex justify-between">
-
-                      <h3 className="font-medium">
+                      <h3 className="font-medium text-slate-800 dark:text-gray-200">
                         Medicine {index + 1}
                       </h3>
 
                       {medicines.length > 1 && (
                         <button
                           type="button"
-                          onClick={() =>
-                            removeMedicine(index)
-                          }
-                          className="text-sm text-red-600"
+                          onClick={() => removeMedicine(index)}
+                          className="text-sm text-red-600 dark:text-red-400 hover:underline"
                         >
                           Remove
                         </button>
                       )}
-
                     </div>
 
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-
                       <input
                         placeholder="Medicine name"
                         value={medicine.name}
                         onChange={(e) =>
-                          handleMedicineChange(
-                            index,
-                            "name",
-                            e.target.value
-                          )
+                          handleMedicineChange(index, "name", e.target.value)
                         }
-                        className="rounded-lg border p-3"
+                        className={inputClass}
                         required
                       />
 
@@ -781,13 +613,9 @@ const handleImageUpload = async () => {
                         placeholder="Dosage e.g. 500mg"
                         value={medicine.dosage}
                         onChange={(e) =>
-                          handleMedicineChange(
-                            index,
-                            "dosage",
-                            e.target.value
-                          )
+                          handleMedicineChange(index, "dosage", e.target.value)
                         }
-                        className="rounded-lg border p-3"
+                        className={inputClass}
                       />
 
                       <input
@@ -800,7 +628,7 @@ const handleImageUpload = async () => {
                             e.target.value
                           )
                         }
-                        className="rounded-lg border p-3"
+                        className={inputClass}
                       />
 
                       <input
@@ -813,9 +641,8 @@ const handleImageUpload = async () => {
                             e.target.value
                           )
                         }
-                        className="rounded-lg border p-3"
+                        className={inputClass}
                       />
-
                     </div>
 
                     <input
@@ -828,484 +655,138 @@ const handleImageUpload = async () => {
                           e.target.value
                         )
                       }
-                      className="mt-3 w-full rounded-lg border p-3"
+                      className={`mt-3 ${inputClass}`}
                     />
-
                   </div>
-
-                )
-              )}
-
+                ))}
+              </div>
             </div>
 
-          </div>
+            <div className="mb-5">
+              <label className="mb-2 block font-medium text-slate-700 dark:text-gray-300">
+                Tests
+              </label>
+              <input
+                type="text"
+                value={tests}
+                onChange={(e) => setTests(e.target.value)}
+                placeholder="CBC, LFT"
+                className={inputClass}
+              />
+            </div>
 
-          {/* TESTS */}
+            <div className="mb-5">
+              <label className="mb-2 block font-medium text-slate-700 dark:text-gray-300">
+                Advice
+              </label>
+              <textarea
+                value={advice}
+                onChange={(e) => setAdvice(e.target.value)}
+                placeholder="Take proper rest and drink plenty of water"
+                rows={4}
+                className={inputClass}
+              />
+            </div>
 
-          <div className="mb-5">
+            <div className="mb-6">
+              <label className="mb-2 block font-medium text-slate-700 dark:text-gray-300">
+                Follow-up Date
+              </label>
+              <input
+                type="date"
+                value={followUpDate}
+                onChange={(e) => setFollowUpDate(e.target.value)}
+                className={`w-fit ${inputClass}`}
+              />
+            </div>
 
-            <label className="mb-2 block font-medium">
-              Tests
-            </label>
+            <button
+              type="submit"
+              disabled={loading}
+              className="rounded-lg bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-500 px-6 py-3 font-medium text-white transition disabled:opacity-50"
+            >
+              {loading ? "Creating..." : "Create Prescription"}
+            </button>
+          </form>
+        )}
+
+        {/* ================================================= */}
+        {/* IMAGE FORM */}
+        {/* ================================================= */}
+
+        {method === "image" && (
+          <div className="mt-8 rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-[#0B1220] p-6 shadow-sm dark:shadow-none">
+            <h2 className="mb-2 text-xl font-semibold text-slate-900 dark:text-gray-100">
+              Upload Prescription Image
+            </h2>
+            <p className="mb-5 text-sm text-slate-500 dark:text-gray-400">
+              Upload a clear prescription image. OCR will extract the
+              prescription details.
+            </p>
 
             <input
-              type="text"
-              value={tests}
-              onChange={(e) =>
-                setTests(e.target.value)
-              }
-              placeholder="CBC, LFT"
-              className="w-full rounded-lg border p-3"
+              type="file"
+              accept="image/*"
+              onChange={(e) => setImage(e.target.files[0])}
+              className="mb-5 block w-full rounded-lg border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-slate-700 dark:text-gray-300 p-3 file:mr-3 file:rounded-md file:border-0 file:bg-teal-50 dark:file:bg-teal-900/25 file:text-teal-700 dark:file:text-teal-400 file:px-3 file:py-1.5"
             />
 
+            {image && (
+              <img
+                src={URL.createObjectURL(image)}
+                alt="Prescription preview"
+                className="mb-5 max-h-80 rounded-lg border border-slate-200 dark:border-gray-800 object-contain"
+              />
+            )}
+
+            <button
+              onClick={handleImageUpload}
+              disabled={loading || !image}
+              className="rounded-lg bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-500 px-6 py-3 font-medium text-white transition disabled:opacity-50"
+            >
+              {loading ? "Processing..." : "Extract Prescription"}
+            </button>
+
+            {prescription.medicines?.length > 0 && <PrescriptionPreview />}
           </div>
+        )}
 
-          {/* ADVICE */}
+        {/* ================================================= */}
+        {/* DESCRIPTION FORM */}
+        {/* ================================================= */}
 
-          <div className="mb-5">
-
-            <label className="mb-2 block font-medium">
-              Advice
-            </label>
+        {method === "description" && (
+          <div className="mt-8 rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-[#0B1220] p-6 shadow-sm dark:shadow-none">
+            <h2 className="mb-2 text-xl font-semibold text-slate-900 dark:text-gray-100">
+              Describe Prescription
+            </h2>
+            <p className="mb-5 text-sm text-slate-500 dark:text-gray-400">
+              Write the prescription in normal language. AI will convert it
+              into structured data.
+            </p>
 
             <textarea
-              value={advice}
-              onChange={(e) =>
-                setAdvice(e.target.value)
-              }
-              placeholder="Take proper rest and drink plenty of water"
-              rows={4}
-              className="w-full rounded-lg border p-3"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={8}
+              placeholder="Example: Fever and headache. Viral fever. Paracetamol 500 BD for 5 days after food, cetirizine 10 OD for 3 days at night. CBC test. Rest and drink plenty of water. Follow up after 5 days."
+              className={`mb-5 ${inputClass}`}
             />
 
+            <button
+              onClick={handleDescriptionParse}
+              disabled={loading || !description.trim()}
+              className="rounded-lg bg-purple-600 hover:bg-purple-700 dark:bg-purple-600 dark:hover:bg-purple-500 px-6 py-3 font-medium text-white transition disabled:opacity-50"
+            >
+              {loading ? "Generating..." : "Generate Prescription"}
+            </button>
+
+            {prescription.medicines?.length > 0 && <PrescriptionPreview />}
           </div>
-
-          {/* FOLLOW UP */}
-
-          <div className="mb-6">
-
-            <label className="mb-2 block font-medium">
-              Follow-up Date
-            </label>
-
-            <input
-              type="date"
-              value={followUpDate}
-              onChange={(e) =>
-                setFollowUpDate(e.target.value)
-              }
-              className="rounded-lg border p-3"
-            />
-
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="rounded-lg bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-          >
-            {loading
-              ? "Creating..."
-              : "Create Prescription"}
-          </button>
-
-        </form>
-
-      )}
-
-      {/* ================================================= */}
-      {/* IMAGE FORM */}
-      {/* ================================================= */}
-
-      {method === "image" && (
-
-        <div className="mt-8 rounded-xl border bg-white p-6 shadow-sm">
-
-          <h2 className="mb-2 text-xl font-semibold">
-            Upload Prescription Image
-          </h2>
-
-          <p className="mb-5 text-sm text-gray-500">
-            Upload a clear prescription image. OCR will
-            extract the prescription details.
-          </p>
-
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) =>
-              setImage(e.target.files[0])
-            }
-            className="mb-5 block w-full rounded-lg border p-3"
-          />
-
-          {image && (
-            <img
-              src={URL.createObjectURL(image)}
-              alt="Prescription preview"
-              className="mb-5 max-h-80 rounded-lg border object-contain"
-            />
-          )}
-
-          <button
-            onClick={handleImageUpload}
-            disabled={loading || !image}
-            className="rounded-lg bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-          >
-            {loading
-              ? "Processing..."
-              : "Extract Prescription"}
-          </button>
-
-          {prescription.medicines?.length > 0 && (
-            <PrescriptionPreview />
-          )}
-
-        </div>
-
-      )}
-
-      {/* ================================================= */}
-      {/* DESCRIPTION FORM */}
-      {/* ================================================= */}
-
-      {method === "description" && (
-
-        <div className="mt-8 rounded-xl border bg-white p-6 shadow-sm">
-
-          <h2 className="mb-2 text-xl font-semibold">
-            Describe Prescription
-          </h2>
-
-          <p className="mb-5 text-sm text-gray-500">
-            Write the prescription in normal language.
-            AI will convert it into structured data.
-          </p>
-
-          <textarea
-            value={description}
-            onChange={(e) =>
-              setDescription(e.target.value)
-            }
-            rows={8}
-            placeholder="Example: Fever and headache. Viral fever. Paracetamol 500 BD for 5 days after food, cetirizine 10 OD for 3 days at night. CBC test. Rest and drink plenty of water. Follow up after 5 days."
-            className="mb-5 w-full rounded-lg border p-4 outline-none focus:border-blue-500"
-          />
-
-          <button
-            onClick={handleDescriptionParse}
-            disabled={loading || !description.trim()}
-            className="rounded-lg bg-purple-600 px-6 py-3 font-medium text-white hover:bg-purple-700 disabled:opacity-50"
-          >
-            {loading
-              ? "Generating..."
-              : "Generate Prescription"}
-          </button>
-
-          {prescription.medicines?.length > 0 && (
-            <PrescriptionPreview />
-          )}
-
-        </div>
-
-      )}
-
+        )}
+      </div>
     </div>
   );
 };
 
 export default PrescriptionOptions;
-
-
-
-// PrescriptionOptions.jsx
-// Teen raaste (manual / image / description) — lekin save karne ka ek hi raasta.
-// Description ya image se data aate hi wahi editable form auto-fill ho jaata hai.
-
-// import React, { useState } from "react";
-// import { useParams, useSearchParams } from "react-router-dom";
-
-// import {
-//   addPrescriptionImage,
-//   ManualPrescription,
-//   PrescriptionDescription,
-// } from "../../api/backend";
-
-// import PrescriptionForm from "./PrescriptionForm";
-// import usePrescriptionForm, { buildFormData } from "./usePrescriptionForm";
-
-// const METHODS = [
-//   {
-//     id: "manual",
-//     icon: "✍️",
-//     title: "Write it yourself",
-//     text: "Type complaints, diagnosis, medicines, tests and advice.",
-//   },
-//   {
-//     id: "description",
-//     icon: "🤖",
-//     title: "Describe in plain language",
-//     text: "Write it the way you would say it. AI turns it into a form you can edit.",
-//   },
-//   {
-//     id: "image",
-//     icon: "📷",
-//     title: "Upload a prescription",
-//     text: "Scan an existing prescription and pull the details out of it.",
-//   },
-// ];
-
-// const PrescriptionOptions = () => {
-//   const { id: patientId } = useParams();
-//   const [searchParams] = useSearchParams();
-//   const appointmentId = searchParams.get("appointmentId");
-
-//   const [method, setMethod] = useState("manual");
-//   const [loading, setLoading] = useState(false);
-//   const [status, setStatus] = useState(null); // { type: "info" | "error" | "success", text }
-
-//   const [description, setDescription] = useState("");
-//   const [image, setImage] = useState(null);
-
-//   const {
-//     form,
-//     source,
-//     setField,
-//     setMedicine,
-//     addMedicine,
-//     removeMedicine,
-//     fillFromApi,
-//     reset,
-//   } = usePrescriptionForm();
-
-//   const notify = (type, text) => setStatus({ type, text });
-
-// const readError = (error, fallback) => {
-//   console.error("Parse failed:", error);
-
-//   if (error.code === "ECONNABORTED") {
-//     return "Service took too long to respond. Try once more.";
-//   }
-
-//   if (!error.response) {
-//     return "Could not reach the parsing service (network or CORS). Check the browser console.";
-//   }
-
-//   return (
-//     error.response.data?.message ||
-//     error.response.data?.error ||
-//     `${fallback} (status ${error.response.status})`
-//   );
-// };
-
-//   /* ---------------------------------------------------------------- */
-//   /* AI description -> autofill                                        */
-//   /* ---------------------------------------------------------------- */
-
-//   const handleDescriptionParse = async () => {
-//     if (!description.trim()) return notify("error", "Write the prescription first.");
-//     if (!appointmentId) return notify("error", "Appointment ID missing in the URL.");
-
-//     try {
-//       setLoading(true);
-//       setStatus(null);
-
-//       const response = await PrescriptionDescription({
-//         appointmentId,
-//         prescriptionText: description,
-//       });
-
-//       const mapped = fillFromApi(response, "ai");
-
-//       setMethod("manual"); // form ke saath review screen par le jao
-
-//       const noMedicines = !mapped.medicines.some((m) => m.name.trim());
-
-//       notify(
-//         noMedicines ? "info" : "success",
-//         noMedicines
-//           ? "Form filled, but no medicines were picked up. Add them below before saving."
-//           : "Form filled from your description. Review it, then save."
-//       );
-//     } catch (error) {
-//       notify("error", readError(error, "Could not read that description. Try again."));
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   /* ---------------------------------------------------------------- */
-//   /* OCR image -> autofill (same form, same save button)               */
-//   /* ---------------------------------------------------------------- */
-
-//   const handleImageUpload = async () => {
-//     if (!image) return notify("error", "Choose a prescription image first.");
-//     if (!appointmentId) return notify("error", "Appointment ID missing in the URL.");
-
-//     try {
-//       setLoading(true);
-//       setStatus(null);
-
-//       const formData = new FormData();
-//       formData.append("file", image);
-//       formData.append("appointmentId", appointmentId);
-
-//       const response = await addPrescriptionImage(formData);
-
-//       fillFromApi(response, "ocr");
-//       setMethod("manual");
-
-//       notify("success", "Form filled from the image. Check each field before saving.");
-//     } catch (error) {
-//       notify("error", readError(error, "Could not read that image. Try a clearer photo."));
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   /* ---------------------------------------------------------------- */
-//   /* Ek hi save — manual, AI aur OCR teeno ke liye. Yahi MongoDB me    */
-//   /* jaata hai.                                                        */
-//   /* ---------------------------------------------------------------- */
-
-//   const handleSave = async (e) => {
-//     e.preventDefault();
-
-//     if (!patientId) return notify("error", "Patient ID missing in the URL.");
-//     if (!appointmentId) return notify("error", "Appointment ID missing in the URL.");
-
-//     if (!form.medicines.some((m) => m.name.trim())) {
-//       return notify("error", "Add at least one medicine before saving.");
-//     }
-
-//     try {
-//       setLoading(true);
-//       setStatus(null);
-
-//       const payload = buildFormData(form, { patientId, appointmentId, source });
-//       await ManualPrescription(payload);
-
-//       reset();
-//       setDescription("");
-//       setImage(null);
-
-//       notify("success", "Prescription saved.");
-//     } catch (error) {
-//       notify("error", readError(error, "Could not save. Check the fields and try again."));
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   /* ---------------------------------------------------------------- */
-
-//   const statusStyles = {
-//     error: "border-red-200 bg-red-50 text-red-700",
-//     success: "border-green-200 bg-green-50 text-green-700",
-//     info: "border-blue-200 bg-blue-50 text-blue-700",
-//   };
-
-//   return (
-//     <div className="mx-auto max-w-5xl p-6">
-//       <h1 className="mb-2 text-2xl font-bold text-gray-800">Create prescription</h1>
-//       <p className="mb-6 text-gray-500">Pick how you want to start. You can edit everything before saving.</p>
-
-//       {status && (
-//         <div className={`mb-5 rounded-lg border p-3 ${statusStyles[status.type]}`}>
-//           {status.text}
-//         </div>
-//       )}
-
-//       <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-//         {METHODS.map((m) => (
-//           <button
-//             key={m.id}
-//             type="button"
-//             onClick={() => setMethod(m.id)}
-//             className={`rounded-xl border p-6 text-left transition hover:border-blue-500 hover:shadow-md ${
-//               method === m.id ? "border-blue-500 bg-blue-50" : "bg-white"
-//             }`}
-//           >
-//             <div className="mb-3 text-3xl">{m.icon}</div>
-//             <h2 className="text-lg font-semibold text-gray-800">{m.title}</h2>
-//             <p className="mt-1 text-sm text-gray-500">{m.text}</p>
-//           </button>
-//         ))}
-//       </div>
-
-//       {method === "description" && (
-//         <div className="mt-8 rounded-xl border bg-white p-6 shadow-sm">
-//           <h2 className="mb-2 text-xl font-semibold text-gray-800">Describe the prescription</h2>
-//           <p className="mb-5 text-sm text-gray-500">
-//             Write it in normal language. The form opens filled in, ready to check.
-//           </p>
-
-//           <textarea
-//             value={description}
-//             onChange={(e) => setDescription(e.target.value)}
-//             rows={8}
-//             placeholder="Fever and headache. Viral fever. Paracetamol 500 BD for 5 days after food, cetirizine 10 OD for 3 days at night. CBC test. Rest and drink plenty of water. Follow up after 5 days."
-//             className="mb-5 w-full rounded-lg border p-4 outline-none focus:border-blue-500"
-//           />
-
-//           <button
-//             type="button"
-//             onClick={handleDescriptionParse}
-//             disabled={loading || !description.trim()}
-//             className="rounded-lg bg-purple-600 px-6 py-3 font-medium text-white hover:bg-purple-700 disabled:opacity-50"
-//           >
-//             {loading ? "Reading..." : "Fill the form"}
-//           </button>
-//         </div>
-//       )}
-
-//       {method === "image" && (
-//         <div className="mt-8 rounded-xl border bg-white p-6 shadow-sm">
-//           <h2 className="mb-2 text-xl font-semibold text-gray-800">Upload a prescription</h2>
-//           <p className="mb-5 text-sm text-gray-500">
-//             A flat, well-lit photo reads best. The form opens filled in, ready to check.
-//           </p>
-
-//           <input
-//             type="file"
-//             accept="image/*"
-//             onChange={(e) => setImage(e.target.files[0])}
-//             className="mb-5 block w-full rounded-lg border p-3"
-//           />
-
-//           {image && (
-//             <img
-//               src={URL.createObjectURL(image)}
-//               alt="Selected prescription"
-//               className="mb-5 max-h-80 rounded-lg border object-contain"
-//             />
-//           )}
-
-//           <button
-//             type="button"
-//             onClick={handleImageUpload}
-//             disabled={loading || !image}
-//             className="rounded-lg bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-//           >
-//             {loading ? "Reading..." : "Fill the form"}
-//           </button>
-//         </div>
-//       )}
-
-//       {method === "manual" && (
-//         <PrescriptionForm
-//           form={form}
-//           source={source}
-//           loading={loading}
-//           onFieldChange={setField}
-//           onMedicineChange={setMedicine}
-//           onAddMedicine={addMedicine}
-//           onRemoveMedicine={removeMedicine}
-//           onSubmit={handleSave}
-//         />
-//       )}
-//     </div>
-//   );
-// };
-
-// export default PrescriptionOptions;
