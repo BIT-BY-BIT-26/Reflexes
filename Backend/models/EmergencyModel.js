@@ -73,7 +73,12 @@ const EmergencyModel = new mongoose.Schema(
         "ON_THE_WAY",
         "ARRIVED",
         "PATIENT_PICKED",
-        "COMPLETED"
+        "COMPLETED",
+
+        // Terminal, like COMPLETED, but reached by the patient calling the
+        // request off rather than by the hospital finishing it. Not part of
+        // the linear REQUESTED -> COMPLETED flow.
+        "CANCELLED"
       ],
       default: "REQUESTED"
     },
@@ -90,6 +95,11 @@ const EmergencyModel = new mongoose.Schema(
     },
 
     completedAt: {
+      type: Date,
+      default: null
+    },
+
+    cancelledAt: {
       type: Date,
       default: null
     },

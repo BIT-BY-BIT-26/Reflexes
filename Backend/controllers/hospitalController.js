@@ -16,6 +16,10 @@ const { redisClient } = require('../config/redisClient');
 const PharmacyModel = require('../models/PharmacyModel');
 const PatientHospitalSchema = require('../models/PatientHospitalSchema');
 const EmergencyModel = require('../models/EmergencyModel');
+const {
+  ACTIVE_EMERGENCY_STATUSES,
+  EMERGENCY_TRANSITIONS,
+} = require('../config/emergencyStatus');
 
 const registerHospital = async (req, res) => {
     try {
@@ -828,6 +832,99 @@ const searchHospitalPatients = async (req, res) => {
   }
 };
 
+// =====================================================
+// LIST EMERGENCY REQUESTS - HOSPITAL ADMIN
+// =====================================================
+//
+// The `emergency-created` socket alert is fire-and-forget: an admin who was
+// logged out, on another page, or who simply refreshed had no way back to a
+// request that had already been raised. This is the durable view of the same
+// data, scoped to the admin's own hospital.
+const getHospitalEmergencies = async (req, res) => {
+  try {
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required"
+      });
+    }
+
+    const hospitalId = req.user.hospitalId;
+
+    if (!hospitalId) {
+      return res.status(403).json({
+        success: false,
+        message: "Hospital information not found"
+      });
+    }
+
+    // "active" is the working queue, "history" the closed requests, "all"
+    // both. Anything unrecognised falls back to the queue rather than
+    // silently widening the result set.
+    const scope = ["active", "history", "all"].includes(req.query.scope)
+      ? req.query.scope
+      : "active";
+
+    const filter = { hospital: hospitalId };
+
+    if (scope === "active") {
+      filter.status = { $in: ACTIVE_EMERGENCY_STATUSES };
+    } else if (scope === "history") {
+      filter.status = { $nin: ACTIVE_EMERGENCY_STATUSES };
+    }
+
+    // The live queue is worked oldest-first - the request that has been
+    // waiting longest is the most urgent. Closed requests read as a log, so
+    // they run newest-first instead.
+    const sort = scope === "active"
+      ? { createdAt: 1 }
+      : { createdAt: -1 };
+
+    // Only the unbounded scopes need a page limit; the active queue is small
+    // by definition and is always returned whole.
+    const page = Math.max(1, Number(req.query.page) || 1);
+
+    const limit = scope === "active"
+      ? 0
+      : Math.min(100, Math.max(1, Number(req.query.limit) || 25));
+
+    let query = EmergencyModel.find(filter)
+      .sort(sort)
+      .populate("patient", "name email phone_number")
+      .populate("assignedBy", "name role")
+      .populate("acknowledgedBy", "name role");
+
+    if (limit) {
+      query = query.skip((page - 1) * limit).limit(limit);
+    }
+
+    const emergencies = await query;
+
+    // Lets the admin shell badge the queue without pulling the list itself.
+    const activeCount = await EmergencyModel.countDocuments({
+      hospital: hospitalId,
+      status: { $in: ACTIVE_EMERGENCY_STATUSES }
+    });
+
+    return res.status(200).json({
+      success: true,
+      scope,
+      count: emergencies.length,
+      activeCount,
+      emergencies
+    });
+
+  } catch (error) {
+    console.error("GET HOSPITAL EMERGENCIES ERROR:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch emergency requests",
+      error: error.message
+    });
+  }
+};
+
 const updateEmergencyStatus = async (req, res) => {
   try {
     const io = req.app.get("io");
@@ -876,38 +973,8 @@ const updateEmergencyStatus = async (req, res) => {
           "You are not authorized to manage this emergency"
       });
     }
-    const validTransitions = {
-
-      REQUESTED: [
-        "ACKNOWLEDGED"
-      ],
-
-      ACKNOWLEDGED: [
-        "AMBULANCE_ASSIGNED"
-      ],
-
-      AMBULANCE_ASSIGNED: [
-        "ON_THE_WAY"
-      ],
-
-      ON_THE_WAY: [
-        "ARRIVED"
-      ],
-
-      ARRIVED: [
-        "PATIENT_PICKED"
-      ],
-
-      PATIENT_PICKED: [
-        "COMPLETED"
-      ],
-
-      COMPLETED: []
-    };
-
-
     const nextStatuses =
-      validTransitions[emergency.status] || [];
+      EMERGENCY_TRANSITIONS[emergency.status] || [];
 
 
     if (!nextStatuses.includes(status)) {
@@ -996,8 +1063,11 @@ const updateEmergencyStatus = async (req, res) => {
 
     if (io) {
 
+      // patient_ with an underscore: the separator every other patient emit
+      // uses, and the one socket.js joins. This was the lone `patient:` and it
+      // meant no ambulance status update ever reached the patient.
       io.to(
-        `patient:${emergency.patient.toString()}`
+        `patient_${emergency.patient.toString()}`
       ).emit(
         "emergency-status-updated",
         updatedEmergency
@@ -1034,4 +1104,4 @@ const updateEmergencyStatus = async (req, res) => {
   }
 };
 
-module.exports= { registerHospital,updateEmergencyStatus,getHospitalPatients,getAllHospitalSearch,searchHospitalPatients,getHospitalById,updateHospitalProfile,getHospitalProfile, getStats, approveHospital,getAllHospitals,getHospitalsQuery, getHospitals, getHospitalCities, getHospitalStates, getAllPharmacies,updatePharmacyStatus,togglePharmacyActive};
+module.exports= { registerHospital,updateEmergencyStatus,getHospitalEmergencies,getHospitalPatients,getAllHospitalSearch,searchHospitalPatients,getHospitalById,updateHospitalProfile,getHospitalProfile, getStats, approveHospital,getAllHospitals,getHospitalsQuery, getHospitals, getHospitalCities, getHospitalStates, getAllPharmacies,updatePharmacyStatus,togglePharmacyActive};

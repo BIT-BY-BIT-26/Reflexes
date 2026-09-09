@@ -77,8 +77,15 @@ useEffect(() => {
     navigate("/login");
   };
 
+  // This Navbar is shared by DoctorLayout and HospitalLayout, so the bell
+  // cannot hardcode the doctor route - ProtectedRoutes would bounce an admin
+  // straight back to /hospital-dashboard and the click would look dead.
   const handleNotificationClick = () => {
-    navigate("/doctor-dashboard/notifications");
+    navigate(
+      role === ROLE.doctor
+        ? "/doctor-dashboard/notifications"
+        : "/hospital-dashboard/notifications"
+    );
   };
   return (
     <header className="relative z-30 sticky top-0  w-full bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-gray-200 dark:border-slate-800 text-gray-900 dark:text-white">

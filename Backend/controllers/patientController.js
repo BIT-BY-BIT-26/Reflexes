@@ -11,6 +11,14 @@ const cloudinary  = require("../config/cloudinary");
 const HospitalModel = require("../models/HospitalModel");
 const EmergencyModel = require("../models/EmergencyModel");
 
+// Lifecycle rules (which statuses are ongoing, how far the patient may cancel)
+// live in config/emergencyStatus.js so this controller and the hospital-side
+// status endpoint cannot drift apart.
+const {
+  ACTIVE_EMERGENCY_STATUSES,
+  CANCELLABLE_EMERGENCY_STATUSES,
+} = require("../config/emergencyStatus");
+
 const registerPatient = async (req, res) => {
   try {
     const { name, email, password, bloodGroup,dob, gender } = req.body;
@@ -617,14 +625,7 @@ const createEmergency = async (req, res) => {
       patient: patientId,
 
       status: {
-        $in: [
-          "REQUESTED",
-          "ACKNOWLEDGED",
-          "AMBULANCE_ASSIGNED",
-          "ON_THE_WAY",
-          "ARRIVED",
-          "PATIENT_PICKED",
-        ],
+        $in: ACTIVE_EMERGENCY_STATUSES,
       },
     });
 
@@ -720,4 +721,225 @@ const createEmergency = async (req, res) => {
 };
 
 
-module.exports = {registerPatient,getActiveQueueStatus,getMyProfile,createWalkInPatient,getPatientAppointments,getPatientProfile ,getPatientReportForDoctor, updatePatientProfile,getMyReports,createEmergency};
+const getMyActiveEmergency = async (req, res) => {
+  try {
+
+    // -----------------------------------------
+    // 1. CHECK AUTHENTICATED USER
+    // -----------------------------------------
+
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+    }
+
+
+    // -----------------------------------------
+    // 2. FIND THE ONGOING EMERGENCY
+    // -----------------------------------------
+
+    // NOTE: Emergency.patient refs User, not Patient.
+    const emergency = await EmergencyModel.findOne({
+      patient: req.user._id,
+
+      status: {
+        $in: ACTIVE_EMERGENCY_STATUSES,
+      },
+    })
+      .sort({ createdAt: -1 })
+
+      .populate(
+        "patient",
+        "name email phone_number"
+      )
+
+      .populate(
+        "hospital",
+        "name phone_number city state location"
+      )
+
+      .populate(
+        "assignedBy",
+        "name email phone_number role"
+      )
+
+      .populate(
+        "acknowledgedBy",
+        "name email phone_number role"
+      );
+
+
+    // -----------------------------------------
+    // 3. RESPONSE
+    // -----------------------------------------
+
+    // Having no active emergency is the normal case, not an error.
+    return res.status(200).json({
+      success: true,
+      emergency: emergency || null,
+    });
+
+  } catch (error) {
+
+    console.error(
+      "GET ACTIVE EMERGENCY ERROR:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch emergency status",
+      error: error.message,
+    });
+  }
+};
+
+
+const cancelEmergency = async (req, res) => {
+  try {
+    const io = req.app.get("io");
+
+    // -----------------------------------------
+    // 1. CHECK AUTHENTICATED USER
+    // -----------------------------------------
+
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
+      });
+    }
+
+    const patientId = req.user._id;
+
+    const { emergencyId } = req.params;
+
+
+    // -----------------------------------------
+    // 2. CLAIM THE CANCELLATION
+    // -----------------------------------------
+
+    // Done as one conditional update rather than read-then-write: a hospital
+    // admin can be advancing the same document through updateEmergencyStatus
+    // at the same moment, and only one of the two may win.
+    const cancelled = await EmergencyModel.findOneAndUpdate(
+      {
+        _id: emergencyId,
+
+        // Ownership is part of the query, so another patient's id can never
+        // match. Emergency.patient refs User, not Patient.
+        patient: patientId,
+
+        status: {
+          $in: CANCELLABLE_EMERGENCY_STATUSES,
+        },
+      },
+
+      {
+        $set: {
+          status: "CANCELLED",
+          cancelledAt: new Date(),
+        },
+      },
+
+      { new: true }
+    )
+      .populate(
+        "patient",
+        "name email phone_number"
+      )
+
+      .populate(
+        "hospital",
+        "name phone_number city state location"
+      )
+
+      .populate(
+        "assignedBy",
+        "name email phone_number role"
+      )
+
+      .populate(
+        "acknowledgedBy",
+        "name email phone_number role"
+      );
+
+
+    // -----------------------------------------
+    // 3. NOTHING CLAIMED - WORK OUT WHY
+    // -----------------------------------------
+
+    if (!cancelled) {
+
+      const existing = await EmergencyModel.findById(emergencyId);
+
+      if (!existing) {
+        return res.status(404).json({
+          success: false,
+          message: "Emergency not found",
+        });
+      }
+
+      if (
+        existing.patient.toString() !==
+        patientId.toString()
+      ) {
+        return res.status(403).json({
+          success: false,
+          message: "You are not authorized to cancel this emergency",
+        });
+      }
+
+      // It exists and is theirs, so it has moved past the point of no return.
+      return res.status(409).json({
+        success: false,
+
+        message:
+          `This request can no longer be cancelled (${existing.status}). Please contact the hospital.`,
+
+        emergency: existing,
+      });
+    }
+
+
+    // -----------------------------------------
+    // 4. TELL THE HOSPITAL
+    // -----------------------------------------
+
+    if (io) {
+      io.to(`hospital:${cancelled.hospital._id}`).emit(
+        "emergency-cancelled",
+        cancelled
+      );
+    }
+
+
+    // -----------------------------------------
+    // 5. RESPONSE
+    // -----------------------------------------
+
+    return res.status(200).json({
+      success: true,
+      message: "Emergency request cancelled",
+      emergency: cancelled,
+    });
+
+  } catch (error) {
+
+    console.error(
+      "CANCEL EMERGENCY ERROR:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to cancel emergency request",
+      error: error.message,
+    });
+  }
+};
+
+
+module.exports = {registerPatient,getActiveQueueStatus,getMyProfile,createWalkInPatient,getPatientAppointments,getPatientProfile ,getPatientReportForDoctor, updatePatientProfile,getMyReports,createEmergency,getMyActiveEmergency,cancelEmergency};

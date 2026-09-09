@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:patient_app/features/auth/provider/auth_provider.dart';
 import 'package:patient_app/features/queue/provider/queue_provider.dart';
 import 'package:patient_app/socket.dart';
-import 'package:patient_app/utils/constants.dart';
 import 'package:provider/provider.dart';
 
 class QueueScreen extends StatefulWidget {
@@ -45,66 +44,73 @@ class _QueueScreenState extends State<QueueScreen> {
     });
   }
 
-void _connectSocket(
+  /// The socket is authenticated with the patient's JWT - without it the
+  /// server's io.use() guard rejects the handshake and no queue update ever
+  /// arrives.
+  void _connectSocket(
     String doctorId,
   ) {
+    final authProvider = Provider.of<AuthProvider>(
+      context,
+      listen: false,
+    );
+
+    final token = authProvider.token;
+    if (token == null) return;
+
     socketService = SocketService();
 
-    socketService?.connect(
-      baseUrl:baseUrl,
+    socketService!.connect(token);
 
-      onQueueUpdate: (data) {
-      final queueProvider =
-          Provider.of<QueueProvider>(
+    socketService!.on("queueUpdated", (data) {
+      final queueProvider = Provider.of<QueueProvider>(
         context,
         listen: false,
       );
-      final token =
-          data["currentToken"];
+
+      final token = data["currentToken"];
+
       if (token != null) {
-        queueProvider.updateCurrentToken(
-          token,
-        );
+        queueProvider.updateCurrentToken(token);
       }
-    },
+    });
 
-      onPaused: (data) {
-        Provider.of<QueueProvider>(
-          context,
-          listen: false,
-        ).pauseQueue();
-      },
+    socketService!.on("opdPaused", (_) {
+      Provider.of<QueueProvider>(
+        context,
+        listen: false,
+      ).pauseQueue();
+    });
 
-      onResumed: (data) {
-      final queueProvider =
-          Provider.of<QueueProvider>(
+    socketService!.on("opdResumed", (data) {
+      final queueProvider = Provider.of<QueueProvider>(
         context,
         listen: false,
       );
-      final token =
-          data["currentToken"] ?? 0;
-      queueProvider.resumeQueue(
-        token,
-      );
-    },
 
+      final token = data["currentToken"] ?? 0;
 
-      onStopped: (data) {
-        Provider.of<QueueProvider>(
-          context,
-          listen: false,
-        ).stopQueue();
-      },
-    );
+      queueProvider.resumeQueue(token);
+    });
 
-    socketService?.joinDoctorRoom(
-      doctorId,
-    );
+    socketService!.on("opdStopped", (_) {
+      Provider.of<QueueProvider>(
+        context,
+        listen: false,
+      ).stopQueue();
+    });
+
+    socketService!.joinDoctor(doctorId);
   }
-  
+
   @override
   void dispose() {
-    socketService?.disconnect();
+    // Drop only this screen's events. The connection is shared - disconnecting
+    // it here would also cut the emergency status feed.
+    socketService?.off("queueUpdated");
+    socketService?.off("opdPaused");
+    socketService?.off("opdResumed");
+    socketService?.off("opdStopped");
     super.dispose();
   }
 

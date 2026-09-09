@@ -212,3 +212,21 @@ export const HospitalSearch = (searchTerm) => {
 export const getSharedMedicalData = async (patientId) => {
   return api.get(`/doctors/patient-history/${patientId}`);
 };
+
+// ---------------- Emergency (hospital admin) ----------------
+
+// scope: "active" (the working queue, oldest first), "history", or "all".
+export const getHospitalEmergencies = (scope = "active") => {
+  return api.get("/emergency/hospital", {
+    params: { scope },
+  });
+};
+
+// `ambulance` is required only for the AMBULANCE_ASSIGNED step; the server
+// rejects that transition without vehicleNumber, driverName and driverPhone.
+export const updateEmergencyStatus = (emergencyId, status, ambulance) => {
+  return api.patch(`/emergency/${emergencyId}/status`, {
+    status,
+    ambulance,
+  });
+};

@@ -2,6 +2,10 @@ import 'dart:ui';
 
 const baseUrl = "http://localhost:3000/api";
 
+// Socket.IO attaches at the server root, not under /api, so it cannot reuse
+// baseUrl - passing the /api suffix silently fails the handshake.
+const socketUrl = "http://localhost:3000";
+
 // MediReach AI voice assistant (separate hosted FastAPI service).
 // Unlike `baseUrl` this is a real hosted URL, so it works on a physical device.
 const voiceAgentBaseUrl = "https://medical-voice-agent.onrender.com";

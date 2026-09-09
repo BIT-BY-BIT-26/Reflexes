@@ -12,4 +12,7 @@ export const queryKeys = {
   hospitalStats: ["hospital", "stats"],
   allDoctors:["doctors","all"],
   allDepartments:["departments","all"],
+
+  // Scoped so the active queue and the closed-request log cache separately.
+  hospitalEmergencies: (scope) => ["hospital", "emergencies", scope],
 };

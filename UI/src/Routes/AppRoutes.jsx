@@ -19,9 +19,10 @@ import AllDepartments from '../features/Admin/AllDepartments'
 import HospitalLayout from '../pages/HospitalLayout'
 import AddDoctor from '../features/Admin/AddDoctor'
 import AllDoctor from '../features/Admin/AllDoctor'
+import EmergencyRequests from '../features/Admin/EmergencyRequests'
 import Appointment from '../components/Doctors/Appointment'
 import OpdSchedule from '../features/Admin/OpdSchedule'
-import NotificationSection from '../features/doctor/NotificationSection'
+import NotificationSection from '../components/NotificationSection'
 import SignupPharmacy from '../components/Pharmacy/SignupPharmacy'
 import PharmacyDashboard from '../components/Pharmacy/PharmacyDashboard'
 import PharmacyLayout from '../features/pharmacy/PharmacyLayout'
@@ -73,6 +74,8 @@ const AppRoutes = () => {
           <Route path='departments/add' element={<AddDepartment />}/>
           <Route path='doctors/add' element={<AddDoctor />}/>
           <Route path='doctors' element={<AllDoctor />}/>
+          <Route path='notifications' element={<NotificationSection />}/>
+          <Route path='emergencies' element={<EmergencyRequests />}/>
           <Route path='doctor/opd-schedule/:doctorId' element={<OpdSchedule />}/>
           <Route path='patients/:id' element={<PatientProfileAdmin />}/>
           <Route path='patient-report/:id' element={<PatientReport />}/>

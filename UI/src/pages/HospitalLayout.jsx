@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import {
+  Bell,
   Building2,
+  Siren,
   LayoutDashboard,
   PlusCircle,
   UserPlus,
@@ -10,6 +12,7 @@ import {
 import { useSelector } from "react-redux";
 import AppSidebar from "../components/layout/AppSidebar";
 import Navbar from "../components/Navbar";
+import useAdminNotifications from "../hooks/useAdminNotifications";
 
 /*
   Shell for /hospital-dashboard/*. Same rail as DoctorLayout - the admin tree
@@ -27,6 +30,8 @@ const navItems = [
   { to: "/hospital-dashboard/departments/add", label: "Add Department", icon: PlusCircle },
   { to: "/hospital-dashboard/doctors", end: true, label: "Doctors", icon: Users },
   { to: "/hospital-dashboard/doctors/add", label: "Add Doctor", icon: UserPlus },
+  { to: "/hospital-dashboard/emergencies", label: "Emergencies", icon: Siren },
+  { to: "/hospital-dashboard/notifications", label: "Notifications", icon: Bell, showUnread: true },
 ];
 
 /* Read-only identity block; `user` is whatever loginUser returned. */
@@ -54,6 +59,9 @@ const AdminIdentity = () => {
 
 const HospitalLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  /* Fills the Navbar bell for as long as the admin is inside this shell. */
+  useAdminNotifications();
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
