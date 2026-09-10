@@ -22,26 +22,5 @@ emergencyRoute.get(
   auth,
   seeRequestedEmergencyAmbulance
 );
-  "/active",
-  auth,
-  authorize("PATIENT"),
-  getActiveEmergency
-);
-
-emergencyRoute.get(
-  "/:emergencyId",
-  auth,
-  authorize("PATIENT"),
-  getEmergencyById
-);
-
-
-emergencyRoute.patch(
-  "/:emergencyId/cancel",
-  auth,
-  authorize("PATIENT"),
-  cancelEmergency
-);
-
 
 module.exports=emergencyRoute;
