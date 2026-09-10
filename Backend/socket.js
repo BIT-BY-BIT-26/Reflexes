@@ -8,51 +8,65 @@ dotenv.config();
 module.exports = (io, onlineDoctors, onlinePatients) => {
 
   // 🔐 Socket authentication
-  io.use(async (socket, next) => {
-    try {
-      const token = socket.handshake.auth?.token;
-      if (!token) {
-        return next(new Error("Authentication token missing"));
-      }
-      const decoded = jwt.verify(
-        token,
-        process.env.JWT_SECRET
-      );
-      const user = await userModel.findById(decoded.id);
-      if (!user) {
-        return next(new Error("User not found"));
-      }
-      socket.user = user;
-      console.log("✅ Socket authenticated:", user._id);
-      console.log("Role:", user.role);
-      console.log("Hospital:", user.hospitalId);
-      
-      //==============
-      //hospital join
-      //==============
-      if (
-        socket.user.role === "HOSPITAL_ADMIN" &&
-        socket.user.hospitalId
-      ) {
-        socket.join(
-          `hospital_${socket.user.hospitalId.toString()}`
-        );
+io.use(async (socket, next) => {
+  try {
+    console.log("\n========== SOCKET AUTH ==========");
 
-        console.log(
-          "🏥 Hospital room joined:",
-          socket.user.hospitalId.toString()
-        );
-      }
+    const token = socket.handshake.auth?.token;
 
-      next();
-    } catch (error) {
-      console.log(
-        "❌ Socket authentication failed:",
-        error.message
-      );
-      next(new Error("Unauthorized"));
+    console.log("Token exists:", !!token);
+
+    if (!token) {
+      console.log("❌ TOKEN MISSING");
+      return next(new Error("Authentication token missing"));
     }
-  });
+
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET
+    );
+
+    console.log("Decoded JWT:", decoded);
+
+    const user = await userModel.findById(decoded.id);
+
+    console.log("User found:", !!user);
+
+    if (!user) {
+      console.log("❌ USER NOT FOUND");
+      return next(new Error("User not found"));
+    }
+
+    socket.user = user;
+
+    console.log("✅ Socket authenticated:", user._id);
+    console.log("Role:", user.role);
+    console.log("Hospital:", user.hospitalId);
+
+    if (
+      user.role === "HOSPITAL_ADMIN" &&
+      user.hospitalId
+    ) {
+      const room = `hospital_${user.hospitalId.toString()}`;
+
+      socket.join(room);
+
+      console.log("🏥 Hospital room joined:", room);
+    }
+
+    console.log("========== AUTH SUCCESS ==========\n");
+
+    next();
+
+  } catch (error) {
+
+    console.error("❌❌ SOCKET AUTH ERROR:");
+    console.error(error);
+    console.error("Message:", error.message);
+
+    next(new Error(error.message));
+  }
+});
   // Connection
   io.on("connection", (socket) => {
     console.log("🟢 Connected:", socket.id);

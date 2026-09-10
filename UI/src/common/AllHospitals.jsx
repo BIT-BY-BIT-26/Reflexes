@@ -16,6 +16,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 
+
 import { getAllHospitals, createReferral } from "../api/backend";
 
 const AllHospitals = () => {
@@ -30,6 +31,10 @@ const AllHospitals = () => {
   // --------------------------------------------------
   const location = useLocation();
   const patientId = location.state?.patientId;
+
+  // --------------------------------------------------
+  // THEME
+  // --------------------------------------------------
 
   // --------------------------------------------------
   // STATES
@@ -170,7 +175,6 @@ const AllHospitals = () => {
   // CREATE REFERRAL
   // --------------------------------------------------
   const handleConfirmReferral = async () => {
-    // Patient ID check
     if (!patientId) {
       setReferralError(
         "Patient information is missing. Please open this page from the patient profile."
@@ -178,13 +182,11 @@ const AllHospitals = () => {
       return;
     }
 
-    // Hospital check
     if (!selectedHospital?._id) {
       setReferralError("Hospital information is missing.");
       return;
     }
 
-    // Reason check
     if (!referralReason.trim()) {
       setReferralError("Please enter the referral reason.");
       return;
@@ -212,7 +214,6 @@ const AllHospitals = () => {
           response?.data?.message || "Patient referred successfully!"
         );
 
-        // Close modal after short delay
         setTimeout(() => {
           setShowReferralModal(false);
           setSelectedHospital(null);
@@ -246,7 +247,16 @@ const AllHospitals = () => {
 
     if (currentStatus === "APPROVED") {
       return (
-        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-green-100 dark:bg-green-900/25 text-green-700 dark:text-green-400">
+        <span
+          className="
+            inline-flex items-center gap-1
+            px-3 py-1 rounded-full
+            text-xs font-semibold
+            bg-green-100 dark:bg-green-900/30
+            text-green-700 dark:text-green-400
+            border border-green-200 dark:border-green-800
+          "
+        >
           <CheckCircle size={14} />
           Approved
         </span>
@@ -255,7 +265,16 @@ const AllHospitals = () => {
 
     if (currentStatus === "PENDING") {
       return (
-        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 dark:bg-yellow-900/25 text-yellow-700 dark:text-yellow-400">
+        <span
+          className="
+            inline-flex items-center gap-1
+            px-3 py-1 rounded-full
+            text-xs font-semibold
+            bg-yellow-100 dark:bg-yellow-900/30
+            text-yellow-700 dark:text-yellow-400
+            border border-yellow-200 dark:border-yellow-800
+          "
+        >
           <Clock size={14} />
           Pending
         </span>
@@ -263,7 +282,15 @@ const AllHospitals = () => {
     }
 
     return (
-      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+      <span
+        className="
+          inline-flex items-center gap-1
+          px-3 py-1 rounded-full
+          text-xs font-semibold
+          bg-gray-100 dark:bg-gray-800
+          text-gray-700 dark:text-gray-300
+        "
+      >
         {status || "Unknown"}
       </span>
     );
@@ -274,31 +301,34 @@ const AllHospitals = () => {
   // --------------------------------------------------
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-black p-6">
+      <div className="min-h-screen bg-gray-50 dark:bg-black p-4 sm:p-6 transition-colors duration-300">
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse">
+
             <div className="h-10 bg-gray-200 dark:bg-gray-800 rounded-lg w-72 mb-3"></div>
+
             <div className="h-5 bg-gray-200 dark:bg-gray-800 rounded w-96 mb-8"></div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
               {[1, 2, 3, 4].map((item) => (
                 <div
                   key={item}
-                  className="h-28 bg-white dark:bg-[#0B1220] rounded-2xl shadow-sm dark:shadow-none"
+                  className="h-28 bg-white dark:bg-gray-900 rounded-2xl shadow-sm"
                 ></div>
               ))}
             </div>
 
-            <div className="h-16 bg-white dark:bg-[#0B1220] rounded-2xl mb-6"></div>
+            <div className="h-16 bg-white dark:bg-gray-900 rounded-2xl mb-6"></div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {[1, 2, 3, 4, 5, 6].map((item) => (
                 <div
                   key={item}
-                  className="h-96 bg-white dark:bg-[#0B1220] rounded-2xl shadow-sm dark:shadow-none"
+                  className="h-96 bg-white dark:bg-gray-900 rounded-2xl shadow-sm"
                 ></div>
               ))}
             </div>
+
           </div>
         </div>
       </div>
@@ -309,13 +339,24 @@ const AllHospitals = () => {
   // MAIN UI
   // --------------------------------------------------
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-black text-gray-900 dark:text-gray-100 p-4 sm:p-6">
+    <div
+      className="
+        min-h-screen
+        bg-gray-50 dark:bg-black
+        text-gray-900 dark:text-white
+        p-4 sm:p-6
+        transition-colors duration-300
+      "
+    >
       <div className="max-w-7xl mx-auto">
 
-        {/* HEADER */}
+        {/* ==================================================
+            HEADER
+        ================================================== */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
               All Hospitals
             </h1>
 
@@ -325,10 +366,26 @@ const AllHospitals = () => {
           </div>
 
           <div className="flex items-center gap-3">
+
+
+            {/* REFRESH */}
             <button
               onClick={() => fetchHospitals(true)}
               disabled={refreshing}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white dark:bg-[#0B1220] border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 font-medium transition disabled:opacity-50"
+              className="
+                inline-flex items-center justify-center
+                gap-2
+                px-4 py-2.5
+                rounded-xl
+                bg-white dark:bg-gray-900
+                border border-gray-200 dark:border-gray-700
+                hover:bg-gray-100 dark:hover:bg-gray-800
+                text-gray-700 dark:text-gray-200
+                font-medium
+                shadow-sm
+                transition-all
+                disabled:opacity-50
+              "
             >
               <RefreshCw
                 size={18}
@@ -347,10 +404,22 @@ const AllHospitals = () => {
           </div>
         </div>
 
-        {/* PATIENT INFO */}
+        {/* ==================================================
+            PATIENT INFO
+        ================================================== */}
         {patientId ? (
-          <div className="mb-6 p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-900/40 flex items-center gap-3">
-            <CheckCircle className="text-blue-600 dark:text-blue-400" size={20} />
+          <div
+            className="
+              mb-6 p-4 rounded-2xl
+              bg-blue-50 dark:bg-blue-900/20
+              border border-blue-200 dark:border-blue-900/50
+              flex items-center gap-3
+            "
+          >
+            <CheckCircle
+              className="text-blue-600 dark:text-blue-400"
+              size={20}
+            />
 
             <div>
               <p className="font-semibold text-blue-800 dark:text-blue-300">
@@ -363,8 +432,18 @@ const AllHospitals = () => {
             </div>
           </div>
         ) : (
-          <div className="mb-6 p-4 rounded-xl bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900/40 flex items-center gap-3">
-            <AlertCircle className="text-yellow-600 dark:text-yellow-400" size={20} />
+          <div
+            className="
+              mb-6 p-4 rounded-2xl
+              bg-yellow-50 dark:bg-yellow-900/20
+              border border-yellow-200 dark:border-yellow-900/50
+              flex items-center gap-3
+            "
+          >
+            <AlertCircle
+              className="text-yellow-600 dark:text-yellow-400"
+              size={20}
+            />
 
             <div>
               <p className="font-semibold text-yellow-800 dark:text-yellow-300">
@@ -379,9 +458,18 @@ const AllHospitals = () => {
           </div>
         )}
 
-        {/* ERROR */}
+        {/* ==================================================
+            ERROR
+        ================================================== */}
         {error && (
-          <div className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 text-red-700 dark:text-red-300">
+          <div
+            className="
+              mb-6 p-4 rounded-2xl
+              bg-red-50 dark:bg-red-900/20
+              border border-red-200 dark:border-red-900/50
+              text-red-700 dark:text-red-400
+            "
+          >
             <div className="flex items-center gap-2">
               <AlertCircle size={20} />
               <span>{error}</span>
@@ -389,79 +477,158 @@ const AllHospitals = () => {
           </div>
         )}
 
-        {/* STATS */}
+        {/* ==================================================
+            STATS
+        ================================================== */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
 
-          <div className="bg-white dark:bg-[#0B1220] rounded-2xl p-5 shadow-sm dark:shadow-none border border-gray-100 dark:border-gray-800">
+          {/* TOTAL */}
+          <div
+            className="
+              bg-white dark:bg-gray-900
+              rounded-2xl p-5
+              shadow-sm dark:shadow-black/30
+              border border-gray-100 dark:border-gray-800
+              transition-all duration-300
+              hover:shadow-md
+            "
+          >
             <div className="flex items-center justify-between">
+
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Total Hospitals</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Total Hospitals
+                </p>
+
+                <p className="text-3xl font-bold text-gray-900 dark:text-white mt-1">
                   {totalHospitals}
                 </p>
               </div>
 
-              <div className="p-3 rounded-xl bg-blue-100 dark:bg-blue-900/25 text-blue-600 dark:text-blue-400">
+              <div className="p-3 rounded-xl bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
                 <Building2 size={24} />
               </div>
+
             </div>
           </div>
 
-          <div className="bg-white dark:bg-[#0B1220] rounded-2xl p-5 shadow-sm dark:shadow-none border border-gray-100 dark:border-gray-800">
+          {/* ACTIVE */}
+          <div
+            className="
+              bg-white dark:bg-gray-900
+              rounded-2xl p-5
+              shadow-sm dark:shadow-black/30
+              border border-gray-100 dark:border-gray-800
+              transition-all duration-300
+              hover:shadow-md
+            "
+          >
             <div className="flex items-center justify-between">
+
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Active</p>
-                <p className="text-3xl font-bold text-green-600 dark:text-green-400 mt-1">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Active
+                </p>
+
+                <p className="text-3xl font-bold text-green-600 mt-1">
                   {activeHospitals}
                 </p>
               </div>
 
-              <div className="p-3 rounded-xl bg-green-100 dark:bg-green-900/25 text-green-600 dark:text-green-400">
+              <div className="p-3 rounded-xl bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400">
                 <CheckCircle size={24} />
               </div>
+
             </div>
           </div>
 
-          <div className="bg-white dark:bg-[#0B1220] rounded-2xl p-5 shadow-sm dark:shadow-none border border-gray-100 dark:border-gray-800">
+          {/* APPROVED */}
+          <div
+            className="
+              bg-white dark:bg-gray-900
+              rounded-2xl p-5
+              shadow-sm dark:shadow-black/30
+              border border-gray-100 dark:border-gray-800
+              transition-all duration-300
+              hover:shadow-md
+            "
+          >
             <div className="flex items-center justify-between">
+
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Approved</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Approved
+                </p>
+
                 <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">
                   {approvedHospitals}
                 </p>
               </div>
 
-              <div className="p-3 rounded-xl bg-indigo-100 dark:bg-indigo-900/25 text-indigo-600 dark:text-indigo-400">
+              <div className="p-3 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400">
                 <CheckCircle size={24} />
               </div>
+
             </div>
           </div>
 
-          <div className="bg-white dark:bg-[#0B1220] rounded-2xl p-5 shadow-sm dark:shadow-none border border-gray-100 dark:border-gray-800">
+          {/* PENDING */}
+          <div
+            className="
+              bg-white dark:bg-gray-900
+              rounded-2xl p-5
+              shadow-sm dark:shadow-black/30
+              border border-gray-100 dark:border-gray-800
+              transition-all duration-300
+              hover:shadow-md
+            "
+          >
             <div className="flex items-center justify-between">
+
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Pending</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Pending
+                </p>
+
                 <p className="text-3xl font-bold text-yellow-600 dark:text-yellow-400 mt-1">
                   {pendingHospitals}
                 </p>
               </div>
 
-              <div className="p-3 rounded-xl bg-yellow-100 dark:bg-yellow-900/25 text-yellow-600 dark:text-yellow-400">
+              <div className="p-3 rounded-xl bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400">
                 <Clock size={24} />
               </div>
+
             </div>
           </div>
+
         </div>
 
-        {/* SEARCH + FILTER */}
-        <div className="bg-white dark:bg-[#0B1220] rounded-2xl p-4 shadow-sm dark:shadow-none border border-gray-100 dark:border-gray-800 mb-8">
+        {/* ==================================================
+            SEARCH + FILTER
+        ================================================== */}
+        <div
+          className="
+            bg-white dark:bg-gray-900
+            rounded-2xl p-4
+            shadow-sm dark:shadow-black/30
+            border border-gray-100 dark:border-gray-800
+            mb-8
+            transition-colors duration-300
+          "
+        >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
             {/* SEARCH */}
             <div className="relative md:col-span-1">
+
               <Search
                 size={20}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"
+                className="
+                  absolute left-3 top-1/2
+                  -translate-y-1/2
+                  text-gray-400 dark:text-gray-500
+                "
               />
 
               <input
@@ -469,15 +636,36 @@ const AllHospitals = () => {
                 placeholder="Search hospital, city or state..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-500/70"
+                className="
+                  w-full
+                  pl-10 pr-4 py-3
+                  rounded-xl
+                  border border-gray-200 dark:border-gray-700
+                  bg-white dark:bg-gray-800
+                  text-gray-900 dark:text-white
+                  placeholder-gray-400 dark:placeholder-gray-500
+                  focus:outline-none
+                  focus:ring-2 focus:ring-blue-500
+                  transition-colors
+                "
               />
+
             </div>
 
             {/* STATUS */}
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-500/70"
+              className="
+                px-4 py-3
+                rounded-xl
+                border border-gray-200 dark:border-gray-700
+                bg-white dark:bg-gray-800
+                text-gray-900 dark:text-white
+                focus:outline-none
+                focus:ring-2 focus:ring-blue-500
+                transition-colors
+              "
             >
               <option value="ALL">All Status</option>
               <option value="APPROVED">Approved</option>
@@ -488,35 +676,60 @@ const AllHospitals = () => {
             <select
               value={activeFilter}
               onChange={(e) => setActiveFilter(e.target.value)}
-              className="px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-500/70"
+              className="
+                px-4 py-3
+                rounded-xl
+                border border-gray-200 dark:border-gray-700
+                bg-white dark:bg-gray-800
+                text-gray-900 dark:text-white
+                focus:outline-none
+                focus:ring-2 focus:ring-blue-500
+                transition-colors
+              "
             >
               <option value="ALL">All Hospitals</option>
               <option value="ACTIVE">Active Only</option>
               <option value="INACTIVE">Inactive Only</option>
             </select>
+
           </div>
         </div>
 
-        {/* RESULT COUNT */}
+        {/* ==================================================
+            RESULT COUNT
+        ================================================== */}
         <div className="flex items-center justify-between mb-5">
+
           <p className="text-gray-600 dark:text-gray-400">
             Showing{" "}
-            <span className="font-semibold text-gray-900 dark:text-gray-100">
+            <span className="font-semibold text-gray-900 dark:text-white">
               {filteredHospitals.length}
             </span>{" "}
             hospitals
           </p>
+
         </div>
 
-        {/* NO HOSPITAL */}
+        {/* ==================================================
+            NO HOSPITAL
+        ================================================== */}
         {filteredHospitals.length === 0 ? (
-          <div className="bg-white dark:bg-[#0B1220] rounded-2xl p-12 text-center border border-gray-100 dark:border-gray-800">
+
+          <div
+            className="
+              bg-white dark:bg-gray-900
+              rounded-2xl p-12
+              text-center
+              border border-gray-100 dark:border-gray-800
+              shadow-sm
+            "
+          >
             <Building2
               size={50}
               className="mx-auto text-gray-300 dark:text-gray-700 mb-4"
             />
 
-            <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
               No hospitals found
             </h3>
 
@@ -524,10 +737,14 @@ const AllHospitals = () => {
               Try changing your search or filters.
             </p>
           </div>
+
         ) : (
 
-          /* HOSPITAL GRID */
+          /* ==================================================
+              HOSPITAL GRID
+          ================================================== */
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+
             {filteredHospitals.map((hospital) => (
               <HospitalCard
                 key={hospital?._id}
@@ -537,52 +754,103 @@ const AllHospitals = () => {
                 getStatusBadge={getStatusBadge}
               />
             ))}
+
           </div>
+
         )}
+
       </div>
 
       {/* ==================================================
           REFERRAL MODAL
       ================================================== */}
       {showReferralModal && selectedHospital && (
+
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
 
           {/* BACKDROP */}
           <div
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={closeReferralModal}
           ></div>
 
           {/* MODAL */}
-          <div className="relative w-full max-w-2xl bg-white dark:bg-[#0B1220] rounded-2xl shadow-2xl overflow-hidden">
+          <div
+            className="
+              relative
+              w-full max-w-2xl
+              bg-white dark:bg-gray-900
+              text-gray-900 dark:text-white
+              rounded-2xl
+              shadow-2xl
+              border border-gray-100 dark:border-gray-800
+              overflow-hidden
+              transition-colors
+            "
+          >
 
             {/* MODAL HEADER */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-800">
+            <div
+              className="
+                flex items-center justify-between
+                p-6
+                border-b border-gray-100 dark:border-gray-800
+              "
+            >
               <div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                   Refer Patient
                 </h2>
 
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                   Send this patient to the selected hospital
                 </p>
+
               </div>
 
               <button
                 onClick={closeReferralModal}
                 disabled={referring}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 transition disabled:opacity-50"
+                className="
+                  p-2
+                  rounded-lg
+                  text-gray-500 dark:text-gray-400
+                  hover:bg-gray-100 dark:hover:bg-gray-800
+                  transition
+                  disabled:opacity-50
+                "
               >
                 <X size={22} />
               </button>
+
             </div>
 
             {/* MODAL BODY */}
             <div className="p-6">
 
               {/* SELECTED HOSPITAL */}
-              <div className="flex items-center gap-4 p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/40 mb-6">
-                <div className="w-14 h-14 rounded-xl bg-white dark:bg-gray-900 flex items-center justify-center overflow-hidden border border-blue-100 dark:border-blue-900/40">
+              <div
+                className="
+                  flex items-center gap-4
+                  p-4
+                  rounded-xl
+                  bg-blue-50 dark:bg-blue-900/20
+                  border border-blue-100 dark:border-blue-900/50
+                  mb-6
+                "
+              >
+
+                <div
+                  className="
+                    w-14 h-14
+                    rounded-xl
+                    bg-white dark:bg-gray-800
+                    flex items-center justify-center
+                    overflow-hidden
+                    border border-blue-100 dark:border-gray-700
+                  "
+                >
                   {selectedHospital.logo ? (
                     <img
                       src={selectedHospital.logo}
@@ -590,12 +858,16 @@ const AllHospitals = () => {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <Building2 className="text-blue-600 dark:text-blue-400" size={28} />
+                    <Building2
+                      className="text-blue-600 dark:text-blue-400"
+                      size={28}
+                    />
                   )}
                 </div>
 
                 <div>
-                  <h3 className="font-bold text-gray-900 dark:text-gray-100">
+
+                  <h3 className="font-bold text-gray-900 dark:text-white">
                     {selectedHospital.name}
                   </h3>
 
@@ -605,7 +877,9 @@ const AllHospitals = () => {
                     {selectedHospital.city || "N/A"},{" "}
                     {selectedHospital.state || "N/A"}
                   </p>
+
                 </div>
+
               </div>
 
               {/* REASON */}
@@ -619,8 +893,19 @@ const AllHospitals = () => {
                   value={referralReason}
                   onChange={(e) => setReferralReason(e.target.value)}
                   placeholder="e.g. Patient requires specialized cardiac treatment"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-500/70"
+                  className="
+                    w-full
+                    px-4 py-3
+                    rounded-xl
+                    border border-gray-200 dark:border-gray-700
+                    bg-white dark:bg-gray-800
+                    text-gray-900 dark:text-white
+                    placeholder-gray-400 dark:placeholder-gray-500
+                    focus:outline-none
+                    focus:ring-2 focus:ring-blue-500
+                  "
                 />
+
               </div>
 
               {/* CLINICAL NOTES */}
@@ -634,8 +919,20 @@ const AllHospitals = () => {
                   onChange={(e) => setClinicalNotes(e.target.value)}
                   placeholder="Add relevant clinical information..."
                   rows={4}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-500/70 resize-none"
+                  className="
+                    w-full
+                    px-4 py-3
+                    rounded-xl
+                    border border-gray-200 dark:border-gray-700
+                    bg-white dark:bg-gray-800
+                    text-gray-900 dark:text-white
+                    placeholder-gray-400 dark:placeholder-gray-500
+                    focus:outline-none
+                    focus:ring-2 focus:ring-blue-500
+                    resize-none
+                  "
                 />
+
               </div>
 
               {/* URGENCY */}
@@ -647,17 +944,35 @@ const AllHospitals = () => {
                 <select
                   value={urgency}
                   onChange={(e) => setUrgency(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-500/70"
+                  className="
+                    w-full
+                    px-4 py-3
+                    rounded-xl
+                    border border-gray-200 dark:border-gray-700
+                    bg-white dark:bg-gray-800
+                    text-gray-900 dark:text-white
+                    focus:outline-none
+                    focus:ring-2 focus:ring-blue-500
+                  "
                 >
                   <option value="NORMAL">Normal</option>
                   <option value="URGENT">Urgent</option>
                   <option value="EMERGENCY">Emergency</option>
                 </select>
+
               </div>
 
               {/* SUCCESS MESSAGE */}
               {referralMessage && (
-                <div className="mb-5 p-4 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-900/40 text-green-700 dark:text-green-400 flex items-center gap-2">
+                <div
+                  className="
+                    mb-5 p-4 rounded-xl
+                    bg-green-50 dark:bg-green-900/20
+                    border border-green-200 dark:border-green-800
+                    text-green-700 dark:text-green-400
+                    flex items-center gap-2
+                  "
+                >
                   <CheckCircle size={20} />
                   <span>{referralMessage}</span>
                 </div>
@@ -665,7 +980,15 @@ const AllHospitals = () => {
 
               {/* ERROR MESSAGE */}
               {referralError && (
-                <div className="mb-5 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 text-red-700 dark:text-red-400 flex items-center gap-2">
+                <div
+                  className="
+                    mb-5 p-4 rounded-xl
+                    bg-red-50 dark:bg-red-900/20
+                    border border-red-200 dark:border-red-800
+                    text-red-700 dark:text-red-400
+                    flex items-center gap-2
+                  "
+                >
                   <AlertCircle size={20} />
                   <span>{referralError}</span>
                 </div>
@@ -677,7 +1000,17 @@ const AllHospitals = () => {
                 <button
                   onClick={closeReferralModal}
                   disabled={referring}
-                  className="px-5 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50"
+                  className="
+                    px-5 py-3
+                    rounded-xl
+                    border border-gray-200 dark:border-gray-700
+                    bg-white dark:bg-gray-800
+                    text-gray-700 dark:text-gray-300
+                    font-medium
+                    hover:bg-gray-50 dark:hover:bg-gray-700
+                    transition
+                    disabled:opacity-50
+                  "
                 >
                   Cancel
                 </button>
@@ -685,7 +1018,20 @@ const AllHospitals = () => {
                 <button
                   onClick={handleConfirmReferral}
                   disabled={referring || Boolean(referralMessage)}
-                  className="px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 text-white font-semibold transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="
+                    px-5 py-3
+                    rounded-xl
+                    bg-blue-600
+                    hover:bg-blue-700
+                    text-white
+                    font-semibold
+                    transition
+                    flex items-center
+                    justify-center
+                    gap-2
+                    disabled:opacity-50
+                    disabled:cursor-not-allowed
+                  "
                 >
                   {referring ? (
                     <>
@@ -699,11 +1045,17 @@ const AllHospitals = () => {
                     </>
                   )}
                 </button>
+
               </div>
+
             </div>
+
           </div>
+
         </div>
+
       )}
+
     </div>
   );
 };
@@ -719,7 +1071,17 @@ const HospitalCard = ({
   getStatusBadge,
 }) => {
   return (
-    <div className="bg-white dark:bg-[#0B1220] rounded-2xl overflow-hidden shadow-sm dark:shadow-none border border-gray-100 dark:border-gray-800 hover:shadow-lg dark:hover:border-gray-700 transition duration-300">
+    <div
+      className="
+        bg-white dark:bg-gray-900
+        rounded-2xl
+        overflow-hidden
+        shadow-sm dark:shadow-black/30
+        border border-gray-100 dark:border-gray-800
+        hover:shadow-lg dark:hover:shadow-black/50
+        transition-all duration-300
+      "
+    >
 
       {/* COVER IMAGE */}
       <div className="relative h-40 bg-gray-100 dark:bg-gray-800">
@@ -731,8 +1093,17 @@ const HospitalCard = ({
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-800">
-            <Building2 size={45} className="text-gray-300 dark:text-gray-600" />
+          <div
+            className="
+              w-full h-full
+              flex items-center justify-center
+              bg-gray-100 dark:bg-gray-800
+            "
+          >
+            <Building2
+              size={45}
+              className="text-gray-300 dark:text-gray-600"
+            />
           </div>
         )}
 
@@ -743,7 +1114,19 @@ const HospitalCard = ({
 
         {/* LOGO */}
         <div className="absolute -bottom-7 left-5">
-          <div className="w-16 h-16 rounded-2xl bg-white dark:bg-[#0B1220] border-4 border-white dark:border-[#0B1220] shadow-md overflow-hidden flex items-center justify-center">
+
+          <div
+            className="
+              w-16 h-16
+              rounded-2xl
+              bg-white dark:bg-gray-800
+              border-4
+              border-white dark:border-gray-900
+              shadow-md
+              overflow-hidden
+              flex items-center justify-center
+            "
+          >
             {hospital.logo ? (
               <img
                 src={hospital.logo}
@@ -751,22 +1134,33 @@ const HospitalCard = ({
                 className="w-full h-full object-cover"
               />
             ) : (
-              <Building2 size={28} className="text-blue-500 dark:text-blue-400" />
+              <Building2
+                size={28}
+                className="text-blue-500 dark:text-blue-400"
+              />
             )}
           </div>
+
         </div>
+
       </div>
 
       {/* CARD CONTENT */}
       <div className="p-5 pt-10">
 
         {/* NAME */}
-        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 line-clamp-1">
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white line-clamp-1">
           {hospital.name || "Unnamed Hospital"}
         </h2>
 
         {/* LOCATION */}
-        <div className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 text-sm mt-2">
+        <div
+          className="
+            flex items-center gap-1.5
+            text-gray-500 dark:text-gray-400
+            text-sm mt-2
+          "
+        >
           <MapPin size={16} />
 
           <span className="line-clamp-1">
@@ -779,6 +1173,7 @@ const HospitalCard = ({
         <div className="flex items-center gap-2 mt-3">
 
           <div className="flex items-center gap-1">
+
             <Star
               size={16}
               className="fill-yellow-400 text-yellow-400"
@@ -789,18 +1184,29 @@ const HospitalCard = ({
                 ? Number(hospital.averageRating).toFixed(1)
                 : "0.0"}
             </span>
+
           </div>
 
-          <span className="text-gray-400 dark:text-gray-600">•</span>
+          <span className="text-gray-400 dark:text-gray-600">
+            •
+          </span>
 
           <span className="text-sm text-gray-500 dark:text-gray-400">
             {hospital.totalReviews || 0} reviews
           </span>
+
         </div>
 
         {/* PHONE */}
         {hospital.phone_number && (
-          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mt-3">
+          <div
+            className="
+              flex items-center gap-2
+              text-sm
+              text-gray-600 dark:text-gray-400
+              mt-3
+            "
+          >
             <Phone size={16} />
             <span>{hospital.phone_number}</span>
           </div>
@@ -810,14 +1216,23 @@ const HospitalCard = ({
         {Array.isArray(hospital.facilities) &&
           hospital.facilities.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-4">
+
               {hospital.facilities.slice(0, 4).map((facility, index) => (
                 <span
                   key={index}
-                  className="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-900/25 text-blue-700 dark:text-blue-400 text-xs font-medium"
+                  className="
+                    px-2.5 py-1
+                    rounded-lg
+                    bg-blue-50 dark:bg-blue-900/30
+                    text-blue-700 dark:text-blue-300
+                    text-xs font-medium
+                    border border-blue-100 dark:border-blue-900/40
+                  "
                 >
                   {facility}
                 </span>
               ))}
+
             </div>
           )}
 
@@ -828,7 +1243,22 @@ const HospitalCard = ({
         <button
           onClick={() => onRefer(hospital)}
           disabled={!canRefer}
-          className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 text-white font-semibold transition flex items-center justify-center gap-2 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed"
+          className="
+            w-full
+            py-3
+            rounded-xl
+            bg-blue-600
+            hover:bg-blue-700
+            text-white
+            font-semibold
+            transition-all
+            flex items-center
+            justify-center
+            gap-2
+            disabled:bg-gray-300
+            dark:disabled:bg-gray-700
+            disabled:cursor-not-allowed
+          "
         >
           <Send size={18} />
 
@@ -840,7 +1270,9 @@ const HospitalCard = ({
             Open this page from a patient profile
           </p>
         )}
+
       </div>
+
     </div>
   );
 };

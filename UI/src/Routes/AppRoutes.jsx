@@ -73,10 +73,10 @@ const AppRoutes = () => {
           <Route path='departments/add' element={<AddDepartment />}/>
           <Route path='doctors/add' element={<AddDoctor />}/>
           <Route path='doctors' element={<AllDoctor />}/>
+          <Route path='all-hospitals' element={<AllHospitals />}/>
           <Route path='doctor/opd-schedule/:doctorId' element={<OpdSchedule />}/>
           <Route path='patients/:id' element={<PatientProfileAdmin />}/>
           <Route path='patient-report/:id' element={<PatientReport />}/>
-          <Route path='all-hospitals' element={<AllHospitals />}/>
           
         </Route>
 
