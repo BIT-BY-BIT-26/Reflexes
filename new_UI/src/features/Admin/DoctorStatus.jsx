@@ -59,7 +59,7 @@ const DoctorStatus = () => {
     fetchDoctors();
 
     // Create socket
-    const socket = io("http://localhost:3000", {
+    const socket = io("http://10.16.0.171:3000", {
       auth: {
         token,
       },
@@ -147,6 +147,7 @@ const DoctorStatus = () => {
           "🟢 Doctor online:",
           doctorId
         );
+         console.log("🟢 Doctor online event received:", doctorId);
 
         setDoctors((prevDoctors) => {
 
