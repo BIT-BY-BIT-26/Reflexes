@@ -1,8 +1,8 @@
 const express = require("express");
 const auth = require("../middleware/auth");
 const authorize = require("../middleware/authorize");
-const { createEmergency, getEmergencyById, cancelEmergency, getActiveEmergency } = require("../controllers/patientController");
-const { updateEmergencyStatus } = require("../controllers/hospitalController");
+const { createEmergency } = require("../controllers/patientController");
+const { updateEmergencyStatus,seeRequestedEmergencyAmbulance } = require("../controllers/hospitalController");
 
 const emergencyRoute = express.Router();
 
@@ -18,26 +18,9 @@ emergencyRoute.patch(
 );
 
 emergencyRoute.get(
-  "/active",
+  "/requested",
   auth,
-  authorize("PATIENT"),
-  getActiveEmergency
+  seeRequestedEmergencyAmbulance
 );
-
-emergencyRoute.get(
-  "/:emergencyId",
-  auth,
-  authorize("PATIENT"),
-  getEmergencyById
-);
-
-
-emergencyRoute.patch(
-  "/:emergencyId/cancel",
-  auth,
-  authorize("PATIENT"),
-  cancelEmergency
-);
-
 
 module.exports=emergencyRoute;

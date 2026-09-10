@@ -3,12 +3,15 @@ import {
   Search,
   Bell,
   ChevronDown,
+  Sun,Moon
 } from "lucide-react";
-import { useSelector } from "react-redux";
-
+import { useSelector,useDispatch } from "react-redux";
+import { toggleTheme } from "../../redux/slices/themeSlice.js";
 const PharmacyNavbar = () => {
+  const dispatch = useDispatch();
 
   const { user } = useSelector((state) => state.auth);
+  const {mode} = useSelector((state) => state.theme);
 
   return (
     <header className="sticky top-0 z-30 h-[76px] border-b border-gray-200 bg-white/90 px-6 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/90">
@@ -43,8 +46,11 @@ const PharmacyNavbar = () => {
               className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
             />
 
-          </div>
 
+          </div>
+          <button onClick={() => dispatch(toggleTheme())} className="relative flex h-10 w-10 items-center justify-center rounded-full text-slate-600 transition hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-800" title={mode === "light" ? "Switch to dark mode" : "Switch to light mode"} >
+            {mode === "light" ? (<Moon size={21} />) : (<Sun size={21} />)}
+          </button>
           {/* Notification */}
           <button className="relative rounded-full p-2.5 text-slate-600 transition hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-800">
 

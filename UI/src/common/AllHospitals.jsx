@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { toggleTheme } from "../redux/slices/themeSlice";
 import {
   Search,
   RefreshCw,
@@ -14,12 +16,16 @@ import {
   AlertCircle,
 } from "lucide-react";
 
-import { useDispatch, useSelector } from "react-redux";
-import { toggleTheme } from "../redux/slices/themeSlice";
 
 import { getAllHospitals, createReferral } from "../api/backend";
 
 const AllHospitals = () => {
+  // --------------------------------------------------
+  // THEME
+  // --------------------------------------------------
+  const dispatch = useDispatch();
+  const mode = useSelector((state) => state.theme.mode);
+
   // --------------------------------------------------
   // GET PATIENT ID FROM PATIENT PROFILE
   // --------------------------------------------------
@@ -29,8 +35,6 @@ const AllHospitals = () => {
   // --------------------------------------------------
   // THEME
   // --------------------------------------------------
-  const mode = useSelector((state) => state.theme.mode);
-  const dispatch = useDispatch();
 
   // --------------------------------------------------
   // STATES
@@ -391,6 +395,12 @@ const AllHospitals = () => {
               {refreshing ? "Refreshing..." : "Refresh"}
             </button>
 
+            <button
+              onClick={() => dispatch(toggleTheme())}
+              className="px-3 py-2.5 rounded-xl bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm font-medium whitespace-nowrap"
+            >
+              {mode === "dark" ? "☀️ Light" : "🌙 Dark"}
+            </button>
           </div>
         </div>
 
@@ -874,7 +884,6 @@ const AllHospitals = () => {
 
               {/* REASON */}
               <div className="mb-5">
-
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                   Referral Reason <span className="text-red-500">*</span>
                 </label>
@@ -901,7 +910,6 @@ const AllHospitals = () => {
 
               {/* CLINICAL NOTES */}
               <div className="mb-5">
-
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                   Clinical Notes
                 </label>
@@ -929,7 +937,6 @@ const AllHospitals = () => {
 
               {/* URGENCY */}
               <div className="mb-5">
-
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                   Urgency
                 </label>

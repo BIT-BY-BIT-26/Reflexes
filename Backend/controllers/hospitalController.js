@@ -1041,4 +1041,47 @@ const updateEmergencyStatus = async (req, res) => {
   }
 };
 
-module.exports= { registerHospital,updateEmergencyStatus,getHospitalPatients,getAllHospitalSearch,searchHospitalPatients,getHospitalById,updateHospitalProfile,getHospitalProfile, getStats, approveHospital,getAllHospitals,getHospitalsQuery, getHospitals, getHospitalCities, getHospitalStates, getAllPharmacies,updatePharmacyStatus,togglePharmacyActive};
+
+
+const seeRequestedEmergencyAmbulance = async (req, res) => {
+  try {
+    const hospitalId = req.user.hospitalId;
+
+    if (!hospitalId) {
+      return res.status(400).json({
+        success: false,
+        message: "Hospital not associated with this user",
+      });
+    }
+
+    const emergencies = await EmergencyModel.find({
+      hospital: hospitalId,
+      status: "REQUESTED",
+    })
+      .populate("patient", "name email phone_number")
+      .populate(
+        "hospital",
+        "name phone_number city state location"
+      )
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      count: emergencies.length,
+      emergencies,
+    });
+  } catch (error) {
+    console.error(
+      "SEE REQUESTED EMERGENCY AMBULANCE ERROR:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch requested emergency patients",
+      error: error.message,
+    });
+  }
+};
+
+module.exports= { registerHospital,updateEmergencyStatus,seeRequestedEmergencyAmbulance,getHospitalPatients,getAllHospitalSearch,searchHospitalPatients,getHospitalById,updateHospitalProfile,getHospitalProfile, getStats, approveHospital,getAllHospitals,getHospitalsQuery, getHospitals, getHospitalCities, getHospitalStates, getAllPharmacies,updatePharmacyStatus,togglePharmacyActive};
